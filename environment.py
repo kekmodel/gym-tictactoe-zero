@@ -12,7 +12,7 @@ class TicTacToeEnv(gym.Env):
     reward_range = (-1, 1)  # 보상의 범위: 패배:-1, 무승부:0, 승리:1
     mark_O = 1  # O 표시의 대응값
     mark_X = 2  # X 표시의 대응값
-    player_pool = np.array([mark_O, mark_X])
+    player_pool = np.array([mark_O, mark_X])  # 플레이어 랜덤 선택용
 
     def __init__(self):
         self.set_start = TicTacToeEnv.mark_O  # O표시가 선
@@ -27,7 +27,7 @@ class TicTacToeEnv(gym.Env):
             self.board_size**2)  # 행동 공간 정의: 3^2개, 0~8의 정수
         self._reset()  # 리셋 함수 호출
 
-    def _seed(self, seed=None):  # 랜덤 시드 설정 함수
+    def _seed(self, seed=None):  # 랜덤 시드 설정 함수: 한 에피소드 동안 유지하기 위함
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
@@ -75,7 +75,7 @@ class TicTacToeEnv(gym.Env):
             self._reset()
         return
 
-    def chek_win(self, state):  # 승무패 체크 함수
+    def chek_win(self, state):  # 승무패 체크 함수 최적화 알고리즘 생각해보기
         ...
 
     def _render(self, mode='human', close=False):
