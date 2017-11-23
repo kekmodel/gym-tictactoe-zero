@@ -1,2 +1,2 @@
 # TicTacToe
-Make an environment for reinforcement learning using gym.
+Environment for reinforcement learning using gym.
