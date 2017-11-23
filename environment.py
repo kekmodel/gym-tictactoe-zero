@@ -5,8 +5,8 @@ import numpy as np
 
 
 class TicTacToeEnv(gym.Env):
-    """OpenAI Gym의 주요 클래스, 환경 뒤에서 이루어지는 변화들을 캡슐화 해놓음
-        환경은 완전히 관찰가능한 환경, 부분적으로 관찰가능한 환경이 있음
+    """gym.Env를 상속하여 틱택토 게임 환경 클래스 정의
+        gym.Env: OpenAI Gym의 주요 클래스, 환경 뒤에서 이루어지는 변화들을 캡슐화 해놓음
     """
     metadata = {'render.modes': ['human']}  # _render()의 리턴 타입 구분: 사람 눈으로 볼거임
     reward_range = (-1, 1)  # 보상의 범위: 패배:-1, 무승부:0, 승리:1
