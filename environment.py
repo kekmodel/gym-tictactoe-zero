@@ -6,8 +6,8 @@ import numpy as np
 
 def check_win(state):  # state 승패체크 함수
     current_state = state
-    loc_mark_O = np.zeros(9)  # 승패체크 전처리용 배열: O용
-    loc_mark_X = np.zeros(9)  # X용
+    loc_mark_O = np.zeros(9, 'int32')  # 승패체크 전처리용 배열: O용
+    loc_mark_X = np.zeros(9, 'int32')  # X용
     if current_state[0] == 1:
         print(current_state)
         # 현재 보드에서 1이 표시된 인덱스를 받아와서 loc_mark_O의 같은 자리에 1을 넣기 나머진 0
@@ -75,7 +75,8 @@ class TicTacToeEnv(gym.Env):
         self.turn = TicTacToeEnv.mark_O
         self.player = np.random.choice(
             TicTacToeEnv.player_pool, 1)  # 플레이어 마크 랜덤선택
-        self.board = np.zeros(self.board_size**2)  # 보드 초기화 : 0이 9개인 배열
+        # 보드 초기화 : 0이 9개인 배열
+        self.board = np.zeros(self.board_size**2, 'int32')
         # 상태 초기화: [턴, 보드상태]의 리스트. 첫턴:mark_O
         self.state = [self.turn, self.board]
         self.reward = 1
@@ -98,9 +99,14 @@ class TicTacToeEnv(gym.Env):
             dict: info
         """
         self.action = action  # 액션 받아오기
-        # 들어온 액션의 주체가 상태의 턴과 같고, 액션자리가 비어 있다면
-        if self.action[0] == self.state[0] and self.state[1][self.action[1]] == 0:
-                # 액션 요청 자리에 해당 턴의 인덱스를 넣는다
+        self.action_mark = self.action[0]  # 액션 주체 인덱스
+        self.state_turn = self.state[0]  # 상태의 턴 인덱스
+        self.action_target = self.action[1]  # 액션 타겟 좌표
+        # 액션이 업데이트를 원하는 상태 보드의 좌표
+        self.state_loc = self.state[1][self.action_target]
+        # 들어온 액션의 주체가 상태의 턴과 같고, 상태 보드가 비어있는 경우
+        if self.action_mark == self.state_turn and self.state_loc == 0:
+            # 액션 요청 자리에 해당 턴의 인덱스를 넣는다
             self.state[1][self.action[1]] = self.state[0]
             check_state = check_win(self.state)  # 승부 체크 [액션 주체, 결과]
             # 액션 주체가 플레이어이고 승부가 났다면 플레이어 승리
@@ -142,5 +148,7 @@ class TicTacToeEnv(gym.Env):
 # 모니터링 용
 tEnv = TicTacToeEnv()
 while not tEnv.done:
-    tEnv.step([tEnv.player, tEnv.action_space.sample()])
+    action = np.array(2, 'int32')
+    action = np.array([tEnv.player, tEnv.action_space.sample()])
+    tEnv.step(action)
 tEnv.reset()
