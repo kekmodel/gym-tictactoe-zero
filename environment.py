@@ -105,12 +105,12 @@ class TicTacToeEnv(gym.Env):
             check_state = check_win(self.state)  # 승부 체크 [액션 주체, 결과]
             # 액션 주체가 플레이어이고 승부가 났다면 플레이어 승리
             if check_state[0] == self.player and check_state[1] == 1:
-                print('You Win!')   # 승리 메시지 출력
+                print('You Win')   # 승리 메시지 출력
                 self.reward = 1  # 보상 +1
                 self.done = True   # 게임 끝
                 return self.state, self.reward, self.done, self.info
             elif check_state[1] == 1:  # 액션 주체가 플레이어가 아닌데 승부가 났으면 패배
-                print('You Lose!')  # 너 짐
+                print('You Lose')  # 너 짐
                 self.reward = -1  # 보상 -1
                 self.done = True  # 게임 끝
                 return self.state, self.reward, self.done, self.info
@@ -129,11 +129,10 @@ class TicTacToeEnv(gym.Env):
             self.done = True  # 게임 중단
             return self.state, self.reward, self.done, self.info
         else:  # 액션 자리가 이미 차있으면
-            print('Nope')  # 안돼
-            self.reward = 0
-            self.done = False
-            self.info = {'NO'}
-            return self.state, self.reward, self.done, self.info  # 돌아가
+            print('No Mark')  # 안돼
+            self.done = False  # 다시해
+            self.info = {'NO'}  # 착수금지에 놓음
+            return self.state, self.reward, self.done, self.info
 
     def _render(self, mode='human', close=False):  # 현재 상태를 그려주는 함수
         if close:
