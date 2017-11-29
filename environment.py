@@ -71,6 +71,9 @@ class TicTacToeEnv(gym.Env):
         self.done = False
         self.first_turn = self.mark_O  # 첫턴은 O
         self._seed()  # 랜덤 시드 설정하는 함수 호출
+        self.render_loc = {0: (50, 250), 1: (150, 250), 2: (250, 250),
+                           3: (50, 150), 4: (150, 150), 5: (250, 150),
+                           6: (50, 50), 7: (150, 50), 8: (250, 50)}
 
     def _seed(self, seed=None):  # 랜덤 시드 설정 함수: 한 에피소드 동안 유지하기 위함
         self.np_random, seed = seeding.np_random(seed)
@@ -108,7 +111,9 @@ class TicTacToeEnv(gym.Env):
         if action_mark == state_turn and state_loc == 0:
             # 액션 요청 자리에 해당 턴의 인덱스+1를 넣는다
             state[1][action[1]] = action_mark + 1
+
             check_state = check_win(state)  # 승부 체크 [액션 주체, 결과]
+
             # 액션 주체가 플레이어이고 승부가 났다면 플레이어 승리
             if check_state[0] == self.player and check_state[1] == 1:
                 print('You Win')   # 승리 메시지 출력
@@ -139,8 +144,6 @@ class TicTacToeEnv(gym.Env):
         else:  # 액션 자리가 이미 차있으면
             print('overlap error')  # 안돼
             self.done = False  # 안끝남
-            reward = None
-            return self.state, reward, self.done, {'overlap error'}
 
     def _render(self, mode='human', close=False):  # 현재 상태를 그려주는 함수
         if close:
@@ -154,34 +157,43 @@ class TicTacToeEnv(gym.Env):
 
         if self.viewer is None:
             self.viewer = rendering.Viewer(screen_width, screen_height)
+
             self.line_1 = rendering.Line((0, 100), (300, 100))
             self.line_1.set_color(0, 0, 0)
-            self.viewer.add_geom(self.line_1)
+
             self.line_2 = rendering.Line((0, 200), (300, 200))
             self.line_2.set_color(0, 0, 0)
-            self.viewer.add_geom(self.line_2)
+
             self.line_a = rendering.Line((100, 0), (100, 300))
             self.line_a.set_color(0, 0, 0)
-            self.viewer.add_geom(self.line_a)
+
             self.line_b = rendering.Line((200, 0), (200, 300))
             self.line_b.set_color(0, 0, 0)
+
+            self.image_O = rendering.Image("img/O.png", 96, 96)
+            self.trans_O = rendering.Transform(self.render_loc[action[1]])
+            self.image_O.add_attr(self.trans_O)
+
+            self.image_X = rendering.Image("img/X.png", 96, 96)
+            self.trans_X = rendering.Transform(self.render_loc[action[1]])
+            self.image_X.add_attr(self.trans_X)
+
+            self.viewer.add_geom(self.line_1)
+            self.viewer.add_geom(self.line_2)
+            self.viewer.add_geom(self.line_a)
             self.viewer.add_geom(self.line_b)
 
-        if self.state is None:
-            return None
-
-       # space = self.state
-       # for i in range(2):
-       #    if space[1][i] == 1:
-       #         self.viewer.add_geom(self.image_O)
+            self.viewer.add_geom(self.image_O)
+            self.viewer.add_geom(self.image_X)
 
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
 
 # 모니터링 용
 env = TicTacToeEnv()
+env.seed()
 env.reset()
 for _ in range(60):
-    action = [0, 1]
+    action = [0, 4]
     state, reward, done, info = env.step(action)
     env.render()
