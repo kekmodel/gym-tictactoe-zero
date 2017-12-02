@@ -127,7 +127,7 @@ render()의 리턴 타입 구분? 사람 눈으로 볼거고 rgb값 60프레임
 
 
 
-언더언더바init언더언더바()   /마크다운뭐야;;/
+언더언더바init언더언더바()   /마크다운뭐야;;언더바하면 줄감/
 
 
 	멤버로 observation_space, action_space 정의
