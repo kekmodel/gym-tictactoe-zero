@@ -12,6 +12,8 @@
 시작!
 
  클래스 
+ 
+ 
 	상속방법은 class 클래스명(슈퍼):
 	필수 구성 함수는 def __init__(self, 인풋들) 
 	기본변수기능: 멤버 (보통 __init__메소드 내부에 self.이름으로 선언)
@@ -24,6 +26,8 @@
 	인스턴스에서 언더바 없이 .이름으로 접근 가능한 경우도 있음(API?)
 
  numpy
+ 
+ 
 	우리의 꿈과 희망
 	C의 배열을 사용가능하게 함 
 	같은 타입만 들어갈 수 있음
@@ -37,10 +41,14 @@
 	지원되는 거 겁나 많음
 	
  삽질
+ 
+ 
 	함수의 리턴 타입을 신경쓰자
 	for, if 문은 탈출조건이 없을 시 아래로 흐름?
 
  리스트
+ 
+ 
 	[]로 선언 
 	여러타입이 들어갈 수 있고
 	추가 삭제 용이함
@@ -49,16 +57,22 @@
 	=로 연결하면 참조임. 복사하고싶으면 리스트.copy()
 
  lambda
-    익명 함수
+ 
+ 
+    	익명 함수
 	간단한 함수를 바로 쓸 수 있게 함. 개꿀.
 	lambda 인풋변수명: 변수규칙
 
  튜플
+ 
+ 
 	()로 선언?
 	변환 안되는 리스트로 생각
 	쉼표 구분으로 선언하면 튜플로 인식
 
  딕셔너리
+ 
+ 
 	가장 쓸모가 많았던 놈
 	{키: 값, ...} 으로 선언
 	튜플.keys() : 키값반환
@@ -69,18 +83,25 @@
 	dict로 머리 좀 굴리면 웬만한 문제 다 해결
 
  언팩킹
+ 
+ 
 	*[] 타입을 벗어던지고 내부값으로 반환
 	**{} 별두개는 키와 내부값. 반환 순서는? 공부요망
 	*{} 한번만 하면 키만 반환
 	함수 인풋 표현에도 쓰는데 솔직히 이해 안감
 
 쓸만한 내부 함수들
+
+
 	map(함수, 이터)
 		인풋 순서대로 아웃풋 반환함
 	filter(규칙, 이터)
 		규칙에 맞는 것만 반환
 
-기본 임포트 모듈
+
+GYM!! 기본 임포트 모듈
+
+
 	import logging  로그 생성용인듯 사용법 아직 모름
 	import gym
 	from gym import spaces 공간 정의 도와줌
@@ -88,12 +109,21 @@
 	import numpy as np  C배열을 사용하게 해줌 우리의 꿈과 희망
 
 환경 클래스는 gym.Env를 상속받아 구성함
+
+
+
 metadata = {'render.modes': ['human', 'rgb_array'],
                 'video.frames_per_second': 60}
+		
+	
 render()의 리턴 타입 구분? 사람 눈으로 볼거고 rgb값 60프레임
 어떻게 작용하는진 모르겠음
 
+
+
 언더언더바init언더언더바()   /마크다운뭐야;;/
+
+
 	멤버로 observation_space, action_space 정의
 	정의방법은 from gym import spaces하여 spaces의 Disccrete로 	정수타입을 BoX로는 여러차원의 실수타입을 정의할때 사용함
 	그러면 .sample()로 랜덤값 반환 가능
@@ -102,17 +132,25 @@ render()의 리턴 타입 구분? 사람 눈으로 볼거고 rgb값 60프레임
 
 
 언더바seed(self, seed=None)
+
+
 	self.np_random, seed = seeding.np_random(seed)
         return [seed]
 시드 생성 메소드 같은데 보통 이렇게 정의함;; 정확한 메커니즘은 모름ㅠ
 
+
+
 언더바reset(self)
+
+
 	에피소드가 끝나면 호출되는 메소드, state 반환!
 	state 초기화
 	done 초기화
 	리턴 state 
 
 언더바step(self, action)
+
+
 	환경의 핵심이 되는 메소드
 	에이전트가 주로 사용할 놈
 	액션에 대한 상태변화, 보상, 여러 정보를 정의
@@ -124,6 +162,8 @@ render()의 리턴 타입 구분? 사람 눈으로 볼거고 rgb값 60프레임
 	reset 은 에이전트에서도 가능
 
 언더바render(self, mode='human', close=False)
+
+
 	상태를 그리는 함수 에이전트에서 render()로 호출함
         if close:
             if self.viewer is not None:
@@ -131,41 +171,60 @@ render()의 리턴 타입 구분? 사람 눈으로 볼거고 rgb값 60프레임
                 self.viewer = None
             return
 로 시작하는데 없어도 될 것 같아서 없애면 에러남 왜지?
+
+
 	if self.viewer is None:
 	...
 	아래에 self.viewer 정의
 
 rendering 모듈
+
+
 	from gym.envs.classic_control import rendering
 	간단한 렌더링 지원해줌 pyglet기반인듯
 
 뷰어 정의
+
+
 	self.viewer = rendering.Viewer(screen_width, screen_height)
 
 줄 긋기 및 선색깔 정의 (x, y) 좌표기반, (r, g, b)
+
+
 	self.line_1 = rendering.Line((0, 100), (300, 100))
             self.line_1.set_color(0, 0, 0)
 
 뷰어에 붙이기
+
+
 	.add_geom 메소드
 	self.viewer.add_geom(객체)
 	
 
 이미지 객체 생성
+
+
 	.Image("파일위치", 가로, 세로 크기)
 	self.image_O1 = rendering.Image("img/O.png", 96, 96)
 
 위치 지정하는 방법
+
+
 	위치컨트롤 객체 생성-> 대상객체에 붙임 -> 대상을 뷰어에 붙임
 
-위치컨트롤 객체	.
-	Transform((x좌표, y좌표))
+위치컨트롤 객체	
+
+	.Transform((x좌표, y좌표))
 	self.trans_O1 = rendering.Transform()
 	대상이 뷰어에 붙기 전까진 뷰어에 반영안됨
 
 위치바꿀 대상객체에 붙이기
+
+
 	대상객체.add_attr(트랜스폼객체)
 
 뷰어에 대상객체 붙이기
+
+
 	마찬가지로 self.viewer.add_geom(대상객체)
 
