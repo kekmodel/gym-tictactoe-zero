@@ -312,6 +312,7 @@ class TicTacToeEnv(gym.Env):
 
 
 # 테스트 용
+'''
 env = TicTacToeEnv()
 env.seed()
 env.reset()
@@ -323,3 +324,4 @@ for i in range(1000):
     print(reward)
     if done:
         env.reset()
+'''
