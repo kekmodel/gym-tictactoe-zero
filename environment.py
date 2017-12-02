@@ -62,7 +62,7 @@ class TicTacToeEnv(gym.Env):
     # _render()의 리턴 타입 구분: 사람 눈으로 볼거고 rgb값 60프레임으로
     metadata = {'render.modes': ['human', 'rgb_array'],
                 'video.frames_per_second': 60}
-    reward_range = (-1, 0, 1)  # 보상의 범위: 패배:-1, 무승부:0, 승리:1
+    reward_range = (-1, 0, 1)  # 보상의 범위 참고: 패배:-1, 무승부:0, 승리:1
 
     def __init__(self):
         self.mark_O = 0  # O 표시의 대응값
@@ -190,7 +190,6 @@ class TicTacToeEnv(gym.Env):
 
             self.image_O3 = rendering.Image("img/O.png", 96, 96)
             self.trans_O3 = rendering.Transform(self.render_loc[2])
-            self.image_O3.add_attr(self.trans_O3)
 
             self.image_O4 = rendering.Image("img/O.png", 96, 96)
             self.trans_O4 = rendering.Transform(self.render_loc[3])
@@ -254,6 +253,7 @@ class TicTacToeEnv(gym.Env):
 
             state = self.state.copy()
             map_dict = dict(zip([0, 1, 2, 3, 4, 5, 6, 7, 8], state[1]))
+
             if 0 in map_dict.keys():
                 if map_dict[0] == 1:
                     self.viewer.add_geom(self.image_O1)
