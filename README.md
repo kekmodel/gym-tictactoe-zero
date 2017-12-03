@@ -35,19 +35,19 @@ GYM!! 기본 임포트 모듈
 render()의 리턴 타입 구분? 사람 눈으로 볼거고 rgb값 60프레임
 어떻게 작용하는진 모르겠음
 
+# 필수 정의 메소드들
 
-
-언더언더바init언더언더바()   /마크다운뭐야;;언더바하면 줄감/
+\__init__(self)
 
 
 	멤버로 observation_space, action_space 정의
-	정의방법은 from gym import spaces하여 spaces의 Disccrete로 	정수타입을 BoX로는 여러차원의 실수타입을 정의할때 사용함
+	정의방법은 from gym import spaces하여 spaces의 Disccrete로 정수타입을 Box로는 여러차원의 실수타입을 정의할때 사용함
 	그러면 .sample()로 랜덤값 반환 가능
-	언더바seed() 호출
+	_seed() 호출
 	state, done, viewer 멤버 초기화하기
 
 
-언더바seed(self, seed=None)
+\_seed(self, seed=None)
 
 
 	self.np_random, seed = seeding.np_random(seed)
@@ -56,7 +56,7 @@ render()의 리턴 타입 구분? 사람 눈으로 볼거고 rgb값 60프레임
 
 
 
-언더바reset(self)
+\_reset(self)
 
 
 	에피소드가 끝나면 호출되는 메소드, state 반환!
@@ -64,12 +64,12 @@ render()의 리턴 타입 구분? 사람 눈으로 볼거고 rgb값 60프레임
 	done 초기화
 	리턴 state 
 
-언더바step(self, action)
+\_step(self, action)
 
 
 	환경의 핵심이 되는 메소드
-	에이전트가 주로 사용할 놈
-	액션에 대한 상태변화, 보상, 여러 정보를 정의
+	에이전트가 step()으로 호출
+	액션에 대한 상태변화, 보상, 진행상태, 추가정보를 정함
 	
 	action_space의 값중 하나를 인풋으로 하여
 	(다음 state, reward, done, info) 튜플 리턴
@@ -77,7 +77,8 @@ render()의 리턴 타입 구분? 사람 눈으로 볼거고 rgb값 60프레임
 	에피소드가 끝나면 reset() 어떻게 할지 생각해야함
 	reset 은 에이전트에서도 가능
 
-언더바render(self, mode='human', close=False)
+## 필수는 아니나 알아두면 좋은 메소드
+\_render(self, mode='human', close=False)
 
 
 	상태를 그리는 함수 에이전트에서 render()로 호출함
@@ -144,7 +145,8 @@ rendering 모듈
 
 	마찬가지로 self.viewer.add_geom(대상객체)
 
- 클래스 
+### 코딩 
+클래스 
  
  
 	상속방법은 class 클래스명(슈퍼):
