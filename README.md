@@ -36,7 +36,7 @@
 
 ### 필수 정의 메소드들
 
-\__init\__(self)
+\_\_init\_\_(self)
 
 	클래스 초기화 메소드
 	멤버로 observation_space, action_space 정의
