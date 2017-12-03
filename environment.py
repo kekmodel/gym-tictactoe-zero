@@ -2,14 +2,13 @@ import logging
 import gym
 from gym import spaces
 from gym.utils import seeding
-from gym.envs.classic_control import rendering
 import numpy as np  # c의 array 지원
 
 logger = logging.getLogger(__name__)
 
 
 def check_win(state):  # state 승패체크 함수
-    current_state = state
+    current_state = state.copy()   # 상태 리스트를 카피
     loc_mark_O = np.zeros(9, 'int32')  # 승패체크 전처리용 배열: O용
     loc_mark_X = np.zeros(9, 'int32')  # X용
     # 승리패턴 8가지 구성
@@ -40,7 +39,7 @@ def check_win(state):  # state 승패체크 함수
                 judge[i][k] = 1
             else:
                 judge[i][k] = 0   # 아닌 것은 0을 넣어
-        if judge[i].sum() == 3:   # 그 배열을 더해서 총합이 3이면 승부난 거임
+        if judge[i].sum() == 3:   # 그 배열을 더 해서 총합이 3이면 승부난 거임
             mark_type = batch_state[0]  # 그럼 현재턴을 저장하고
             match_result = 1   # 승부났음을 저장하고
             return [mark_type, match_result]  # 리턴해라
@@ -67,7 +66,6 @@ class TicTacToeEnv(gym.Env):
     def __init__(self):
         self.mark_O = 0  # O 표시의 대응값
         self.mark_X = 1  # X 표시의 대응값
-        self.mark_dict = {0: 'Mark O', 1: 'Mark X'}
         self.player = 0  # player의 타입을 설정하는 멤버
         self.board_size = 9  # 3x3 보드 사이즈
         # 관찰 공간 정의: [순서, 보드]: [1~2, 0~8]
@@ -76,9 +74,10 @@ class TicTacToeEnv(gym.Env):
         self.action_space = self.observation_space  # 액션 공간 == 관찰 공간
         self.viewer = None  # 뷰어 초기화
         self.state = None  # 상태 초기화
-        self.done = False
+        self.done = False  # 진행상태 초기화
         self.first_turn = self.mark_O  # 첫턴은 O
         self._seed()  # 랜덤 시드 설정하는 함수 호출
+        # _렌더 메소드에 사용할 뷰의 좌표 딕트
         self.render_loc = {0: (50, 250), 1: (150, 250), 2: (250, 250),
                            3: (50, 150), 4: (150, 150), 5: (250, 150),
                            6: (50, 50), 7: (150, 50), 8: (250, 50)}
@@ -88,7 +87,7 @@ class TicTacToeEnv(gym.Env):
         return [seed]
 
     def _reset(self):  # 상태 리셋 함수
-        self.done = False
+        self.done = False  # 안끝남
         # 상태 리셋: [턴, [보드 상태:9개 배열]] 리스트
         self.state = [self.first_turn, np.zeros(self.board_size, 'int32')]
         print('state reset')
@@ -96,25 +95,25 @@ class TicTacToeEnv(gym.Env):
 
     def _step(self, action):
         """한번의 행동에 환경의 변수들이 어떻게 변하는지 정하는 함수
-            승부가 나면 _reset()을 호출하여 환경을 초기화 해야 함
+            승부가 나면 reset()을 호출(메소드 내부 또는 에이전트)하여 환경을 초기화 해야 함
             action을 받아서 (state, reward, done, info)인 튜플 리턴
 
-        Args:
-             list: action
+        인풋:
+            list: action
 
-        Return:
+        아웃풋:
             list: state
              int: reward
             bool: done
             dict: info
         """
         action_mark = action[0]  # 액션 주체 인덱스
-        action_target = action[1]  # 액션 타겟 좌표
-        state_turn = self.state[0]
-        state_loc = self.state[1][action_target]
-        # 들어온 액션의 주체가 상태의 턴과 같고, 상태 보드가 비어있는 경우
+        action_target = action[1]  # 액션 타겟 위치
+        state_turn = self.state[0]   # 상태의 턴
+        state_loc = self.state[1][action_target]   # 액션 타겟인 보드의 위치
+        # 들어온 액션의 주체가 상태의 턴과 같고, 액션 타겟의 상태 보드가 비어있는 경우
         if action_mark == state_turn and state_loc == 0:
-            # 액션 요청 자리에 해당 턴의 인덱스+1를 넣는다
+            # 액션 요청 자리에 해당 턴값+1 넣는다
             self.state[1][action_target] = action_mark + 1
 
             check_state = check_win(self.state)  # 승부 체크 리턴:[액션 주체, 결과]
@@ -153,19 +152,21 @@ class TicTacToeEnv(gym.Env):
         else:  # 액션 자리가 이미 차있으면
             print('Overlab Lose')  # 반칙패
             reward = -1  # 보상 -1
-            self.done = True
+            self.done = True  # 게임 끝
             return self.state, reward, self.done, {}
 
     def _render(self, mode='human', close=False):  # 현재 상태를 그려주는 함수
-        if close:
-            if self.viewer is not None:
-                self.viewer.close()
-                self.viewer = None
+        if close:   # 클로즈값이 참인데
+            if self.viewer is not None:  # 뷰어가 비어있지 않으면
+                self.viewer.close()   # 뷰어를 닫고
+                self.viewer = None   # 뷰어 초기화
             return
 
-        if self.viewer is None:
+        if self.viewer is None:  # 뷰어가 비어 있으면 만들어라
+            from gym.envs.classic_control import rendering  # 렌더링 모듈
+            # 캔버스 역할의 뷰어 초기화
             self.viewer = rendering.Viewer(300, 300)
-
+            # 선긋기 (시작점좌표, 끝점좌표), 색정하기 (r, g, b)
             self.line_1 = rendering.Line((0, 100), (300, 100))
             self.line_1.set_color(0, 0, 0)
             self.line_2 = rendering.Line((0, 200), (300, 200))
@@ -174,14 +175,16 @@ class TicTacToeEnv(gym.Env):
             self.line_a.set_color(0, 0, 0)
             self.line_b = rendering.Line((200, 0), (200, 300))
             self.line_b.set_color(0, 0, 0)
-
+            # 뷰어에 줄 붙이기
             self.viewer.add_geom(self.line_1)
             self.viewer.add_geom(self.line_2)
             self.viewer.add_geom(self.line_a)
             self.viewer.add_geom(self.line_b)
-
+            # O,X 이미지 생성
             self.image_O1 = rendering.Image("img/O.png", 96, 96)
+            # 위치 컨트롤 하는 놈
             self.trans_O1 = rendering.Transform(self.render_loc[0])
+            # 이놈을 이미지에 붙임 (이미지를 뷰어에 붙이기 전까진 표현안됨)
             self.image_O1.add_attr(self.trans_O1)
 
             self.image_O2 = rendering.Image("img/O.png", 96, 96)
@@ -250,10 +253,12 @@ class TicTacToeEnv(gym.Env):
             self.image_X9 = rendering.Image("img/X.png", 96, 96)
             self.trans_X9 = rendering.Transform(self.render_loc[8])
             self.image_X9.add_attr(self.trans_X9)
-
+            # 상태를 카피해서 받아오기
             state = self.state.copy()
+            # 상태보드의 자리마다 번호를 붙여서 합친후 딕트로! zip 꿀!
             map_dict = dict(zip([0, 1, 2, 3, 4, 5, 6, 7, 8], state[1]))
 
+            # 이 딕트의 키마다 1,2,0을 확인하여 해당하는 이미지 뷰어에 붙여라
             if 0 in map_dict.keys():
                 if map_dict[0] == 1:
                     self.viewer.add_geom(self.image_O1)
@@ -307,7 +312,7 @@ class TicTacToeEnv(gym.Env):
                     self.viewer.add_geom(self.image_O9)
                 elif map_dict[8] == 2:
                     self.viewer.add_geom(self.image_X9)
-
+        # 뷰어를 렌더해서 리턴해라 rgb배열 모드임
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
 
@@ -318,7 +323,7 @@ env.seed()
 env.reset()
 env.player = 0  # 나는 동그라미!
 
-for i in range(1000):
+for i in range(10000):
     action = [i % 2, env.action_space[1].sample()]
     observation, reward, done, info = env.step(action)
     print(reward)
