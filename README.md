@@ -59,9 +59,10 @@
 
 
 	에피소드가 끝나면 호출되는 메소드, state 반환!
+	reset()으로 에이전트가 호출가능
 	state 초기화
 	done 초기화
-	리턴 state 
+	return self.state 
 
 \_step(self, action)
 
