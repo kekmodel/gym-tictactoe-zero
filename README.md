@@ -1,6 +1,7 @@
+
 # TicTacToe
 ![tictactoe](./img/Tic_Tac_Toe.gif)
----
+----------------------------
 ### <일반인이 도전해보는 강화학습>
 ## 첫번째 프로젝트: gym 기반으로 틱택토 환경 만들어 보기
 -----------------------
@@ -16,20 +17,20 @@
 
 ### gym 기본 임포트 모듈
 
-
 	import logging  로그 생성용인듯 사용법 아직 모름
 	import gym
 	from gym import spaces 공간 정의 도와줌
 	from gym.utils import seeding 시드생성에 사용
-	import numpy as np  C배열을 사용하게 해줌 우리의 꿈과 희망
+	import numpy as np  C의 배열을 사용하게 해줌 우리의 꿈과 희망
 
 환경 클래스는 gym.Env를 상속받아 구성함
 	
 	class myEnv(gym.Env):
-	metadata = {'render.modes': ['human', 'rgb_array'], 'video.frames_per_second': 60}
+		metadata = {'render.modes': ['human', 'rgb_array'], 
+				'video.frames_per_second': 60}
 		
-메타데이타는 render()의 리턴 타입 구분? 사람 눈으로 볼거고 rgb값 60프레임
-어떻게 작용하는진 모르겠음
+메타데이타는 render()의 리턴 타입 구분? 사람 눈으로 볼거고 rgb값 60프레임으로 잡음
+어떻게 작용는진 모르겠음
 
 ### 필수 정의 메소드들
 
