@@ -1,4 +1,5 @@
 # TicTacToe
+![tictactoe](./img/Tic_Tac_Toe.gif)
 
 일반인이 도전해보는 강화학습 공부
 
