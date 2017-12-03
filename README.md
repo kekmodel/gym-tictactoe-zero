@@ -36,9 +36,9 @@
 
 ### 필수 정의 메소드들
 
-\__init__(self)
+\__init\__(self)
 
-
+	클래스 초기화 메소드
 	멤버로 observation_space, action_space 정의
 	정의방법은 from gym import spaces하여 spaces의 Disccrete로 정수타입을 Box로는 여러차원의 실수타입을 정의할때 사용함
 	그러면 .sample()로 랜덤값 반환 가능
