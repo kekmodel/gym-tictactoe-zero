@@ -1,8 +1,8 @@
 # TicTacToe
 ![tictactoe](./img/Tic_Tac_Toe.gif)
 ---
-## <일반인이 도전해보는 강화학습>
-### 첫번째 프로젝트: gym 기반으로 틱택토 환경 만들어 보기
+### <일반인이 도전해보는 강화학습>
+## 첫번째 프로젝트: gym 기반으로 틱택토 환경 만들어 보기
 -----------------------
 다음 프로젝트: 내가 만든 환경에서 강화학습 에이전트 구현
 
@@ -24,11 +24,11 @@
 	import numpy as np  C배열을 사용하게 해줌 우리의 꿈과 희망
 
 환경 클래스는 gym.Env를 상속받아 구성함
+	
+	class myEnv(gym.Env):
+	metadata = {'render.modes': ['human', 'rgb_array'], 'video.frames_per_second': 60}
 		
-		metadata = {'render.modes': ['human', 'rgb_array'],
-                'video.frames_per_second': 60}
-		
-render()의 리턴 타입 구분? 사람 눈으로 볼거고 rgb값 60프레임
+메타데이타는 render()의 리턴 타입 구분? 사람 눈으로 볼거고 rgb값 60프레임
 어떻게 작용하는진 모르겠음
 
 ### 필수 정의 메소드들
@@ -85,10 +85,12 @@ render()의 리턴 타입 구분? 사람 눈으로 볼거고 rgb값 60프레임
             return
 로 시작하는데 없어도 될 것 같아서 없애면 에러남 왜지?
 
+본론부분
 
 	if self.viewer is None:
 	...
 	아래에 self.viewer 정의
+
 
 rendering 모듈
 
@@ -141,7 +143,8 @@ rendering 모듈
 
 	마찬가지로 self.viewer.add_geom(대상객체)
 
-### 코딩  
+
+### 코딩일기
 클래스 
  
  
@@ -158,9 +161,7 @@ rendering 모듈
 
  numpy
  
- 
-	우리의 꿈과 희망
-	C의 배열을 사용가능하게 함 
+  
 	같은 타입만 들어갈 수 있음
 	np.zeros((행수, 열수), '타입') 으로 초기화!
 	np.where(배열 == 1)
@@ -176,6 +177,7 @@ rendering 모듈
  
 	함수의 리턴 타입을 신경쓰자
 	for, if 문은 탈출조건이 없을 시 아래로 흐름?
+	스레 공부 필요함
 
  리스트
  
