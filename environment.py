@@ -68,7 +68,7 @@ class TicTacToeEnv(gym.Env):
         self.mark_X = 1  # X 표시의 대응값
         self.player = 0  # player의 타입을 설정하는 멤버
         self.board_size = 9  # 3x3 보드 사이즈
-        # 관찰 공간 정의: [순서, 보드]: [1~2, 0~8]
+        # 관찰 공간 정의: [순서, 보드]: [0~1, 0~8]
         self.observation_space = np.array(
             [spaces.Discrete(2), spaces.Discrete(9)])
         self.action_space = self.observation_space  # 액션 공간 == 관찰 공간
