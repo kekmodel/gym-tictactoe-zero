@@ -1,12 +1,12 @@
-import logging
+import logging  # 로그 제공 모듈
 import gym
-from gym import spaces
-from gym.utils import seeding
-import numpy as np
-import time
+from gym import spaces   # 공간 정의 클래스
+from gym.utils import seeding   # 시드 제공 클래스
+import numpy as np   # 배열제공 모듈
+import time   # 테스트용
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)   # 다들 하길래;; 로그 접근용?
 
 
 def check_win(state):  # state 승패체크 함수
@@ -18,9 +18,9 @@ def check_win(state):  # state 승패체크 함수
                             np.array([3, 3, 3, 1, 1, 1, 3, 3, 3]),
                             np.array([3, 3, 3, 3, 3, 3, 1, 1, 1]),
                             np.array([1, 3, 3, 1, 3, 3, 1, 3, 3]),
-                            np.array([1, 3, 3, 1, 3, 3, 1, 3, 3]),
-                            np.array([3, 1, 3, 3, 1, 3, 3, 1, 3]),
                             np.array([3, 3, 1, 3, 3, 1, 3, 3, 1]),
+                            np.array([3, 1, 3, 3, 1, 3, 3, 1, 3]),
+                            np.array([3, 3, 1, 3, 1, 3, 1, 3, 3]),
                             np.array([1, 3, 3, 3, 1, 3, 3, 3, 1])])
     if current_state[0] == 0:
         # 현재 보드에서 1이 표시된 인덱스를 받아와서 loc_mark_O의 같은 자리에 1을 넣기 나머진 0
@@ -60,7 +60,7 @@ class TicTacToeEnv(gym.Env):
     """
     # _render()의 리턴 타입 구분: 사람 눈으로 볼거고 rgb값 60프레임으로
     metadata = {'render.modes': ['human', 'rgb_array'],
-                'video.frames_per_second': 1}
+                'video.frames_per_second': 60}
     reward_range = (-1, 0, 1)  # 보상의 범위 참고: 패배:-1, 무승부:0, 승리:1
 
     def __init__(self):
@@ -90,6 +90,7 @@ class TicTacToeEnv(gym.Env):
         self.done = False  # 안끝남
         # 상태 리셋: [턴, [보드 상태:9개 배열]] 리스트
         self.state = [self.first_turn, np.zeros(self.board_size, 'int32')]
+        self.viewer = None   # 뷰어리셋
         print('state reset')
         return self.state  # 상태 리스트 리턴
 
@@ -193,6 +194,7 @@ class TicTacToeEnv(gym.Env):
 
             self.image_O3 = rendering.Image("img/O.png", 96, 96)
             self.trans_O3 = rendering.Transform(self.render_loc[2])
+            self.image_O3.add_attr(self.trans_O3)
 
             self.image_O4 = rendering.Image("img/O.png", 96, 96)
             self.trans_O4 = rendering.Transform(self.render_loc[3])
@@ -307,7 +309,8 @@ class TicTacToeEnv(gym.Env):
         # 뷰어를 렌더해서 리턴해라 rgb배열 모드임
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
-'''
+
+''' 
 # 테스트 용
 env = TicTacToeEnv()
 env.seed()
@@ -315,48 +318,84 @@ env.reset()
 env.player = 0  # 나는 동그라미!
 print(env.state)
 
-action = [0, 6]
-observation, reward, done, info = env.step(action)
+action = [env.state[0], 4]
+state, reward, done, info = env.step(action)
 print(reward)
-print(observation)
+print(state)
 env.render()
-time.sleep(3)
+time.sleep(1)
 if done:
+    time.sleep(3)
     env.reset()
 
-action = [1, 2]
-observation, reward, done, info = env.step(action)
+action = [env.state[0], 5]
+state, reward, done, info = env.step(action)
 print(reward)
-print(observation)
+print(state)
 env.render()
-time.sleep(3)
+time.sleep(1)
 if done:
+    time.sleep(3)
     env.reset()
 
-action = [0, 3]
-observation, reward, done, info = env.step(action)
+action = [env.state[0], 0]
+state, reward, done, info = env.step(action)
 print(reward)
-print(observation)
+print(state)
 env.render()
-time.sleep(3)
+time.sleep(1)
 if done:
+    time.sleep(3)
     env.reset()
 
-action = [1, 8]
-observation, reward, done, info = env.step(action)
+action = [env.state[0], 8]
+state, reward, done, info = env.step(action)
 print(reward)
-print(observation)
+print(state)
 env.render()
-time.sleep(3)
+time.sleep(1)
 if done:
+    time.sleep(3)
     env.reset()
 
-action = [0, 0]
-observation, reward, done, info = env.step(action)
+action = [env.state[0], 2]
+state, reward, done, info = env.step(action)
 print(reward)
-print(observation)
+print(state)
 env.render()
-time.sleep(3)
+time.sleep(1)
 if done:
+    time.sleep(3)
     env.reset()
+
+action = [env.state[0], 7]
+state, reward, done, info = env.step(action)
+print(reward)
+print(state)
+env.render()
+time.sleep(1)
+if done:
+    time.sleep(3)
+    env.reset()
+
+action = [env.state[0], 6]
+state, reward, done, info = env.step(action)
+print(reward)
+print(state)
+env.render()
+time.sleep(1)
+if done:
+    time.sleep(3)
+    env.reset()
+'''
+''' 반복문 테스트
+for i in range(100):
+    action = [env.state[0], env.action_space[1].sample()]
+    state, reward, done, info = env.step(action)
+    print(reward)
+    print(state)
+    env.render()
+    if done:
+        time.sleep(3)
+        env.reset()
 '''
