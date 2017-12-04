@@ -2,7 +2,9 @@ import logging
 import gym
 from gym import spaces
 from gym.utils import seeding
-import numpy as np  # c의 array 지원
+import numpy as np
+import time
+
 
 logger = logging.getLogger(__name__)
 
@@ -21,12 +23,10 @@ def check_win(state):  # state 승패체크 함수
                             np.array([3, 3, 1, 3, 3, 1, 3, 3, 1]),
                             np.array([1, 3, 3, 3, 1, 3, 3, 3, 1])])
     if current_state[0] == 0:
-        print(current_state)
         # 현재 보드에서 1이 표시된 인덱스를 받아와서 loc_mark_O의 같은 자리에 1을 넣기 나머진 0
         loc_mark_O[np.where(current_state[1] == 1)] = 1
         batch_state = [current_state[0], loc_mark_O]  # 승패를 필터링할 상태로 전처리
     else:
-        print(current_state)  # 현재 상태 확인
         # 현재 보드에서 2가 표시된 인덱스를 받아와서 loc_mark_X의 같은 자리에 1을 넣기 나머진 0
         loc_mark_X[np.where(current_state[1] == 2)] = 1
         batch_state = [current_state[0], loc_mark_X]  # 전처리 완료
@@ -60,7 +60,7 @@ class TicTacToeEnv(gym.Env):
     """
     # _render()의 리턴 타입 구분: 사람 눈으로 볼거고 rgb값 60프레임으로
     metadata = {'render.modes': ['human', 'rgb_array'],
-                'video.frames_per_second': 60}
+                'video.frames_per_second': 1}
     reward_range = (-1, 0, 1)  # 보상의 범위 참고: 패배:-1, 무승부:0, 승리:1
 
     def __init__(self):
@@ -162,7 +162,7 @@ class TicTacToeEnv(gym.Env):
                 self.viewer = None   # 뷰어 초기화
             return
 
-        if self.viewer is None:  # 뷰어가 비어 있으면 만들어라
+        if self.viewer is None:
             from gym.envs.classic_control import rendering  # 렌더링 모듈
             # 캔버스 역할의 뷰어 초기화
             self.viewer = rendering.Viewer(300, 300)
@@ -253,80 +253,110 @@ class TicTacToeEnv(gym.Env):
             self.image_X9 = rendering.Image("img/X.png", 96, 96)
             self.trans_X9 = rendering.Transform(self.render_loc[8])
             self.image_X9.add_attr(self.trans_X9)
-            # 상태를 카피해서 받아오기
-            state = self.state.copy()
-            # 상태보드의 자리마다 번호를 붙여서 합친후 딕트로! zip 꿀!
-            map_dict = dict(zip([0, 1, 2, 3, 4, 5, 6, 7, 8], state[1]))
 
-            # 이 딕트의 키마다 1,2,0을 확인하여 해당하는 이미지 뷰어에 붙여라
-            if 0 in map_dict.keys():
-                if map_dict[0] == 1:
-                    self.viewer.add_geom(self.image_O1)
-                elif map_dict[0] == 2:
-                    self.viewer.add_geom(self.image_X1)
+        # 상태를 카피해서 받아오기
+        state = self.state.copy()
+        # 상태보드의 자리마다 번호를 붙여서 합친후 딕트로! zip 꿀!
+        map_dict = dict(zip([0, 1, 2, 3, 4, 5, 6, 7, 8], state[1]))
 
-            if 1 in map_dict.keys():
-                if map_dict[1] == 1:
-                    self.viewer.add_geom(self.image_O2)
-                elif map_dict[1] == 2:
-                    self.viewer.add_geom(self.image_X2)
+        # 이 딕트의 키마다 1,2가 있는지 확인하여 해당하는 이미지 뷰어에 붙여라
+        if map_dict[0] == 1:
+            self.viewer.add_geom(self.image_O1)
+        elif map_dict[0] == 2:
+            self.viewer.add_geom(self.image_X1)
 
-            if 2 in map_dict.keys():
-                if map_dict[2] == 1:
-                    self.viewer.add_geom(self.image_O3)
-                elif map_dict[2] == 2:
-                    self.viewer.add_geom(self.image_X3)
+        if map_dict[1] == 1:
+            self.viewer.add_geom(self.image_O2)
+        elif map_dict[1] == 2:
+            self.viewer.add_geom(self.image_X2)
 
-            if 3 in map_dict.keys():
-                if map_dict[3] == 1:
-                    self.viewer.add_geom(self.image_O4)
-                elif map_dict[3] == 2:
-                    self.viewer.add_geom(self.image_X4)
+        if map_dict[2] == 1:
+            self.viewer.add_geom(self.image_O3)
+        elif map_dict[2] == 2:
+            self.viewer.add_geom(self.image_X3)
 
-            if 4 in map_dict.keys():
-                if map_dict[4] == 1:
-                    self.viewer.add_geom(self.image_O5)
-                elif map_dict[4] == 2:
-                    self.viewer.add_geom(self.image_X5)
+        if map_dict[3] == 1:
+            self.viewer.add_geom(self.image_O4)
+        elif map_dict[3] == 2:
+            self.viewer.add_geom(self.image_X4)
 
-            if 5 in map_dict.keys():
-                if map_dict[5] == 1:
-                    self.viewer.add_geom(self.image_O6)
-                elif map_dict[5] == 2:
-                    self.viewer.add_geom(self.image_X6)
+        if map_dict[4] == 1:
+            self.viewer.add_geom(self.image_O5)
+        elif map_dict[4] == 2:
+            self.viewer.add_geom(self.image_X5)
 
-            if 6 in map_dict.keys():
-                if map_dict[6] == 1:
-                    self.viewer.add_geom(self.image_O7)
-                elif map_dict[6] == 2:
-                    self.viewer.add_geom(self.image_X7)
+        if map_dict[5] == 1:
+            self.viewer.add_geom(self.image_O6)
+        elif map_dict[5] == 2:
+            self.viewer.add_geom(self.image_X6)
 
-            if 7 in map_dict.keys():
-                if map_dict[7] == 1:
-                    self.viewer.add_geom(self.image_O8)
-                elif map_dict[7] == 2:
-                    self.viewer.add_geom(self.image_X8)
+        if map_dict[6] == 1:
+            self.viewer.add_geom(self.image_O7)
+        elif map_dict[6] == 2:
+            self.viewer.add_geom(self.image_X7)
 
-            if 8 in map_dict.keys():
-                if map_dict[8] == 1:
-                    self.viewer.add_geom(self.image_O9)
-                elif map_dict[8] == 2:
-                    self.viewer.add_geom(self.image_X9)
+        if map_dict[7] == 1:
+            self.viewer.add_geom(self.image_O8)
+        elif map_dict[7] == 2:
+            self.viewer.add_geom(self.image_X8)
+
+        if map_dict[8] == 1:
+            self.viewer.add_geom(self.image_O9)
+        elif map_dict[8] == 2:
+            self.viewer.add_geom(self.image_X9)
         # 뷰어를 렌더해서 리턴해라 rgb배열 모드임
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
-
-# 테스트 용
 '''
+# 테스트 용
 env = TicTacToeEnv()
 env.seed()
 env.reset()
 env.player = 0  # 나는 동그라미!
+print(env.state)
 
-for i in range(10000):
-    action = [i % 2, env.action_space[1].sample()]
-    observation, reward, done, info = env.step(action)
-    print(reward)
-    if done:
-        env.reset()
+action = [0, 6]
+observation, reward, done, info = env.step(action)
+print(reward)
+print(observation)
+env.render()
+time.sleep(3)
+if done:
+    env.reset()
+
+action = [1, 2]
+observation, reward, done, info = env.step(action)
+print(reward)
+print(observation)
+env.render()
+time.sleep(3)
+if done:
+    env.reset()
+
+action = [0, 3]
+observation, reward, done, info = env.step(action)
+print(reward)
+print(observation)
+env.render()
+time.sleep(3)
+if done:
+    env.reset()
+
+action = [1, 8]
+observation, reward, done, info = env.step(action)
+print(reward)
+print(observation)
+env.render()
+time.sleep(3)
+if done:
+    env.reset()
+
+action = [0, 0]
+observation, reward, done, info = env.step(action)
+print(reward)
+print(observation)
+env.render()
+time.sleep(3)
+if done:
+    env.reset()
 '''
