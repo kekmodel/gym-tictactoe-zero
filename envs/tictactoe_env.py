@@ -3,7 +3,6 @@ import gym
 from gym import spaces   # 공간 정의 클래스
 from gym.utils import seeding   # 시드 제공 클래스
 import numpy as np   # 배열제공 모듈
-import time   # 테스트용
 
 
 logger = logging.getLogger(__name__)   # 다들 하길래;; 로그 접근용?
@@ -11,8 +10,8 @@ logger = logging.getLogger(__name__)   # 다들 하길래;; 로그 접근용?
 
 def check_win(state):  # state 승패체크 함수
     current_state = state.copy()   # 상태 리스트를 카피
-    loc_mark_O = np.zeros(9, 'int32')  # 승패체크 전처리용 배열: O용
-    loc_mark_X = np.zeros(9, 'int32')  # X용
+    loc_mark_O = np.zeros(9, 'int')  # 승패체크 전처리용 배열: O용
+    loc_mark_X = np.zeros(9, 'int')  # X용
     # 승리패턴 8가지 구성
     win_pattern = np.array([np.array([1, 1, 1, 3, 3, 3, 3, 3, 3]),
                             np.array([3, 3, 3, 1, 1, 1, 3, 3, 3]),
@@ -32,7 +31,7 @@ def check_win(state):  # state 승패체크 함수
         batch_state = [current_state[0], loc_mark_X]  # 전처리 완료
 
     # 전처리한 보드와 승리패턴 8가지와 비교하여 해당 정보 리턴
-    judge = np.zeros((8, 9), 'int32')  # 비교 결과를 넣은 8*9 배열 초기화
+    judge = np.zeros((8, 9), 'int')  # 비교 결과를 넣은 8*9 배열 초기화
     for i in range(8):   # 각각의 값을 비교해서
         for k in range(9):
             if batch_state[1][k] == win_pattern[i][k]:   # 일치하는 자리엔 1을 넣고
@@ -68,19 +67,15 @@ class TicTacToeEnv(gym.Env):
         self.mark_X = 1  # X 표시의 대응값
         self.player = 0  # player의 타입을 설정하는 멤버
         self.board_size = 9  # 3x3 보드 사이즈
-        # 관찰 공간 정의: [순서, 보드]: [0~1, 0~8]
-        self.observation_space = np.array(
-            [spaces.Discrete(2), spaces.Discrete(9)])
-        self.action_space = self.observation_space  # 액션 공간 == 관찰 공간
+        # 관찰 공간 정의: 보드 공간 9칸 0~8
+        self.observation_space = spaces.Discrete(9)
+        # 액션 공간 = 관찰 공간
+        self.action_space = self.observation_space
         self.viewer = None  # 뷰어 초기화
         self.state = None  # 상태 초기화
         self.done = False  # 진행상태 초기화
         self.first_turn = self.mark_O  # 첫턴은 O
         self._seed()  # 랜덤 시드 설정하는 함수 호출
-        # _렌더 메소드에 사용할 뷰의 좌표 딕트
-        self.render_loc = {0: (50, 250), 1: (150, 250), 2: (250, 250),
-                           3: (50, 150), 4: (150, 150), 5: (250, 150),
-                           6: (50, 50), 7: (150, 50), 8: (250, 50)}
 
     def _seed(self, seed=None):  # 랜덤 시드 설정 함수: 한 에피소드 동안 유지하기 위함
         self.np_random, seed = seeding.np_random(seed)
@@ -89,7 +84,7 @@ class TicTacToeEnv(gym.Env):
     def _reset(self):  # 상태 리셋 함수
         self.done = False  # 안끝남
         # 상태 리셋: [턴, [보드 상태:9개 배열]] 리스트
-        self.state = [self.first_turn, np.zeros(self.board_size, 'int32')]
+        self.state = [self.first_turn, np.zeros(self.board_size, 'int')]
         self.viewer = None   # 뷰어리셋
         print('state reset')
         return self.state  # 상태 리스트 리턴
@@ -165,6 +160,10 @@ class TicTacToeEnv(gym.Env):
 
         if self.viewer is None:
             from gym.envs.classic_control import rendering  # 렌더링 모듈
+            # _렌더 메소드에 사용할 뷰의 좌표 딕트
+            self.render_loc = {0: (50, 250), 1: (150, 250), 2: (250, 250),
+                               3: (50, 150), 4: (150, 150), 5: (250, 150),
+                               6: (50, 50), 7: (150, 50), 8: (250, 50)}
             # 캔버스 역할의 뷰어 초기화
             self.viewer = rendering.Viewer(300, 300)
             # 선긋기 (시작점좌표, 끝점좌표), 색정하기 (r, g, b)
@@ -310,14 +309,16 @@ class TicTacToeEnv(gym.Env):
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
 
-# 테스트
 if __name__ == "__main__":
     env = TicTacToeEnv()
-    env.seed()
     env.reset()
     env.player = 0  # 나는 동그라미!
     print(env.state)
-
+    action = env.action_space.sample()
+    observation = env.observation_space.sample()
+    print(observation, action)
+'''
+    import time   # 테스트용
     action = [env.state[0], 4]
     state, reward, done, info = env.step(action)
     print(reward)
@@ -388,7 +389,7 @@ if __name__ == "__main__":
         time.sleep(1)
         env.reset()
 
-''' 반복문 테스트
+    # 반복문 테스트
     for i in range(100):
         action = [env.state[0], env.action_space[1].sample()]
         state, reward, done, info = env.step(action)
