@@ -67,10 +67,11 @@ class TicTacToeEnv(gym.Env):
         self.mark_X = 1  # X 표시의 대응값
         self.player = 0  # player의 타입을 설정하는 멤버
         self.board_size = 9  # 3x3 보드 사이즈
-        # 관찰 공간 정의: 보드 공간 9칸 0~8
-        self.observation_space = spaces.Discrete(9)
-        # 액션 공간 = 관찰 공간
-        self.action_space = self.observation_space
+        # 관찰 공간 정의: [턴: 0~1, 보드 공간 0~8]
+        self.observation_space = np.array(
+            [spaces.Discrete(2), spaces.Discrete(9)])
+        # 액션 공간: 0~8
+        self.action_space = spaces.Discrete(9)
         self.viewer = None  # 뷰어 초기화
         self.state = None  # 상태 초기화
         self.done = False  # 진행상태 초기화
@@ -86,7 +87,6 @@ class TicTacToeEnv(gym.Env):
         # 상태 리셋: [턴, [보드 상태:9개 배열]] 리스트
         self.state = [self.first_turn, np.zeros(self.board_size, 'int')]
         self.viewer = None   # 뷰어리셋
-        print('state reset')
         return self.state  # 상태 리스트 리턴
 
     def _step(self, action):
@@ -309,6 +309,7 @@ class TicTacToeEnv(gym.Env):
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
 
+'''
 if __name__ == "__main__":
     env = TicTacToeEnv()
     env.reset()
@@ -317,7 +318,7 @@ if __name__ == "__main__":
     action = env.action_space.sample()
     observation = env.observation_space.sample()
     print(observation, action)
-'''
+
     import time   # 테스트용
     action = [env.state[0], 4]
     state, reward, done, info = env.step(action)
