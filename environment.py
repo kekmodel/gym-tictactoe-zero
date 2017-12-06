@@ -310,92 +310,92 @@ class TicTacToeEnv(gym.Env):
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
 
-''' 
-# 테스트 용
-env = TicTacToeEnv()
-env.seed()
-env.reset()
-env.player = 0  # 나는 동그라미!
-print(env.state)
-
-action = [env.state[0], 4]
-state, reward, done, info = env.step(action)
-print(reward)
-print(state)
-env.render()
-time.sleep(1)
-if done:
-    time.sleep(3)
+# 테스트
+if __name__ == "__main__":
+    env = TicTacToeEnv()
+    env.seed()
     env.reset()
+    env.player = 0  # 나는 동그라미!
+    print(env.state)
 
-action = [env.state[0], 5]
-state, reward, done, info = env.step(action)
-print(reward)
-print(state)
-env.render()
-time.sleep(1)
-if done:
-    time.sleep(3)
-    env.reset()
-
-action = [env.state[0], 0]
-state, reward, done, info = env.step(action)
-print(reward)
-print(state)
-env.render()
-time.sleep(1)
-if done:
-    time.sleep(3)
-    env.reset()
-
-action = [env.state[0], 8]
-state, reward, done, info = env.step(action)
-print(reward)
-print(state)
-env.render()
-time.sleep(1)
-if done:
-    time.sleep(3)
-    env.reset()
-
-action = [env.state[0], 2]
-state, reward, done, info = env.step(action)
-print(reward)
-print(state)
-env.render()
-time.sleep(1)
-if done:
-    time.sleep(3)
-    env.reset()
-
-action = [env.state[0], 7]
-state, reward, done, info = env.step(action)
-print(reward)
-print(state)
-env.render()
-time.sleep(1)
-if done:
-    time.sleep(3)
-    env.reset()
-
-action = [env.state[0], 6]
-state, reward, done, info = env.step(action)
-print(reward)
-print(state)
-env.render()
-time.sleep(1)
-if done:
-    time.sleep(3)
-    env.reset()
-'''
-''' 반복문 테스트
-for i in range(100):
-    action = [env.state[0], env.action_space[1].sample()]
+    action = [env.state[0], 4]
     state, reward, done, info = env.step(action)
     print(reward)
     print(state)
     env.render()
+    time.sleep(1)
     if done:
         time.sleep(3)
         env.reset()
+
+    action = [env.state[0], 5]
+    state, reward, done, info = env.step(action)
+    print(reward)
+    print(state)
+    env.render()
+    time.sleep(1)
+    if done:
+        time.sleep(3)
+        env.reset()
+
+    action = [env.state[0], 0]
+    state, reward, done, info = env.step(action)
+    print(reward)
+    print(state)
+    env.render()
+    time.sleep(1)
+    if done:
+        time.sleep(3)
+        env.reset()
+
+    action = [env.state[0], 8]
+    state, reward, done, info = env.step(action)
+    print(reward)
+    print(state)
+    env.render()
+    time.sleep(1)
+    if done:
+        time.sleep(3)
+        env.reset()
+
+    action = [env.state[0], 2]
+    state, reward, done, info = env.step(action)
+    print(reward)
+    print(state)
+    env.render()
+    time.sleep(1)
+    if done:
+        time.sleep(3)
+        env.reset()
+
+    action = [env.state[0], 7]
+    state, reward, done, info = env.step(action)
+    print(reward)
+    print(state)
+    env.render()
+    time.sleep(1)
+    if done:
+        time.sleep(3)
+        env.reset()
+
+    action = [env.state[0], 6]
+    state, reward, done, info = env.step(action)
+    print(reward)
+    print(state)
+    env.render()
+    time.sleep(1)
+    if done:
+        time.sleep(1)
+        env.reset()
+
+''' 반복문 테스트
+    for i in range(100):
+        action = [env.state[0], env.action_space[1].sample()]
+        state, reward, done, info = env.step(action)
+        print(reward)
+        print(state)
+        env.render()
+        if done:
+            time.sleep(3)
+            env.reset()
 '''
