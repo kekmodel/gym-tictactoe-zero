@@ -1,7 +1,7 @@
 
 class RandomAgent(object):
-    def __init__(self, env):
-        self.action_space = env.action_space
+    def __init__(self, action_space):
+        self.action_space = action_space
 
     def act(self, state):
         while True:
