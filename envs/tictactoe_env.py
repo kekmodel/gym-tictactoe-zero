@@ -8,52 +8,6 @@ import numpy as np   # 배열 제공 모듈
 logger = logging.getLogger(__name__)   # 실행 로그 남기기
 
 
-def check_win(state):  # state 승패체크 함수
-    current_state = state.copy()   # 상태 리스트를 카피
-    loc_mark_O = np.zeros(9, 'int')  # 승패체크 전처리용 배열: O용
-    loc_mark_X = np.zeros(9, 'int')  # X용
-    # 승리패턴 8가지 구성 (1:내 돌이 있는 곳, 3: 내 돌이 없는 곳)
-    win_pattern = np.array([np.array([1, 1, 1, 3, 3, 3, 3, 3, 3]),
-                            np.array([3, 3, 3, 1, 1, 1, 3, 3, 3]),
-                            np.array([3, 3, 3, 3, 3, 3, 1, 1, 1]),
-                            np.array([1, 3, 3, 1, 3, 3, 1, 3, 3]),
-                            np.array([3, 3, 1, 3, 3, 1, 3, 3, 1]),
-                            np.array([3, 1, 3, 3, 1, 3, 3, 1, 3]),
-                            np.array([3, 3, 1, 3, 1, 3, 1, 3, 3]),
-                            np.array([1, 3, 3, 3, 1, 3, 3, 3, 1])])
-    # 전처리 과정 (상대돌을 제외한 내 돌이 있는 자리만 1을 넣음)
-    if current_state[0] == 0:
-        # 현재 보드에서 1(마크O)이 표시된 인덱스를 받아와서 그 자리에 1을 넣기 나머진 0
-        loc_mark_O[np.where(current_state[1] == 1)] = 1
-        batch_state = [current_state[0], loc_mark_O]  # 승패를 필터링할 상태로 전처리
-    else:
-        # 현재 보드에서 2(마크X)가 표시된 인덱스를 받아와서 그 자리에 1을 넣기 나머진 0
-        loc_mark_X[np.where(current_state[1] == 2)] = 1
-        batch_state = [current_state[0], loc_mark_X]  # 전처리 완료
-
-    # 전처리한 보드와 승리패턴 8가지와 비교하여 해당 정보 리턴
-    judge = np.zeros((8, 9), 'int')  # 비교 결과를 넣을 8*9 배열 초기화
-    for i in range(8):   # 승리 패턴과 각각의 값을 비교해서
-        for k in range(9):
-            if batch_state[1][k] == win_pattern[i][k]:   # 일치하는 자리엔 1을 넣고
-                judge[i][k] = 1
-            else:
-                judge[i][k] = 0   # 아닌 것은 0을 넣어
-        if judge[i].sum() == 3:   # 그 배열을 더 해서 총합이 3이면 승부난 거임
-            mark_type = batch_state[0]  # 그럼 현재 마크를 저장하고
-            match_result = 1   # 승부났음을 저장하고 (1:승부남 0:비김)
-            return [mark_type, match_result]  # 결과를 리턴해라
-        # 승부가 안났는데 현재 상태 꽉찼다면
-        elif np.count_nonzero(current_state[1]) == 9:
-            mark_type = batch_state[0]  # 마지막 마크를 저장하고
-            match_result = 0  # 비김
-            return [mark_type, match_result]  # 결과 리턴
-    # 승부도 안났고 비기지도 않았으면 계속 진행해라
-    mark_type = batch_state[0]
-    mark_result = 2   # 0,1이 아닌 아무 수 (게임 계속 된다는 정보)
-    return [mark_type, mark_result]  # 리턴
-
-
 class TicTacToeEnv(gym.Env):
     """gym.Env를 상속하여 틱택토 게임 환경 클래스 정의
         gym.Env: OpenAI Gym의 주요 클래스, 환경 뒤에서 이루어지는 동작 캡슐화(gym/core.py 참조)
@@ -112,7 +66,7 @@ class TicTacToeEnv(gym.Env):
             self.state[1][action_target] = action_mark + 1
             self.state[2] += 1  # 턴수에 1 더하기
 
-            check_state = check_win(self.state)  # 승부 체크 리턴:[액션 주체, 결과]
+            check_state = self.__check_win(self.state)  # 승부 체크 리턴:[액션 주체, 결과]
 
             # 액션 주체가 플레이어인데 승부가 났다면 플레이어 승리
             if check_state[0] == self.player and check_state[1] == 1:
@@ -151,6 +105,51 @@ class TicTacToeEnv(gym.Env):
             self.done = True  # 게임 끝
             return self.state, reward, self.done, {}
 
+    def __check_win(self, state):  # state 승패체크 함수
+        current_state = state.copy()   # 상태 리스트를 카피
+        loc_mark_O = np.zeros(9, 'int')  # 승패체크 전처리용 배열: O용
+        loc_mark_X = np.zeros(9, 'int')  # X용
+        # 승리패턴 8가지 구성 (1:내 돌이 있는 곳, 3: 내 돌이 없는 곳)
+        win_pattern = np.array([np.array([1, 1, 1, 3, 3, 3, 3, 3, 3]),
+                                np.array([3, 3, 3, 1, 1, 1, 3, 3, 3]),
+                                np.array([3, 3, 3, 3, 3, 3, 1, 1, 1]),
+                                np.array([1, 3, 3, 1, 3, 3, 1, 3, 3]),
+                                np.array([3, 3, 1, 3, 3, 1, 3, 3, 1]),
+                                np.array([3, 1, 3, 3, 1, 3, 3, 1, 3]),
+                                np.array([3, 3, 1, 3, 1, 3, 1, 3, 3]),
+                                np.array([1, 3, 3, 3, 1, 3, 3, 3, 1])])
+        # 전처리 과정 (상대돌을 제외한 내 돌이 있는 자리만 1을 넣음)
+        if current_state[0] == 0:
+            # 현재 보드에서 1(마크O)이 표시된 인덱스를 받아와서 그 자리에 1을 넣기 나머진 0
+            loc_mark_O[np.where(current_state[1] == 1)] = 1
+            batch_state = [current_state[0], loc_mark_O]  # 승패를 필터링할 상태로 전처리
+        else:
+            # 현재 보드에서 2(마크X)가 표시된 인덱스를 받아와서 그 자리에 1을 넣기 나머진 0
+            loc_mark_X[np.where(current_state[1] == 2)] = 1
+            batch_state = [current_state[0], loc_mark_X]  # 전처리 완료
+
+        # 전처리한 보드와 승리패턴 8가지와 비교하여 해당 정보 리턴
+        judge = np.zeros((8, 9), 'int')  # 비교 결과를 넣을 8*9 배열 초기화
+        for i in range(8):   # 승리 패턴과 각각의 값을 비교해서
+            for k in range(9):
+                if batch_state[1][k] == win_pattern[i][k]:   # 일치하는 자리엔 1을 넣고
+                    judge[i][k] = 1
+                else:
+                    judge[i][k] = 0   # 아닌 것은 0을 넣어
+            if judge[i].sum() == 3:   # 그 배열을 더 해서 총합이 3이면 승부난 거임
+                mark_type = batch_state[0]  # 그럼 현재 마크를 저장하고
+                match_result = 1   # 승부났음을 저장하고 (1:승부남 0:비김)
+                return [mark_type, match_result]  # 결과를 리턴해라
+            # 승부가 안났는데 현재 상태 꽉찼다면
+            elif np.count_nonzero(current_state[1]) == 9:
+                mark_type = batch_state[0]  # 마지막 마크를 저장하고
+                match_result = 0  # 비김
+                return [mark_type, match_result]  # 결과 리턴
+        # 승부도 안났고 비기지도 않았으면 계속 진행해라
+        mark_type = batch_state[0]
+        mark_result = 2   # 0,1이 아닌 아무 수 (게임 계속 된다는 정보)
+        return [mark_type, mark_result]
+
     def _render(self, mode='human', close=False):  # 현재 상태를 그려주는 함수
         if close:   # 클로즈값이 참인데
             if self.viewer is not None:  # 뷰어가 비어있지 않으면
@@ -184,10 +183,10 @@ class TicTacToeEnv(gym.Env):
             self.viewer.add_geom(self.line_b)
 
             # ----------- OX 마크 이미지 생성 및 위치 지정 -------------- #
-            # 9개의 위치에 O,X 모두 위치지정해 놓음
-            # 이 파일이 있는 폴더 내부의 img 폴더
+            # 9개의 위치에 O,X 모두 위치지정해 놓음 (18장)
+            # 그림파일 위치는 이 파일이 있는 폴더 내부의 img 폴더
             self.image_O1 = rendering.Image("img/O.png", 96, 96)
-            # 위치 컨트롤 하는 놈
+            # 위치 컨트롤 하는 객체
             self.trans_O1 = rendering.Transform(self.render_loc[0])
             # 이놈을 이미지에 장착 (이미지를 뷰어에 붙이기 전까진 렌더링 안됨)
             self.image_O1.add_attr(self.trans_O1)
@@ -261,15 +260,18 @@ class TicTacToeEnv(gym.Env):
             self.image_X9.add_attr(self.trans_X9)
 
         # ------------ 상태 정보에 맞는 이미지를 뷰어에 붙이는 과정-------------- #
-        # 상태를 카피해서 받아오기
-        state = self.state.copy()
+        # 좌표 번호
         # 0 1 2
         # 3 4 5
         # 6 7 8
+
+        # 상태를 카피해서 받아오기
+        state = self.state.copy()
+
         # 상태보드의 자리마다 번호를 붙여서 합친후 딕트로 구성
         map_dict = dict(zip([0, 1, 2, 3, 4, 5, 6, 7, 8], state[1]))
 
-        # 좌표번호마다 마크O,X가 있는지 확인하여 해당하는 이미지를 뷰어에 붙임
+        # 좌표번호마다 O,X가 있는지 확인하여 해당하는 이미지를 뷰어에 붙임
         if map_dict[0] == 1:
             self.viewer.add_geom(self.image_O1)
         elif map_dict[0] == 2:
@@ -317,14 +319,15 @@ class TicTacToeEnv(gym.Env):
         # 뷰어를 렌더해서 리턴해라 rgb배열 모드임
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
-'''
+
+# 테스트
 if __name__ == "__main__":
+    import time
     env = TicTacToeEnv()
     state = env.reset()
-    env.player = 0  # 나는 동그라미!
+    env.player = env.mark_O  # 나는 동그라미!
     print(state)
 
-    import time   # 테스트용
     action = [state[0], 4]
     state, reward, done, info = env.step(action)
     print(reward)
@@ -395,14 +398,4 @@ if __name__ == "__main__":
         time.sleep(1)
         env.reset()
 
-    # 반복문 테스트
-    for i in range(100):
-        action = [env.state[0], env.action_space[1].sample()]
-        state, reward, done, info = env.step(action)
-        print(reward)
-        print(state)
-        env.render()
-        if done:
-            time.sleep(3)
-            env.reset()
-'''
+    env.close()

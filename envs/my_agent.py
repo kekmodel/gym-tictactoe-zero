@@ -1,22 +1,28 @@
 import gym
 import envs
 import time
-from random_agent import RandomAgent
+# from random_agent import RandomAgent
 
 
 class MyAgent(object):
-    def __init__(self, state_space, action_space):
-        self.state_space = state_space
+    def __init__(self, action_space):
         self.action_space = action_space
         self.action_n = action_space.n
+
+    def act(self, state):
+        while True:
+            target = self.action_space.sample()
+            if state[1][target] == 0:
+                action = [state[0], target]
+                return action
 
 
 if __name__ == "__main__":
 
     env = gym.make('TicTacToe-v0')
-    env.seed(0)
+    env.seed(2017)
 
-    agent = RandomAgent(env.action_space)
+    agent = MyAgent(env.action_space)
     my_mark = env.observation_space[0]
 
     episode_count = 10
@@ -32,14 +38,12 @@ if __name__ == "__main__":
         print('My Mark: %s' % mark_dict[env.player])
         while True:
             action = agent.act(state)
-            state, reward, done, info = env.step(action)
-            env.render()
-            time.sleep(0.4)
+            state, reward, done, _ = env.step(action)
             if done:
                 result[reward] += 1
                 print('timesteps: %d' % (state[2] + 1))
-                env.close()
                 break
+    env.close()
     winrate = result[0] / episode_count * 100
     print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%%' %
           (result[1], result[-1], result[0], winrate))
