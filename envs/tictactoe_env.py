@@ -22,19 +22,19 @@ class TicTacToeEnv(gym.Env):
         self.opponent = 1  # 상대 식별 변수
         self.mark_O = None  # O가 누군지 식별
         self.mark_X = None  # X가 누군지 식별
-        self.board_size = 9  # 3x3 보드 사이즈
+        self.board_size = 3  # 3x3 보드 사이즈
         self.board_n = 3  # 보드 개수 3개: 0.플레이어보드, 1.상대보드, 2.O구별 보드
-        # 관찰 공간: 9개짜리 3장, 허용 범위 [0,1] 있으면 1, 없으면 0
+        # 관찰 공간: 3*3개짜리 3장, 허용 범위 [0,1] 있으면 1, 없으면 0
         self.observation_space = spaces.Box(low=0,
                                             high=1,
-                                            shape=(self.board_n,
-                                                   self.board_size))
-        # 액션 공간: (player ,opponent 구분 | 좌표값)
-        self.action_space = spaces.MultiDiscrete([[0, 1], [0, 8]])
+                                            shape=(self.board_size,
+                                                   self.board_size,
+                                                   self.board_n))
+        # 액션 공간: (player ,opponent 구분 | 행, 열)
+        self.action_space = spaces.MultiDiscrete([[0, 1], [0, 2], [0, 2]])
         self.step_count = None  # 액션 진행 횟수 초기화
         self.viewer = None  # 뷰어 초기화
         self.state = None  # 상태 초기화
-        self.error = None  # 규칙 위반 식별용
         self._seed()  # 랜덤 시드 설정하는 함수 호출
 
     # 랜덤 시드 생성 및 설정 함수
@@ -45,13 +45,12 @@ class TicTacToeEnv(gym.Env):
         return [seed]
 
     def _reset(self):  # 상태 리셋 함수
-        # 상태 초기화 (9개짜리배열 3장) 2진으로만 해결하기 위해!
-        self.state = np.zeros((self.board_n, self.board_size))
+        # 상태 초기화 (3*3 개짜리배열 3장) 2진으로만 해결하기 위해!
+        self.state = np.zeros((self.board_size, self.board_size, self.board_n))
         self.step_count = 0  # 액션 진행 횟수 0
         self.viewer = None   # 뷰어 리셋
         self.mark_O = None  # O 주체 리셋
         self.mark_X = None  # X 주체 리셋
-        self.error = False  # 규칙위반 리셋
         return self.state  # 상태 리턴
 
     def _step(self, action):
@@ -61,12 +60,12 @@ class TicTacToeEnv(gym.Env):
         """
         # 규칙 위반 필터링: 액션 자리에 이미 자리가 차있음
         for i in range(2):
-            if self.state[i][action[1]] == 1:
-                if action[0] == self.player:  # 근데 그게 플레이어가 한 짓이면
+            if self.state[i][action[1]][action[2]] == 1:
+                if action[0] == self.player:  # 근데 그게 플레이어가 한 짓이면 반칙패
                     reward = -1
                     done = True  # 게임 종료
                     info = {'steps': self.step_count + 1}  # 액션 1회로 인정
-                    print('Illegal Lose!')  # 반칙패
+                    print('Illegal Lose!')  # 출력
                     return self.state, reward, done, info  # 필수 요소 리턴
                 else:  # 상대가 한짓이면 반대
                     reward = 1
@@ -74,29 +73,29 @@ class TicTacToeEnv(gym.Env):
                     info = {'steps': self.step_count + 1}
                     print('Illegal Win!')
                     return self.state, reward, done, info
-
-        # 0, 2, 4 같은 짝수 상태에서 시작된 액션은 O표시니까
+        # 반칙이 아니면
+        # step_count 0, 2, 4 같은 짝수 상태에서 시작된 액션은 O표시니까
         if self.step_count % 2 == 0:
             if self.step_count == 0:  # 첫액션엔 주체를 불러와서 O표시가 누군지 매칭해주고
                 self.mark_O = action[0]
-            self.state[2][action[1]] = 1  # 2번보드에 액션 적용
-            self.state[action[0]][action[1]] = 1  # 주체를 식별해서 해당 보드에도 적용
-        else:
-            self.state[action[0]][action[1]] = 1  # 아니면 해당보드에 적용
+            self.state[2][action[1]][action[2]] = 1  # 2번보드에 액션 적용
+            # 주체를 식별해서 해당 보드에도 적용
+            self.state[action[0]][action[1]][action[2]] = 1
+        else:  # 1, 3, 5 상태 액션은  X니까 해당 보드에만 적용
+            self.state[action[0]][action[1]][action[2]] = 1
         self.step_count += 1  # 액션 진행 횟수 +1
         return self.__check_win()  # 승패 체크해서 리턴
 
     def __check_win(self):  # state 승패체크용 내부 함수
         # 승리패턴 8가지 구성 (1:돌이 있는 곳, 0: 돌이 없는 곳)
-        win_pattern = np.array([np.array([1, 1, 1, 0, 0, 0, 0, 0, 0], 'float'),
-                                np.array([0, 0, 0, 1, 1, 1, 0, 0, 0], 'float'),
-                                np.array([0, 0, 0, 0, 0, 0, 1, 1, 1], 'float'),
-                                np.array([1, 0, 0, 1, 0, 0, 1, 0, 0], 'float'),
-                                np.array([0, 0, 1, 0, 0, 1, 0, 0, 1], 'float'),
-                                np.array([0, 1, 0, 0, 1, 0, 0, 1, 0], 'float'),
-                                np.array([0, 0, 1, 0, 1, 0, 1, 0, 0], 'float'),
-                                np.array([1, 0, 0, 0, 1, 0, 0, 0, 1], 'float')]
-                               )
+        win_pattern = np.array([[[1, 1, 1], [0, 0, 0], [0, 0, 0]],
+                                [[0, 0, 0], [1, 1, 1], [0, 0, 0]],
+                                [[0, 0, 0], [0, 0, 0], [1, 1, 1]],
+                                [[1, 0, 0], [1, 0, 0], [1, 0, 0]],
+                                [[0, 0, 1], [0, 0, 1], [0, 0, 1]],
+                                [[0, 1, 0], [0, 1, 0], [0, 1, 0]],
+                                [[0, 0, 1], [0, 1, 0], [1, 0, 0]],
+                                [[1, 0, 0], [0, 1, 0], [0, 0, 1]]], 'float')
         for i in range(2):
             for k in range(8):  # 0,1번 보드가 승리패턴과 일치하면
                 # 바이너리 배열은 패턴을 포함할때 곱하면 자기 자신 나옴; 고민하다 발견
@@ -238,135 +237,135 @@ class TicTacToeEnv(gym.Env):
         # ------------ 상태 정보에 맞는 이미지를 뷰어에 붙이는 과정-------------- #
         self.mark_X = abs(self.mark_O - 1)  # 0이면 1, 1이면 0으로 만들어줌
         # 좌표번호마다 O,X가 있는지 확인하여 해당하는 이미지를 뷰어에 붙임
-        if self.state[self.mark_O][0] == 1:
+        if self.state[self.mark_O][0][0] == 1:
             self.viewer.add_geom(self.image_O1)
-        elif self.state[self.mark_X][0] == 1:
+        elif self.state[self.mark_X][0][0] == 1:
             self.viewer.add_geom(self.image_X1)
 
-        if self.state[self.mark_O][1] == 1:
+        if self.state[self.mark_O][0][1] == 1:
             self.viewer.add_geom(self.image_O2)
-        elif self.state[self.mark_X][1] == 1:
+        elif self.state[self.mark_X][0][1] == 1:
             self.viewer.add_geom(self.image_X2)
 
-        if self.state[self.mark_O][2] == 1:
+        if self.state[self.mark_O][0][2] == 1:
             self.viewer.add_geom(self.image_O3)
-        elif self.state[self.mark_X][2] == 1:
+        elif self.state[self.mark_X][0][2] == 1:
             self.viewer.add_geom(self.image_X3)
 
-        if self.state[self.mark_O][3] == 1:
+        if self.state[self.mark_O][1][0] == 1:
             self.viewer.add_geom(self.image_O4)
-        elif self.state[self.mark_X][3] == 1:
+        elif self.state[self.mark_X][1][0] == 1:
             self.viewer.add_geom(self.image_X4)
 
-        if self.state[self.mark_O][4] == 1:
+        if self.state[self.mark_O][1][1] == 1:
             self.viewer.add_geom(self.image_O5)
-        elif self.state[self.mark_X][4] == 1:
+        elif self.state[self.mark_X][1][1] == 1:
             self.viewer.add_geom(self.image_X5)
 
-        if self.state[self.mark_O][5] == 1:
+        if self.state[self.mark_O][1][2] == 1:
             self.viewer.add_geom(self.image_O6)
-        elif self.state[self.mark_X][5] == 1:
+        elif self.state[self.mark_X][1][2] == 1:
             self.viewer.add_geom(self.image_X6)
 
-        if self.state[self.mark_O][6] == 1:
+        if self.state[self.mark_O][2][0] == 1:
             self.viewer.add_geom(self.image_O7)
-        elif self.state[self.mark_X][6] == 1:
+        elif self.state[self.mark_X][2][0] == 1:
             self.viewer.add_geom(self.image_X7)
 
-        if self.state[self.mark_O][7] == 1:
+        if self.state[self.mark_O][2][1] == 1:
             self.viewer.add_geom(self.image_O8)
-        elif self.state[self.mark_X][7] == 1:
+        elif self.state[self.mark_X][2][1] == 1:
             self.viewer.add_geom(self.image_X8)
 
-        if self.state[self.mark_O][8] == 1:
+        if self.state[self.mark_O][2][2] == 1:
             self.viewer.add_geom(self.image_O9)
-        elif self.state[self.mark_X][8] == 1:
+        elif self.state[self.mark_X][2][2] == 1:
             self.viewer.add_geom(self.image_X9)
         # 뷰어를 렌더해서 리턴해라 rgb배열 모드임
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
 
-# 테스트
 if __name__ == "__main__":
     import time
     env = TicTacToeEnv()
     state = env.reset()
-    print(np.reshape(state, (3, 3, 3)))
+    print(state)
     print('Start!')
 
-    action = [0, 4]
+    action = [0, 1, 1]
     state, reward, done, info = env.step(action)
-    print(np.reshape(state, (3, 3, 3)))
-    print('reward: %d' % reward)
-    env.render()
-    time.sleep(0.4)
-    if done:
-        time.sleep(1)
-        env.reset()
-
-    action = [1, 5]
-    state, reward, done, info = env.step(action)
-    print(np.reshape(state, (3, 3, 3)))
-    print('reward: %d' % reward)
-    env.render()
-    time.sleep(0.4)
-    if done:
-        time.sleep(1)
-        env.reset()
-
-    action = [0, 3]
-    state, reward, done, info = env.step(action)
-    print(np.reshape(state, (3, 3, 3)))
     print('reward: %d' % reward)
     print(info)
+    print(state)
     env.render()
     time.sleep(0.4)
     if done:
         time.sleep(1)
         env.reset()
 
-    action = [1, 8]
+    action = [1, 1, 2]
     state, reward, done, info = env.step(action)
-    print(np.reshape(state, (3, 3, 3)))
     print('reward: %d' % reward)
     print(info)
+    print(state)
     env.render()
     time.sleep(0.4)
     if done:
         time.sleep(1)
         env.reset()
 
-    action = [0, 2]
+    action = [0, 1, 0]
     state, reward, done, info = env.step(action)
-    print(np.reshape(state, (3, 3, 3)))
     print('reward: %d' % reward)
     print(info)
+    print(state)
     env.render()
     time.sleep(0.4)
     if done:
         time.sleep(1)
         env.reset()
 
-    action = [1, 7]
+    action = [1, 2, 2]
     state, reward, done, info = env.step(action)
-    print(np.reshape(state, (3, 3, 3)))
     print('reward: %d' % reward)
     print(info)
+    print(state)
     env.render()
     time.sleep(0.4)
     if done:
         time.sleep(1)
         env.reset()
 
-    action = [0, 6]
+    action = [0, 0, 2]
     state, reward, done, info = env.step(action)
-    print(np.reshape(state, (3, 3, 3)))
     print('reward: %d' % reward)
     print(info)
+    print(state)
     env.render()
     time.sleep(0.4)
     if done:
-        print('Termination')
+        time.sleep(1)
+        env.reset()
+
+    action = [1, 2, 1]
+    state, reward, done, info = env.step(action)
+    print('reward: %d' % reward)
+    print(info)
+    print(state)
+    env.render()
+    time.sleep(0.4)
+    if done:
+        time.sleep(1)
+        env.reset()
+
+    action = [0, 2, 0]
+    state, reward, done, info = env.step(action)
+    print('reward: %d' % reward)
+    print(info)
+    print(state)
+    env.render()
+    time.sleep(0.4)
+    if done:
         time.sleep(1)
         env.reset()
 

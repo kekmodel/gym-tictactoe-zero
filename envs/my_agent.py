@@ -6,7 +6,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
-from torch.distributions import Categorical
 
 
 class MyAgent(object):
@@ -17,7 +16,7 @@ class MyAgent(object):
 
     # def policy(self):
     # def value(self):
-    def act(self, state):
+    def select_action(self, state):
         board = np.array(state[1])
         board_empty = 9 - np.nonzero(board)
         self.policy = np.full(1 / board_empty, (self.policy.shape))
@@ -29,6 +28,8 @@ class MyAgent(object):
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
+        self.conv1 = nn.Conv1d(9, 256, kernel_size=3)
+        self.bn1 = nn.BatchNorm2d(256)
         self.affine1 = nn.Linear(4, 128)
         self.policy_head = nn.Linear(128, 2)
         self.value_head = nn.Linear(128, 1)
@@ -47,9 +48,8 @@ if __name__ == "__main__":
 
     env = gym.make('TicTacToe-v0')
     env.seed(2017)
-    torch.manual_seed(2017)
 
-    episode_count = 1000
+    episode_count = 8000
     result = {1: 0, 0: 0, -1: 0}
 
     for i in range(episode_count):
@@ -57,7 +57,9 @@ if __name__ == "__main__":
         print('-' * 14, '\nepisode: %d' % (i + 1))
         k = 0
         while True:
-            action = [k % 2, env.action_space.sample()[1]]
+            action = [k % 2,
+                      env.action_space.sample()[1],
+                      env.action_space.sample()[2]]
             print(action)
             state, reward, done, info = env.step(action)
             k += 1
