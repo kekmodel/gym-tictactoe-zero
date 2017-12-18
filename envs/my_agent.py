@@ -10,42 +10,84 @@ from torch.autograd import Variable
 
 class MyAgent(object):
     def __init__(self):
-        self.policy = np.zeros((1, 9))
-        print(self.policy)
-        self.value = []
-
-    # def policy(self):
-    # def value(self):
-    def select_action(self, state):
-        board = np.array(state[1])
-        board_empty = 9 - np.nonzero(board)
-        self.policy = np.full(1 / board_empty, (self.policy.shape))
+        self.brain = NeuralNetwork()
 
     def learn(self):
         ...
 
 
-class Model(nn.Module):
+class NeuralNetwork(nn.Module):
     def __init__(self):
-        super(Model, self).__init__()
-        self.conv1 = nn.Conv1d(9, 256, kernel_size=3)
-        self.bn1 = nn.BatchNorm2d(256)
-        self.affine1 = nn.Linear(4, 128)
-        self.policy_head = nn.Linear(128, 2)
-        self.value_head = nn.Linear(128, 1)
+        super(NeuralNetwork, self).__init__()
+        # convolutional layer
+        self.conv = nn.Conv2d(27, 256, kernel_size=3)
+        self.conv_bn = nn.BatchNorm2d(256)
+        self.conv_relu = nn.ReLU()
+
+        # residual layer
+        self.conv1 = nn.Conv2d(256, 256, kernel_size=3)
+        self.conv1_bn = nn.BatchNorm2d(256)
+        self.conv1_relu = nn.ReLU()
+        self.conv2 = nn.Conv2d(256, 256, kernel_size=3)
+        self.conv2_bn = nn.BatchNorm2d(256)
+        # forward엔 여기에 skip connection 추가하기
+        self.conv2_relu = nn.ReLU()
+
+        # 정책 헤드: 정책함수 인풋 받는 곳
+        self.policy_head = nn.Conv2d(256, 2, kernel_size=1)
+        self.policy_bn = nn.BatchNorm2d(2)
+        self.policy_relu = nn.ReLU()
+        self.policy_out = nn.Linear(2, 9)
+
+        # 가치 헤드: 가치함수 인풋 받는 곳
+        self.value_head = nn.Conv2d(256, 1, kernel_size=1)
+        self.value_bn = nn.BatchNorm2d(1)
+        self.value_relu = nn.ReLU()
+        self.value_fc = nn.Linear(1, 256)
+        self.value_scalar = nn.Linear(256, 1)
+        self.value_out = nn.Tanh()
 
         self.saved_actions = []
         self.rewards = []
 
-    def forward(self, x):
-        x = F.relu(self.affine1(x))
-        action_scores = self.action_head(x)
-        state_values = self.value_head(x)
-        return F.softmax(action_scores, dim=1), state_values
+    def forward(self, state):
+
+        x = self.conv(state)
+        x = self.conv_bn(x)
+        x = self.conv_relu(x)
+        x = self.conv1(x)
+        x = self.conv1_bn(x)
+        x = self.conv1_relu(x)
+        x = self.conv2(x)
+        x = self.conv2_bn(x)
+        x += state  # skip connection
+        x = self.conv2_relu(x)
+
+        p = self.policy_head(x)
+        p = self.policy_bn(p)
+        p = self.policy_relu(p)
+        p = self.policy_out(p)
+
+        v = self.value_head(x)
+        v = self.value_bn(v)
+        v = self.value_relu(v)
+        v = self.value_fc(v)
+        v = self.value_scalar(v)
+        v = self.value_out(v)
+
+        return p, v
 
 
 if __name__ == "__main__":
-
+    env = gym.make('TicTacToe-v0')
+    env.seed(2017)
+    state = env.np_random.randn(3, 3, 3, 1)
+    state = torch.from_numpy(state).float()
+    print(state)
+    agent = MyAgent()
+    p, v = agent.brain(state)
+    print(p, v)
+    '''
     env = gym.make('TicTacToe-v0')
     env.seed(2017)
 
@@ -70,3 +112,4 @@ if __name__ == "__main__":
     env.close()
     print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%%' %
           (result[1], result[-1], result[0], result[1] / episode_count * 100))
+    '''
