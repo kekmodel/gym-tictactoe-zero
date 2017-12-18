@@ -20,8 +20,8 @@ class TicTacToeEnv(gym.Env):
     def __init__(self):
         self.player = 0  # 플레이어 식별 변수
         self.opponent = 1  # 상대 식별 변수
-        self.mark_O = None  # O가 누군지 식별
-        self.mark_X = None  # X가 누군지 식별
+        self.mark_O = None  # O가 누군지 매칭, 리셋에서 또 하지만 존재 알릴 겸?
+        self.mark_X = None  # X가 누군지 매칭
         self.board_size = 3  # 3x3 보드 사이즈
         self.board_n = 3  # 보드 개수 3개: 0.플레이어보드, 1.상대보드, 2.O구별 보드
         # 관찰 공간: 3*3개짜리 3장, 허용 범위 [0,1] 있으면 1, 없으면 0
@@ -54,9 +54,9 @@ class TicTacToeEnv(gym.Env):
         return self.state  # 상태 리턴
 
     def _step(self, action):
-        """한번의 행동에 환경의 변수들이 어떻게 변하는지 정하는 함수
+        """한번의 행동에 상태가 어떻게 변하는지 정하는 함수
             승부가 나면 reset()을 호출(메소드 내부 또는 에이전트)하여 환경을 초기화 해야 함
-            action을 받아서 (state, reward, done, info)인 튜플 리턴
+            action을 받아서 (state, reward, done, info)인 튜플 리턴해야 함
         """
         # 규칙 위반 필터링: 액션 자리에 이미 자리가 차있음
         for i in range(2):
@@ -98,7 +98,7 @@ class TicTacToeEnv(gym.Env):
                                 [[1, 0, 0], [0, 1, 0], [0, 0, 1]]], 'float')
         for i in range(2):
             for k in range(8):  # 0,1번 보드가 승리패턴과 일치하면
-                # 바이너리 배열은 패턴을 포함할때 곱하면 자기 자신 나옴; 고민하다 발견
+                # 바이너리 배열은 패턴을 포함할때 서로 곱(행렬곱아님)하면 패턴 자신이 나옴; 고민하다 발견
                 if np.all(self.state[i] * win_pattern[k] == win_pattern[k]):
                     if i == self.player:  # 주체인 i가 플레이어면 승리
                         reward = 1  # 보상 1
@@ -112,14 +112,14 @@ class TicTacToeEnv(gym.Env):
                         info = {'steps': self.step_count}  # step 수 기록
                         print('You Lose!')  # 너 짐
                         return self.state, reward, done, info  # 필수 값 리턴!
-        # 다 돌려봤는데 승부난게 없더라 근데 O표시 2번보드에 들어있는게 5개면? 비김
+        # 다 돌려봤는데 승부난게 없더라 근데 O식별용 2번보드에 들어있는게 5개면? 비김
         if np.count_nonzero(self.state[2]) == 5:
             reward = 0  # 보상 0
             done = True  # 게임 끝
             print('Draw!')  # 비김
             info = {'steps': self.step_count}
             return self.state, reward, done, info
-        else:  # 다 아니면 다음 수 둬야지
+        else:  # 이거 다~~~ 아니면 다음 수 둬야지
             reward = 0
             done = False  # 안 끝남!
             info = {'steps': self.step_count}
@@ -134,15 +134,15 @@ class TicTacToeEnv(gym.Env):
 
         if self.viewer is None:
             from gym.envs.classic_control import rendering  # 렌더링 모듈 임포트
-            # _렌더 메소드에 사용할 뷰의 좌표 딕트 구성
+            # 뷰어의 좌표 딕트로 구성
             self.render_loc = {0: (50, 250), 1: (150, 250), 2: (250, 250),
                                3: (50, 150), 4: (150, 150), 5: (250, 150),
                                6: (50, 50), 7: (150, 50), 8: (250, 50)}
 
-            # ------------------- 캔버스 뷰어 생성 --------------------- #
+            # -------------------- 뷰어 생성 --------------------- #
             # 캔버스 역할의 뷰어 초기화 가로 세로 300
             self.viewer = rendering.Viewer(300, 300)
-            # 선긋기 (시작점좌표, 끝점좌표), 색정하기 (r, g, b)
+            # 가로 세로 선 생성 (시작점좌표, 끝점좌표), 색정하기 (r, g, b)
             self.line_1 = rendering.Line((0, 100), (300, 100))
             self.line_1.set_color(0, 0, 0)
             self.line_2 = rendering.Line((0, 200), (300, 200))
@@ -151,7 +151,7 @@ class TicTacToeEnv(gym.Env):
             self.line_a.set_color(0, 0, 0)
             self.line_b = rendering.Line((200, 0), (200, 300))
             self.line_b.set_color(0, 0, 0)
-            # 뷰어에 줄 붙이기
+            # 뷰어에 선 붙이기
             self.viewer.add_geom(self.line_1)
             self.viewer.add_geom(self.line_2)
             self.viewer.add_geom(self.line_a)
@@ -160,6 +160,7 @@ class TicTacToeEnv(gym.Env):
             # ----------- OX 마크 이미지 생성 및 위치 지정 -------------- #
             # 9개의 위치에 O,X 모두 위치지정해 놓음 (18장)
             # 그림파일 위치는 이 파일이 있는 폴더 내부의 img 폴더
+            # 그림 객체 생성
             self.image_O1 = rendering.Image("img/O.png", 96, 96)
             # 위치 컨트롤 하는 객체
             self.trans_O1 = rendering.Transform(self.render_loc[0])
@@ -234,9 +235,9 @@ class TicTacToeEnv(gym.Env):
             self.trans_X9 = rendering.Transform(self.render_loc[8])
             self.image_X9.add_attr(self.trans_X9)
 
-        # ------------ 상태 정보에 맞는 이미지를 뷰어에 붙이는 과정-------------- #
+        # ------------ 상태 정보에 맞는 이미지를 뷰어에 붙이는 과정 -------------- #
         self.mark_X = abs(self.mark_O - 1)  # 0이면 1, 1이면 0으로 만들어줌
-        # 좌표번호마다 O,X가 있는지 확인하여 해당하는 이미지를 뷰어에 붙임
+        # 좌표번호마다 O,X가 있는지 확인하여 해당하는 이미지를 뷰어에 붙임 (렌더링 때 보임)
         if self.state[self.mark_O][0][0] == 1:
             self.viewer.add_geom(self.image_O1)
         elif self.state[self.mark_X][0][0] == 1:
@@ -281,10 +282,10 @@ class TicTacToeEnv(gym.Env):
             self.viewer.add_geom(self.image_O9)
         elif self.state[self.mark_X][2][2] == 1:
             self.viewer.add_geom(self.image_X9)
-        # 뷰어를 렌더해서 리턴해라 rgb배열 모드임
+        # 뷰어를 렌더링해서 리턴해라 rgb배열 모드임
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
-
+# 테스트용 지워도 무방
 if __name__ == "__main__":
     import time
     env = TicTacToeEnv()
