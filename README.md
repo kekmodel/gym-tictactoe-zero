@@ -1,10 +1,11 @@
-
 # gym-tictactoe
 ![tictactoe](./envs/img/Tic_Tac_Toe.gif)
 ----------------------------
 ### <일반인이 도전해보는 강화학습>
 ## 첫번째 프로젝트: gym 기반으로 틱택토 환경 만들어 보기
 gym을 설치한 후 실행하면 돌아감! 파이썬 3.5로 만들었음!
+
+
 https://github.com/openai/gym
 
 다음 프로젝트: 내가 만든 환경에서 강화학습 에이전트 구현
