@@ -21,34 +21,34 @@ class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
         # convolutional layer
-        self.conv = nn.Conv2d(3, 256, kernel_size=(3, 3))
-        self.conv_bn = nn.BatchNorm2d(256)
+        self.conv = nn.Conv2d(3, 4, kernel_size=2)
+        self.conv_bn = nn.BatchNorm2d(4)
         self.conv_relu = nn.ReLU()
 
         # residual layer
-        self.conv1 = nn.Conv2d(256, 256, kernel_size=(3, 3))
-        self.conv1_bn = nn.BatchNorm2d(256)
+        self.conv1 = nn.Conv2d(4, 4, kernel_size=1)
+        self.conv1_bn = nn.BatchNorm2d(4)
         self.conv1_relu = nn.ReLU()
-        self.conv2 = nn.Conv2d(256, 256, kernel_size=(3, 3))
-        self.conv2_bn = nn.BatchNorm2d(256)
+        self.conv2 = nn.Conv2d(4, 4, kernel_size=1)
+        self.conv2_bn = nn.BatchNorm2d(4)
         # forward엔 여기에 skip connection 추가하기
         self.conv2_relu = nn.ReLU()
 
         # 정책 헤드: 정책함수 인풋 받는 곳
-        self.policy_head = nn.Conv2d(256, 2, kernel_size=(3, 3))
+        self.policy_head = nn.Conv2d(4, 2, kernel_size=1)
         self.policy_bn = nn.BatchNorm2d(2)
         self.policy_relu = nn.ReLU()
         self.policy_out = nn.Linear(2, 9)
 
         # 가치 헤드: 가치함수 인풋 받는 곳
-        self.value_head = nn.Conv2d(256, 1, kernel_size=(3, 3))
+        self.value_head = nn.Conv2d(4, 1, kernel_size=1)
         self.value_bn = nn.BatchNorm2d(1)
         self.value_relu = nn.ReLU()
-        self.value_fc = nn.Linear(1, 256)
-        self.value_scalar = nn.Linear(256, 1)
+        self.value_fc = nn.Linear(2, 4)
+        self.value_scalar = nn.Linear(4, 1)
         self.value_out = nn.Tanh()
 
-        # 초기화
+        # weight 초기화
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
@@ -63,16 +63,16 @@ class NeuralNetwork(nn.Module):
 
     def forward(self, state):
 
-        print(state)
         x = self.conv(state)
         x = self.conv_bn(x)
         x = self.conv_relu(x)
+        residual = x
         x = self.conv1(x)
         x = self.conv1_bn(x)
         x = self.conv1_relu(x)
         x = self.conv2(x)
         x = self.conv2_bn(x)
-        x += state  # skip connection
+        x += residual  # skip connection
         x = self.conv2_relu(x)
 
         p = self.policy_head(x)
@@ -94,12 +94,13 @@ if __name__ == "__main__":
     env = gym.make('TicTacToe-v0')
     env.seed(2017)
     state = env.reset()
-    env.step([0, 2, 1])
-    env.step([1, 1, 1])
     agent = MyAgent()
-    state = torch.from_numpy(state).float().unsqueeze(0)
+    state = torch.from_numpy(state).float().unsqueeze(-1)
+    state = Variable(state, requires_grad=True)
+    print(state)
     p, v = agent.brain(state)
-    print(p, v)
+    print('p-vector:{}'.format(p))
+    print('value:{}'.format(v))
 '''
     episode_count = 8000
     result = {1: 0, 0: 0, -1: 0}
@@ -109,6 +110,12 @@ if __name__ == "__main__":
         print('-' * 14, '\nepisode: %d' % (i + 1))
         k = 0
         while True:
+            state = torch.from_numpy(state).float().unsqueeze(0)
+            state = Variable(state, requires_grad=True)
+            p, v = agent.brain(state)
+            loss = p[0]
+            print('p-vector:{}'.format(p))
+            print('value:{}'.format(v))
             action = [k % 2,
                       env.action_space.sample()[1],
                       env.action_space.sample()[2]]
