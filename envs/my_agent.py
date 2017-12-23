@@ -95,7 +95,7 @@ if __name__ == "__main__":
     env.seed(2017)
     state = env.reset()
     agent = MyAgent()
-    state = torch.from_numpy(state).float().unsqueeze(-1)
+    state = torch.from_numpy(state).float().unsqueeze(0)
     state = Variable(state, requires_grad=True)
     print(state)
     p, v = agent.brain(state)
