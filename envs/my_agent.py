@@ -1,116 +1,99 @@
-import gym
+# -*- coding: utf-8 -*-
 import envs
+import neural_network
+import gym
 import numpy as np
 import math
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
+from collections import deque
 
 
-class MyAgent(object):
-    def __init__(self):
-        self.brain = NeuralNetwork()
-
-    def learn(self):
-        ...
+PLAYER = 0
+OPPONENT = 1
+MARK_O = 2
 
 
-class NeuralNetwork(nn.Module):
-    def __init__(self):
-        super(NeuralNetwork, self).__init__()
-        # convolutional layer
-        self.conv = nn.Conv2d(3, 9, kernel_size=3, padding=1)
-        self.conv_bn = nn.BatchNorm2d(9)
-        self.conv_relu = nn.ReLU(inplace=True)
+# 에이전트 클래스
+class ZeroAgent(object):
+    def __init__(self, state, action_space):
+        self.state = state
+        self.board = self.state[PLAYER] + self.state[OPPONENT]
+        self.action_space = action_space
 
-        # residual layer
-        self.conv1 = nn.Conv2d(9, 9, kernel_size=3, padding=1)
-        self.conv1_bn = nn.BatchNorm2d(9)
-        self.conv1_relu = nn.ReLU(inplace=True)
-        self.conv2 = nn.Conv2d(9, 9, kernel_size=3, padding=1)
-        self.conv2_bn = nn.BatchNorm2d(9)
-        # forward엔 여기에 skip connection 추가하기
-        self.conv2_relu = nn.ReLU(inplace=True)
+    def act(self):
+        while True:
+            target = self.action_space.sample()
+            if self.board[target[1]][target[2]] == 0:
+                return [target[1], target[2]]
 
-        # 정책 헤드: 정책함수 인풋 받는 곳
-        self.policy_head = nn.Conv2d(9, 2, kernel_size=1)
-        self.policy_bn = nn.BatchNorm2d(2)
-        self.policy_relu = nn.ReLU(inplace=True)
-        self.policy_fc = nn.Linear(18, 9)
-        self.policy_softmax = nn.Softmax(dim=1)
 
-        # 가치 헤드: 가치함수 인풋 받는 곳
-        self.value_head = nn.Conv2d(9, 1, kernel_size=1)
-        self.value_bn = nn.BatchNorm2d(1)
-        self.value_relu1 = nn.ReLU(inplace=True)
-        self.value_fc = nn.Linear(9, 9)
-        self.value_relu2 = nn.ReLU(inplace=True)
-        self.value_scalar = nn.Linear(9, 1)
-        self.value_out = nn.Tanh()
+class MCTS(object):
+    def __init__(self, pr=None):
+        self.pr = pr
+        self.node_memory = deque(maxlen=9 * 1000 * 2)
+        self.edge_memory = deque(maxlen=9 * 1000 * 2)
+        self.c_puct = 5
+        self.tau = 0.67
+        self.Pi = None
 
-        # weight 초기화
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, math.sqrt(2. / n))
-                if m.bias is not None:
-                    m.bias.data.zero_()
-            elif isinstance(m, nn.BatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
-            elif isinstance(m, nn.Linear):
-                m.weight.data.normal_(0, 0.01)
-                m.bias.data.zero_()
+    def run(self):
+        self.make_node()
+        self.make_edge()
+        self.select()
+        self.backup()
 
-        # 메모리
-        self.saved_actions = []
-        self.rewards = []
+    def make_node(self):
+        self.node_memory.append(self.state)
+        return self.node_memory[0]
 
-    def forward(self, state):
+    def select_action(self, state):
+        self.state = state.copy()
+        self.make_edge()
+        return 0
 
-        x = self.conv(state)
-        x = self.conv_bn(x)
-        x = self.conv_relu(x)
-        residual = x
-        x = self.conv1(x)
-        x = self.conv1_bn(x)
-        x = self.conv1_relu(x)
-        x = self.conv2(x)
-        x = self.conv2_bn(x)
-        x += residual  # skip connection
-        x = self.conv2_relu(x)
+    def _make_edge(self):
+        self.board = self.state[PLAYER] + self.state[OPPONENT]
+        edge = np.zeros((3, 3, 4), 'float')
+        empty_loc = np.where(self.board == 0)
+        legal_move_n = len(empty_loc[0])
+        puct_memory = []
+        if self.pr is None:
+            self.pr = 1 / legal_move_n
+        for i in range(legal_move_n):
+            N = edge[empty_loc[0][i]][empty_loc[1][i]][0]
+            W = edge[empty_loc[0][i]][empty_loc[1][i]][1]
+            if N != 0:
+                Q = W / N
+                edge[empty_loc[0][i]][empty_loc[1][i]][2] = Q
+            else:
+                Q = edge[empty_loc[0][i]][empty_loc[1][i]][2]
+        P = edge[empty_loc[0][i]][empty_loc[1][i]][3] = self.pr
+        self.edge_memory.append(edge)
 
-        p = self.policy_head(x)
-        p = self.policy_bn(p)
-        p = self.policy_relu(p)
-        p = p.view(p.size(0), -1)
-        p = self.policy_fc(p)
-        p = self.policy_softmax(p)
-
-        v = self.value_head(x)
-        v = self.value_bn(v)
-        v = self.value_relu1(v)
-        v = v.view(v.size(0), -1)
-        v = self.value_fc(v)
-        v = self.value_relu2(v)
-        v = self.value_scalar(v)
-        v = self.value_out(v)
-
-        return p, v
+    def backup(self, reward):
+        print(self.node_memory, self.edge_memory)
 
 
 if __name__ == "__main__":
     env = gym.make('TicTacToe-v0')
-    env.seed(2017)
-    state = env.reset()
-    agent = MyAgent()
-    state = torch.from_numpy(state).float().unsqueeze(0)
-    state = Variable(state, requires_grad=True)
-    p, v = agent.brain(state)
-    print('[Pr]: {}'.format(p))
-    print('[Value]: {}'.format(v))
+    env.seed(2018)
+    action_space = env.action_space
+    selfplay = MCTS()
+    episode_count = 1000
+    reward_memory = []
+    for e in range(episode_count):
+        state = env.reset()
+        done = False
+        while not done:
+            action = selfplay.select_action(state)
+            state, reward, done, info = env.step(action)
+            reward_memory.append(reward)
+        if done:
+            selfplay.backup(reward)
+    env.close()
+
 '''
     episode_count = 8000
     result = {1: 0, 0: 0, -1: 0}
