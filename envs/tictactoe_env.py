@@ -135,27 +135,27 @@ class TicTacToeEnv(gym.Env):
         if self.viewer is None:
             from gym.envs.classic_control import rendering  # 렌더링 모듈 임포트
             # 뷰어의 좌표 딕트로 구성
-            self.render_loc = {0: (50, 250), 1: (150, 250), 2: (250, 250),
-                               3: (50, 150), 4: (150, 150), 5: (250, 150),
-                               6: (50, 50), 7: (150, 50), 8: (250, 50)}
+            render_loc = {0: (50, 250), 1: (150, 250), 2: (250, 250),
+                          3: (50, 150), 4: (150, 150), 5: (250, 150),
+                          6: (50, 50), 7: (150, 50), 8: (250, 50)}
 
             # -------------------- 뷰어 생성 --------------------- #
             # 캔버스 역할의 뷰어 초기화 가로 세로 300
             self.viewer = rendering.Viewer(300, 300)
             # 가로 세로 선 생성 (시작점좌표, 끝점좌표), 색정하기 (r, g, b)
-            self.line_1 = rendering.Line((0, 100), (300, 100))
-            self.line_1.set_color(0, 0, 0)
-            self.line_2 = rendering.Line((0, 200), (300, 200))
-            self.line_2.set_color(0, 0, 0)
-            self.line_a = rendering.Line((100, 0), (100, 300))
-            self.line_a.set_color(0, 0, 0)
-            self.line_b = rendering.Line((200, 0), (200, 300))
-            self.line_b.set_color(0, 0, 0)
+            line_1 = rendering.Line((0, 100), (300, 100))
+            line_1.set_color(0, 0, 0)
+            line_2 = rendering.Line((0, 200), (300, 200))
+            line_2.set_color(0, 0, 0)
+            line_a = rendering.Line((100, 0), (100, 300))
+            line_a.set_color(0, 0, 0)
+            line_b = rendering.Line((200, 0), (200, 300))
+            line_b.set_color(0, 0, 0)
             # 뷰어에 선 붙이기
-            self.viewer.add_geom(self.line_1)
-            self.viewer.add_geom(self.line_2)
-            self.viewer.add_geom(self.line_a)
-            self.viewer.add_geom(self.line_b)
+            self.viewer.add_geom(line_1)
+            self.viewer.add_geom(line_2)
+            self.viewer.add_geom(line_a)
+            self.viewer.add_geom(line_b)
 
             # ----------- OX 마크 이미지 생성 및 위치 지정 -------------- #
             # 9개의 위치에 O,X 모두 위치지정해 놓음 (18장)
@@ -163,77 +163,77 @@ class TicTacToeEnv(gym.Env):
             # 그림 객체 생성
             self.image_O1 = rendering.Image("img/O.png", 96, 96)
             # 위치 컨트롤 하는 객체
-            self.trans_O1 = rendering.Transform(self.render_loc[0])
+            trans_O1 = rendering.Transform(render_loc[0])
             # 이놈을 이미지에 장착 (이미지를 뷰어에 붙이기 전까진 렌더링 안됨)
-            self.image_O1.add_attr(self.trans_O1)
+            self.image_O1.add_attr(trans_O1)
 
             self.image_O2 = rendering.Image("img/O.png", 96, 96)
-            self.trans_O2 = rendering.Transform(self.render_loc[1])
-            self.image_O2.add_attr(self.trans_O2)
+            trans_O2 = rendering.Transform(render_loc[1])
+            self.image_O2.add_attr(trans_O2)
 
             self.image_O3 = rendering.Image("img/O.png", 96, 96)
-            self.trans_O3 = rendering.Transform(self.render_loc[2])
-            self.image_O3.add_attr(self.trans_O3)
+            trans_O3 = rendering.Transform(render_loc[2])
+            self.image_O3.add_attr(trans_O3)
 
             self.image_O4 = rendering.Image("img/O.png", 96, 96)
-            self.trans_O4 = rendering.Transform(self.render_loc[3])
-            self.image_O4.add_attr(self.trans_O4)
+            trans_O4 = rendering.Transform(render_loc[3])
+            self.image_O4.add_attr(trans_O4)
 
             self.image_O5 = rendering.Image("img/O.png", 96, 96)
-            self.trans_O5 = rendering.Transform(self.render_loc[4])
-            self.image_O5.add_attr(self.trans_O5)
+            trans_O5 = rendering.Transform(render_loc[4])
+            self.image_O5.add_attr(trans_O5)
 
             self.image_O6 = rendering.Image("img/O.png", 96, 96)
-            self.trans_O6 = rendering.Transform(self.render_loc[5])
-            self.image_O6.add_attr(self.trans_O6)
+            trans_O6 = rendering.Transform(render_loc[5])
+            self.image_O6.add_attr(trans_O6)
 
             self.image_O7 = rendering.Image("img/O.png", 96, 96)
-            self.trans_O7 = rendering.Transform(self.render_loc[6])
-            self.image_O7.add_attr(self.trans_O7)
+            trans_O7 = rendering.Transform(render_loc[6])
+            self.image_O7.add_attr(trans_O7)
 
             self.image_O8 = rendering.Image("img/O.png", 96, 96)
-            self.trans_O8 = rendering.Transform(self.render_loc[7])
-            self.image_O8.add_attr(self.trans_O8)
+            trans_O8 = rendering.Transform(render_loc[7])
+            self.image_O8.add_attr(trans_O8)
 
             self.image_O9 = rendering.Image("img/O.png", 96, 96)
-            self.trans_O9 = rendering.Transform(self.render_loc[8])
-            self.image_O9.add_attr(self.trans_O9)
+            trans_O9 = rendering.Transform(render_loc[8])
+            self.image_O9.add_attr(trans_O9)
 
             self.image_X1 = rendering.Image("img/X.png", 96, 96)
-            self.trans_X1 = rendering.Transform(self.render_loc[0])
-            self.image_X1.add_attr(self.trans_X1)
+            trans_X1 = rendering.Transform(render_loc[0])
+            self.image_X1.add_attr(trans_X1)
 
             self.image_X2 = rendering.Image("img/X.png", 96, 96)
-            self.trans_X2 = rendering.Transform(self.render_loc[1])
-            self.image_X2.add_attr(self.trans_X2)
+            trans_X2 = rendering.Transform(render_loc[1])
+            self.image_X2.add_attr(trans_X2)
 
             self.image_X3 = rendering.Image("img/X.png", 96, 96)
-            self.trans_X3 = rendering.Transform(self.render_loc[2])
-            self.image_X3.add_attr(self.trans_X3)
+            trans_X3 = rendering.Transform(render_loc[2])
+            self.image_X3.add_attr(trans_X3)
 
             self.image_X4 = rendering.Image("img/X.png", 96, 96)
-            self.trans_X4 = rendering.Transform(self.render_loc[3])
-            self.image_X4.add_attr(self.trans_X4)
+            trans_X4 = rendering.Transform(render_loc[3])
+            self.image_X4.add_attr(trans_X4)
 
             self.image_X5 = rendering.Image("img/X.png", 96, 96)
-            self.trans_X5 = rendering.Transform(self.render_loc[4])
-            self.image_X5.add_attr(self.trans_X5)
+            trans_X5 = rendering.Transform(render_loc[4])
+            self.image_X5.add_attr(trans_X5)
 
             self.image_X6 = rendering.Image("img/X.png", 96, 96)
-            self.trans_X6 = rendering.Transform(self.render_loc[5])
-            self.image_X6.add_attr(self.trans_X6)
+            trans_X6 = rendering.Transform(render_loc[5])
+            self.image_X6.add_attr(trans_X6)
 
             self.image_X7 = rendering.Image("img/X.png", 96, 96)
-            self.trans_X7 = rendering.Transform(self.render_loc[6])
-            self.image_X7.add_attr(self.trans_X7)
+            trans_X7 = rendering.Transform(render_loc[6])
+            self.image_X7.add_attr(trans_X7)
 
             self.image_X8 = rendering.Image("img/X.png", 96, 96)
-            self.trans_X8 = rendering.Transform(self.render_loc[7])
-            self.image_X8.add_attr(self.trans_X8)
+            trans_X8 = rendering.Transform(render_loc[7])
+            self.image_X8.add_attr(trans_X8)
 
             self.image_X9 = rendering.Image("img/X.png", 96, 96)
-            self.trans_X9 = rendering.Transform(self.render_loc[8])
-            self.image_X9.add_attr(self.trans_X9)
+            trans_X9 = rendering.Transform(render_loc[8])
+            self.image_X9.add_attr(trans_X9)
 
         # ------------ 상태 정보에 맞는 이미지를 뷰어에 붙이는 과정 -------------- #
         self.mark_X = abs(self.mark_O - 1)  # 0이면 1, 1이면 0으로 만들어줌
@@ -284,6 +284,7 @@ class TicTacToeEnv(gym.Env):
             self.viewer.add_geom(self.image_X9)
         # 뷰어를 렌더링해서 리턴해라 rgb배열 모드임
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
+
 
 # 테스트용 지워도 무방
 if __name__ == "__main__":
