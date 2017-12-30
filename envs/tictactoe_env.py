@@ -1,11 +1,35 @@
-import logging  # 로그 제공 모듈
+import logging  # 로그 제공 모듈, 생략해도 됨
 import gym   # 환경 제공 모듈
 from gym import spaces   # 공간 정의 클래스
 from gym.utils import seeding   # 시드 제공 클래스
 import numpy as np   # 배열 제공 모듈
 
 
-logger = logging.getLogger(__name__)   # 실행 로그 남기기
+logger = logging.getLogger(__name__)   # 실행 로그 남기기, 생략해도 됨
+''' 소개 -----------------------------------------------------------
+# 규칙: O, X 를 번갈아 가면서 표시하고 3개 연속으로 한줄을 채우면 승리, 무승부 있음
+# state: (3, 3, 3) 넘파이 배열: 3*3 평면 3장
+ 0번 평면: 나의 표시만 1로 체크
+ 1번 평면: 상대 표시만 1로 체크 (현재 셀프 플레이만 지원)
+ 2번 평면: O표시만 1로 체크 (누가 OX인지 구별 용)
+# action: [피아식별, 좌표행, 좌표열]
+ ex) [0, 1, 1] -> step(action) -> state[0][1][1] = 1
+* 0번 평면을 기준으로 승패체크. 보상 (승:1, 무:0, 패:-1)
+* 최초 입력된 액션의 주체를 O표시로 인식하여 2번 평면에 동기화 함
+[
+[[0., 0., 0.]
+ [0., 0., 0.]
+ [0., 0., 0.]]  0번 평면
+
+[[0., 0., 0.]
+ [0., 0., 0.]
+ [0., 0., 0.]]  1번 평면
+
+[[0., 0., 0.]
+ [0., 0., 0.]
+ [0., 0., 0.]]  2번 평면
+ ]
+--------------------------------------------------------------- '''
 
 
 class TicTacToeEnv(gym.Env):
@@ -20,7 +44,7 @@ class TicTacToeEnv(gym.Env):
     def __init__(self):
         self.player = 0  # 플레이어 식별 변수
         self.opponent = 1  # 상대 식별 변수
-        self.mark_O = None  # O가 누군지 매칭, 리셋에서 또 하지만 존재 알릴 겸?
+        self.mark_O = None  # O가 누군지 매칭, _reset()에서 설정
         self.mark_X = None  # X가 누군지 매칭
         self.board_size = 3  # 3x3 보드 사이즈
         self.board_n = 3  # 보드 개수 3개: 0.플레이어보드, 1.상대보드, 2.O구별 보드
