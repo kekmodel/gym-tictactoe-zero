@@ -15,18 +15,20 @@ OPPONENT = 1
 MARK_O = 2
 
 
-# 에이전트 클래스
+# 에이전트 클래스 (실제 플레이 용, 예시)
 class ZeroAgent(object):
     def __init__(self, state, action_space):
         self.state = state
         self.board = self.state[PLAYER] + self.state[OPPONENT]
         self.action_space = action_space
 
-    def act(self):
+    def select_action(self):
         while True:
             target = self.action_space.sample()
             if self.board[target[1]][target[2]] == 0:
                 return [target[1], target[2]]
+
+# 몬테카를로 트리 탐색 클래스 (train 데이타 생성 및 실제 플레이에 사용할 예정)
 
 
 class MCTS(object):
@@ -63,7 +65,7 @@ class MCTS(object):
                 edge[empty_loc[0][i]][empty_loc[1][i]][2] = Q
             else:
                 Q = edge[empty_loc[0][i]][empty_loc[1][i]][2]
-        P = edge[empty_loc[0][i]][empty_loc[1][i]][3] = self.pr
+            P = edge[empty_loc[0][i]][empty_loc[1][i]][3] = self.pr
         self.edge_memory.append(edge)
 
     def backup(self, reward):
