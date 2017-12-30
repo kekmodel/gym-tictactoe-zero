@@ -38,12 +38,6 @@ class MCTS(object):
         self.tau = 0.67
         self.Pi = None
 
-    def run(self):
-        self.make_node()
-        self.make_edge()
-        self.select()
-        self.backup()
-
     def make_node(self):
         self.node_memory.append(self.state)
         return self.node_memory[0]
@@ -81,7 +75,7 @@ if __name__ == "__main__":
     env.seed(2018)
     action_space = env.action_space
     selfplay = MCTS()
-    episode_count = 1000
+    episode_count = 2000
     reward_memory = []
     for e in range(episode_count):
         state = env.reset()
