@@ -31,6 +31,9 @@ logger = logging.getLogger(__name__)   # 실행 로그 남기기, 생략해도 �
  ]
 --------------------------------------------------------------- '''
 
+PLAYER = 0  # 플레이어 식별 변수
+OPPONENT = 1  # 상대 식별 변수
+
 
 class TicTacToeEnv(gym.Env):
     """gym.Env를 상속하여 틱택토 게임 환경 클래스 정의
@@ -42,8 +45,6 @@ class TicTacToeEnv(gym.Env):
     reward_range = (-1, 0, 1)  # 보상의 범위 참고: 패배:-1, 무승부:0, 승리:1
 
     def __init__(self):
-        self.player = 0  # 플레이어 식별 변수
-        self.opponent = 1  # 상대 식별 변수
         self.mark_O = None  # O가 누군지 매칭, _reset()에서 설정
         self.mark_X = None  # X가 누군지 매칭
         self.board_size = 3  # 3x3 보드 사이즈
@@ -85,13 +86,13 @@ class TicTacToeEnv(gym.Env):
         # 규칙 위반 필터링: 액션 자리에 이미 자리가 차있음
         for i in range(2):
             if self.state[i][action[1]][action[2]] == 1:
-                if action[0] == self.player:  # 근데 그게 플레이어가 한 짓이면 반칙패
+                if action[0] == PLAYER:  # 근데 그게 플레이어가 한 짓이면 반칙패
                     reward = -1
                     done = True  # 게임 종료
                     info = {'steps': self.step_count + 1}  # 액션 1회로 인정
                     print('Illegal Lose!')  # 출력
                     return self.state, reward, done, info  # 필수 요소 리턴
-                else:  # 상대가 한짓이면 반대
+                elif action[0] == OPPONENT:  # 상대가 한짓이면 반대
                     reward = 1
                     done = True
                     info = {'steps': self.step_count + 1}
@@ -124,7 +125,7 @@ class TicTacToeEnv(gym.Env):
             for k in range(8):  # 0,1번 보드가 승리패턴과 일치하면
                 # 바이너리 배열은 패턴을 포함할때 서로 곱(행렬곱아님)하면 패턴 자신이 나옴; 고민하다 발견
                 if np.all(self.state[i] * win_pattern[k] == win_pattern[k]):
-                    if i == self.player:  # 주체인 i가 플레이어면 승리
+                    if i == PLAYER:  # 주체인 i가 플레이어면 승리
                         reward = 1  # 보상 1
                         done = True  # 게임 끝
                         info = {'steps': self.step_count}  # step 수 기록
@@ -260,7 +261,7 @@ class TicTacToeEnv(gym.Env):
             self.image_X9.add_attr(trans_X9)
 
         # ------------ 상태 정보에 맞는 이미지를 뷰어에 붙이는 과정 -------------- #
-        self.mark_X = abs(self.mark_O - 1)  # 0이면 1, 1이면 0으로 만들어줌
+        self.mark_X = abs(self.mark_O - 1)  # O가 0이면 X는 1, 1이면 0으로 세팅
         # 좌표번호마다 O,X가 있는지 확인하여 해당하는 이미지를 뷰어에 붙임 (렌더링 때 보임)
         if self.state[self.mark_O][0][0] == 1:
             self.viewer.add_geom(self.image_O1)
@@ -325,9 +326,6 @@ if __name__ == "__main__":
     print(state)
     env.render()
     time.sleep(0.4)
-    if done:
-        time.sleep(1)
-        env.reset()
 
     action = [1, 1, 2]
     state, reward, done, info = env.step(action)
@@ -336,9 +334,6 @@ if __name__ == "__main__":
     print(state)
     env.render()
     time.sleep(0.4)
-    if done:
-        time.sleep(1)
-        env.reset()
 
     action = [0, 1, 0]
     state, reward, done, info = env.step(action)
@@ -347,9 +342,6 @@ if __name__ == "__main__":
     print(state)
     env.render()
     time.sleep(0.4)
-    if done:
-        time.sleep(1)
-        env.reset()
 
     action = [1, 2, 2]
     state, reward, done, info = env.step(action)
@@ -358,9 +350,6 @@ if __name__ == "__main__":
     print(state)
     env.render()
     time.sleep(0.4)
-    if done:
-        time.sleep(1)
-        env.reset()
 
     action = [0, 0, 2]
     state, reward, done, info = env.step(action)
@@ -369,9 +358,6 @@ if __name__ == "__main__":
     print(state)
     env.render()
     time.sleep(0.4)
-    if done:
-        time.sleep(1)
-        env.reset()
 
     action = [1, 2, 1]
     state, reward, done, info = env.step(action)
@@ -380,9 +366,6 @@ if __name__ == "__main__":
     print(state)
     env.render()
     time.sleep(0.4)
-    if done:
-        time.sleep(1)
-        env.reset()
 
     action = [0, 2, 0]
     state, reward, done, info = env.step(action)
@@ -392,7 +375,6 @@ if __name__ == "__main__":
     env.render()
     time.sleep(0.4)
     if done:
-        time.sleep(1)
-        env.reset()
+        time.sleep(0.2)
 
     env.close()
