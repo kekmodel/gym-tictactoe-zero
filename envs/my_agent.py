@@ -1,26 +1,18 @@
 # -*- coding: utf-8 -*-
 import envs
-import neural_network
 
 import gym
 from gym.utils import seeding
 
 import numpy as np
-import hashlib
-import h5py
-
 import math
 from collections import deque, defaultdict
-
-import torch
-import torch.optim as optim
-from torch.autograd import Variable
 
 
 PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
-episode_count = 10
+episode_count = 2000
 
 
 # 에이전트 클래스 (실제 플레이 용, 예시)
@@ -37,9 +29,9 @@ class ZeroAgent(object):
                 return [target[1], target[2]]
 
 
-# 몬테카를로 트리 탐색 클래스 (train 데이타 생성 및 실제 플레이에 사용될 예정)
+# 몬테카를로 트리 탐색 클래스 (train 데이타 생성 용)
 class MCTS(object):
-    def __init__(self, pr=True):
+    def __init__(self, pr=0):
         self.pr = pr
         self.edge = np.zeros((3, 3, 4), 'float')
         self.pi = np.zeros((3, 3), 'float')
@@ -57,18 +49,22 @@ class MCTS(object):
 
         # 하이퍼파라미터
         self.c_puct = 5
+        self.epsilon = 0.25
         self.seed()
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def reset(self):
+    def _reset_step(self):
         self.edge = np.zeros((3, 3, 4), 'float')
         self.pi = np.zeros((3, 3), 'float')
         self.puct_memory = np.zeros((3, 3), 'float')
-        self.action_memory = deque(maxlen=9)
         self.total_visit = 0
+
+    def _reset_episode(self):
+        self.action_memory = deque(maxlen=9)
+        self.action_count = -1
 
     def select_action(self, state):
         self.action_count += 1
@@ -91,6 +87,7 @@ class MCTS(object):
                 self.edge[move_target[0]][move_target[1]][0] += 1
                 self.edge_memory.appendleft(self.edge)
                 self.action_memory.appendleft(action)
+                self._reset_step()
                 return action
 
     def _remember_tree(self):
@@ -98,7 +95,7 @@ class MCTS(object):
         for v in memory:
             key = v[0]
             val = v[1]
-            self.tree_memory[key] += val  # P는 버림 (보완필요)
+            self.tree_memory[key] += val  # 더하면 P는 신뢰안됨 (보완필요)
 
     def _cal_puct(self):
         if self.node_memory[0] in self.tree_memory:
@@ -121,7 +118,7 @@ class MCTS(object):
         self.board = self.state[PLAYER] + self.state[OPPONENT]
         self.empty_loc = np.asarray(np.where(self.board == 0)).transpose()
         self.legal_move_n = self.empty_loc.shape[0]
-        if self.pr:
+        if self.pr == 0:
             self.pr = 1 / self.legal_move_n
         for i in range(self.legal_move_n):
             self.edge[self.empty_loc[i][0]][self.empty_loc[i][1]][3] = self.pr
@@ -129,12 +126,13 @@ class MCTS(object):
     def backup(self, reward, info):
         steps = info['steps']
         for i in range(steps):
-            if self.action_memory[i][0] == 0:
+            if self.action_memory[i][0] == PLAYER:
                 self.edge_memory[i][self.action_memory[i][1]
                                     ][self.action_memory[i][2]][1] += reward
             else:
                 self.edge_memory[i][self.action_memory[i][1]
                                     ][self.action_memory[i][2]][1] -= reward
+        self._reset_episode()
 
     def cal_pi(self, tau=0):
         for i in range(len(self.edge_memory)):
@@ -158,28 +156,31 @@ if __name__ == "__main__":
     # 셀프 플레이 인스턴스 생성
     selfplay = MCTS()
     selfplay.seed(2018)
+    # 기록용
     result = {1: 0, 0: 0, -1: 0}
     # train data 생성
     for e in range(episode_count):
         state = env.reset()
-        selfplay.reset()
         print('-' * 15, '\nepisode: %d' % (e + 1))
+        # 첫턴을 나와 상대 중 누가 할지 정하기
         selfplay.first_turn = selfplay.np_random.choice(2, replace=False)
         done = False
         while not done:
+            # state 타입 tuple로 변환하기 (dict의 key로 쓰려고)
             state_copy = state.copy()
             state_tuple = tuple(state_copy.flatten())
             selfplay.node_memory.appendleft(state_tuple)
             selfplay.state_memory.appendleft(state)
+            # 액션 고르기
             action = selfplay.select_action(state)
-            # print('action: {}'.format(action))
             state, reward, done, info = env.step(action)
         if done:
-            print(state[0] + state[1] * 2)
+            # 승부난 상황 보기
+            print(state[PLAYER] + state[OPPONENT] * 2)
+            # 보상 백업
             selfplay.backup(reward, info)
-            selfplay.reset()
             result[reward] += 1
-    env.close()
+    # 에피소드 정리
     print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%%' %
           (result[1], result[-1], result[0], result[1] / episode_count * 100))
 
