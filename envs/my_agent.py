@@ -79,6 +79,7 @@ class MCTS(object):
         self._remember_tree()
         self._cal_puct()
         tmp = np.argwhere(self.puct_memory == self.puct_memory.max())
+        # 착수금지, 동점 처리
         while True:
             move_target = tmp[self.np_random.choice(
                 tmp.shape[0])]
@@ -97,20 +98,21 @@ class MCTS(object):
         for v in memory:
             key = v[0]
             val = v[1]
-            for i in range(3):
-                self.tree_memory[key] += val  # P는 버림
+            self.tree_memory[key] += val  # P는 버림 (보완필요)
 
     def _cal_puct(self):
         if self.node_memory[0] in self.tree_memory:
-            edge = self.tree_memoty[self.node_memory[0]]
+            edge = self.tree_memory[self.node_memory[0]]
             for i in range(3):
                 for k in range(3):
                     self.total_visit += edge[i][k][0]
+                    # P는 여기서
                     self.puct_memory[i][k] = self.c_puct * \
                         self.edge[i][k][3] / (1 + edge[i][k][0])
             for c in range(3):
                 for r in range(3):
-                    edge[c][r][2] = edge[c][r][1] / edge[c][r][0]
+                    if edge[c][r][0] != 0:
+                        edge[c][r][2] = edge[c][r][1] / edge[c][r][0]
                     self.puct_memory[c][r] = self.puct_memory[c][r] * \
                         math.sqrt(self.total_visit - edge[c][r][0]) + \
                         edge[c][r][2]
@@ -132,7 +134,7 @@ class MCTS(object):
                                     ][self.action_memory[i][2]][1] += reward
             else:
                 self.edge_memory[i][self.action_memory[i][1]
-                                    ][self.action_memory[i][2]][1] += -reward
+                                    ][self.action_memory[i][2]][1] -= reward
 
     def cal_pi(self, tau=0):
         for i in range(len(self.edge_memory)):
@@ -172,9 +174,8 @@ if __name__ == "__main__":
             action = selfplay.select_action(state)
             # print('action: {}'.format(action))
             state, reward, done, info = env.step(action)
-            env.render()
         if done:
-            selfplay.node_memory.appendleft(state)
+            print(state[0] + state[1] * 2)
             selfplay.backup(reward, info)
             selfplay.reset()
             result[reward] += 1
