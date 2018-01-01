@@ -10,7 +10,7 @@ import hashlib
 import h5py
 
 import math
-from collections import deque
+from collections import deque, defaultdict
 
 import torch
 import torch.optim as optim
@@ -20,7 +20,7 @@ from torch.autograd import Variable
 PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
-episode_count = 20
+episode_count = 10
 
 
 # 에이전트 클래스 (실제 플레이 용, 예시)
@@ -42,17 +42,18 @@ class MCTS(object):
     def __init__(self, pr=True):
         self.pr = pr
         self.edge = np.zeros((3, 3, 4), 'float')
+        self.pi = np.zeros((3, 3), 'float')
+        self.puct_memory = np.zeros((3, 3), 'float')
         self.state_memory = deque(maxlen=9 * episode_count)
         self.node_memory = deque(maxlen=9 * episode_count)
         self.edge_memory = deque(maxlen=9 * episode_count)
         self.pi_memory = deque(maxlen=9 * episode_count)
         self.action_memory = deque(maxlen=9)
-        self.puct_memory = np.zeros((3, 3), 'float')
-        self.pi = np.zeros((3, 3), 'float')
+        self.tree_memory = defaultdict(lambda: 0)
         self.legal_move_n = 0
         self.total_visit = 0
         self.first_turn = PLAYER or OPPONENT
-        self.action_count = 1
+        self.action_count = -1
 
         # 하이퍼파라미터
         self.c_puct = 5
@@ -65,14 +66,17 @@ class MCTS(object):
     def reset(self):
         self.edge = np.zeros((3, 3, 4), 'float')
         self.pi = np.zeros((3, 3), 'float')
+        self.puct_memory = np.zeros((3, 3), 'float')
         self.action_memory = deque(maxlen=9)
+        self.total_visit = 0
 
     def select_action(self, state):
-        memory = dict(zip(self.node_memory, self.edge_memory))
         self.action_count += 1
+        self.state = state
+        # 호출될 때마다 첫턴 기준 교대로 행동주체 바꿈, 나중에 왼쪽에 붙여줌
         user_type = (self.first_turn + self.action_count) % 2
-        self.state = state.copy()
         self._make_edge()
+        self._remember_tree()
         self._cal_puct()
         tmp = np.argwhere(self.puct_memory == self.puct_memory.max())
         while True:
@@ -88,22 +92,32 @@ class MCTS(object):
                 self.action_memory.appendleft(action)
                 return action
 
+    def _remember_tree(self):
+        memory = list(zip(self.node_memory, self.edge_memory))
+        for v in memory:
+            key = v[0]
+            val = v[1]
+            for i in range(3):
+                self.tree_memory[key] += val  # P는 버림
+
     def _cal_puct(self):
-        for i in range(3):
-            for k in range(3):
-                self.total_visit += self.edge[i][k][0]
-                self.puct_memory[i][k] = self.edge[i][k][2] + \
-                    self.c_puct * self.edge[i][k][3] / (1 + self.edge[i][k][0])
-        for i in range(3):
-            for k in range(3):
-                self.puct_memory[i][k] = self.puct_memory[i][k] * \
-                    math.sqrt(self.total_visit - self.edge[i][k][0])
+        if self.node_memory[0] in self.tree_memory:
+            edge = self.tree_memoty[self.node_memory[0]]
+            for i in range(3):
+                for k in range(3):
+                    self.total_visit += edge[i][k][0]
+                    self.puct_memory[i][k] = self.c_puct * \
+                        self.edge[i][k][3] / (1 + edge[i][k][0])
+            for c in range(3):
+                for r in range(3):
+                    edge[c][r][2] = edge[c][r][1] / edge[c][r][0]
+                    self.puct_memory[c][r] = self.puct_memory[c][r] * \
+                        math.sqrt(self.total_visit - edge[c][r][0]) + \
+                        edge[c][r][2]
 
     def _make_edge(self):
         self.board = self.state[PLAYER] + self.state[OPPONENT]
-        self.empty_loc = np.where(self.board == 0)
-        self.empty_loc = np.asarray(self.empty_loc)
-        self.empty_loc = np.transpose(self.empty_loc)
+        self.empty_loc = np.asarray(np.where(self.board == 0)).transpose()
         self.legal_move_n = self.empty_loc.shape[0]
         if self.pr:
             self.pr = 1 / self.legal_move_n
@@ -119,17 +133,16 @@ class MCTS(object):
             else:
                 self.edge_memory[i][self.action_memory[i][1]
                                     ][self.action_memory[i][2]][1] += -reward
-        print(self.edge_memory)
 
     def cal_pi(self, tau=0):
         for i in range(len(self.edge_memory)):
             for r in range(3):
                 for c in range(3):
                     self.pi[r][c] = self.edge_memory[i][r][c][3]
-            self.pi_memory.appendleft(self.softmax(self.pi.flatten()))
+            self.pi_memory.appendleft(self._softmax(self.pi.flatten()))
         return self.pi_memory
 
-    def softmax(self, N):
+    def _softmax(self, N):
         e_x = np.exp(N - np.max(N))
         pi = e_x / e_x.sum(axis=0)
         return np.reshape(pi, (3, 3))
@@ -157,20 +170,22 @@ if __name__ == "__main__":
             selfplay.node_memory.appendleft(state_tuple)
             selfplay.state_memory.appendleft(state)
             action = selfplay.select_action(state)
-            print('action: {}'.format(action))
+            # print('action: {}'.format(action))
             state, reward, done, info = env.step(action)
+            env.render()
         if done:
             selfplay.node_memory.appendleft(state)
             selfplay.backup(reward, info)
+            selfplay.reset()
             result[reward] += 1
-        env.close()
+    env.close()
     print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%%' %
           (result[1], result[-1], result[0], result[1] / episode_count * 100))
 
- #           with h5py.File('edge_memory.h5', 'w') as hf:
- #               hf.create_dataset("edge_memory", data=edge_memory)
- #           print('node: {}'.format(node_memory), '\n')
- #           print('edge: {}'.format(edge_memory), '\n')
+    # with h5py.File('edge_memory.h5', 'w') as hf:
+    # hf.create_dataset("edge_memory", data=edge_memory)
+    # print('node: {}'.format(node_memory), '\n')
+    # print('edge: {}'.format(edge_memory), '\n')
 
     # 신경망 학습
     # 신경망 평가
