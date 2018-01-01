@@ -5,7 +5,7 @@
 ## 첫번째 프로젝트: gym 기반으로 틱택토 환경 만들어 보기
 gym을 설치한 후 실행하면 돌아감! 파이썬 3.5로 만들었음!
 
-gym폴더가 gym-tictactoe폴더 한단계 상위에 있어야 함!
+gym폴더가 gym-tictactoe폴더가 있는 곳에 있어야 함!
 
 
 https://github.com/openai/gym
