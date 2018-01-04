@@ -1,3 +1,7 @@
 envs/__pycache__
+envs/.DS_Store
+envs/edge_memory_bak.hdf5
+envs/state_memory_bak.hdf5
+envs/my_agent_bak.py
 /.idea
 /.DS_Store

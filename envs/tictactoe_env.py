@@ -39,9 +39,8 @@ class TicTacToeEnv(gym.Env):
     """gym.Env를 상속하여 틱택토 게임 환경 클래스 정의
         gym.Env: OpenAI Gym의 주요 클래스, 환경 뒤에서 이루어지는 동작 캡슐화(gym/core.py 참조)
     """
-    # _render()의 리턴 타입 구분: 사람 눈으로 볼거고 rgb값 60프레임으로
-    metadata = {'render.modes': ['human', 'rgb_array'],
-                'video.frames_per_second': 60}
+    # _render()의 리턴 타입 구분
+    metadata = {'render.modes': ['human', 'rgb_array']}
     reward_range = (-1, 0, 1)  # 보상의 범위 참고: 패배:-1, 무승부:0, 승리:1
 
     def __init__(self):
@@ -83,32 +82,34 @@ class TicTacToeEnv(gym.Env):
             승부가 나면 reset()을 호출(메소드 내부 또는 에이전트)하여 환경을 초기화 해야 함
             action을 받아서 (state, reward, done, info)인 튜플 리턴해야 함
         """
+        # step count에 1을 더함
+        self.step_count += 1
         # 규칙 위반 필터링: 액션 자리에 이미 자리가 차있음
         for i in range(2):
             if self.state[i][action[1]][action[2]] == 1:
                 if action[0] == PLAYER:  # 근데 그게 플레이어가 한 짓이면 반칙패
                     reward = -1
                     done = True  # 게임 종료
-                    info = {'steps': self.step_count + 1}  # 액션 1회로 인정
+                    info = {'steps': self.step_count}  # 액션 1회로 인정
                     print('Illegal Lose!')  # 출력
                     return self.state, reward, done, info  # 필수 요소 리턴
                 elif action[0] == OPPONENT:  # 상대가 한짓이면 반대
                     reward = 1
                     done = True
-                    info = {'steps': self.step_count + 1}
+                    info = {'steps': self.step_count}
                     print('Illegal Win!')
                     return self.state, reward, done, info
-        # 반칙이 아니면
-        # step_count 0, 2, 4 같은 짝수 상태에서 시작된 액션은 O표시니까
-        if self.step_count % 2 == 0:
-            if self.step_count == 0:  # 첫액션엔 주체를 불러와서 O표시가 누군지 매칭해주고
+        # 반칙이 아니면 진행
+        # step_count 1, 3, 5 같은 홀수번째 액션은 O표시니까
+        if self.step_count % 2 == 1:
+            # 첫 action엔 action주체를 불러와서 O표시가 누군지 매칭해주고
+            if self.step_count == 1:
                 self.mark_O = action[0]
-            self.state[2][action[1]][action[2]] = 1  # 2번보드에 액션 적용
+            self.state[2][action[1]][action[2]] = 1  # O표시용 2번보드에 동기화
             # 주체를 식별해서 해당 보드에도 적용
             self.state[action[0]][action[1]][action[2]] = 1
-        else:  # 1, 3, 5 상태 액션은  X니까 해당 보드에만 적용
+        else:  # 짝수번 째 액션은  X니까 해당 보드에만 적용
             self.state[action[0]][action[1]][action[2]] = 1
-        self.step_count += 1  # 액션 진행 횟수 +1
         return self.__check_win()  # 승패 체크해서 리턴
 
     def __check_win(self):  # state 승패체크용 내부 함수
@@ -307,7 +308,7 @@ class TicTacToeEnv(gym.Env):
             self.viewer.add_geom(self.image_O9)
         elif self.state[self.mark_X][2][2] == 1:
             self.viewer.add_geom(self.image_X9)
-        # 뷰어를 렌더링해서 리턴해라 rgb배열 모드임
+        # rgb 모드면 뷰어를 렌더링해서 리턴해라
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
 
