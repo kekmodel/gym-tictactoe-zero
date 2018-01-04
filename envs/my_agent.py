@@ -5,6 +5,9 @@ import gym
 from gym.utils import seeding
 
 import numpy as np
+import matplotlib.pyplot as plt
+from trueskill import Rating, rate_1vs1
+import h5py
 import math
 from collections import deque, defaultdict
 
@@ -31,8 +34,8 @@ class ZeroAgent(object):
 
 # 몬테카를로 트리 탐색 클래스 (train 데이타 생성 용)
 class MCTS(object):
-    def __init__(self, pr=0):
-        self.pr = pr
+    def __init__(self):
+        self.pr = 0
         self.edge = np.zeros((3, 3, 4), 'float')
         self.pi = np.zeros((3, 3), 'float')
         self.puct_memory = np.zeros((3, 3), 'float')
@@ -56,13 +59,13 @@ class MCTS(object):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def _reset_step(self):
+    def _reset_ram(self):
         self.edge = np.zeros((3, 3, 4), 'float')
         self.pi = np.zeros((3, 3), 'float')
         self.puct_memory = np.zeros((3, 3), 'float')
         self.total_visit = 0
 
-    def _reset_episode(self):
+    def _reset_rom(self):
         self.action_memory = deque(maxlen=9)
         self.action_count = -1
 
@@ -78,7 +81,7 @@ class MCTS(object):
         # 착수금지, 동점 처리
         while True:
             move_target = tmp[self.np_random.choice(
-                tmp.shape[0])]
+                tmp.shape[0], replace=False)]
             is_empty = []
             for i in range(self.legal_move_n):
                 is_empty.append(np.array_equiv(self.empty_loc[i], move_target))
@@ -87,7 +90,7 @@ class MCTS(object):
                 self.edge[move_target[0]][move_target[1]][0] += 1
                 self.edge_memory.appendleft(self.edge)
                 self.action_memory.appendleft(action)
-                self._reset_step()
+                self._reset_ram()
                 return action
 
     def _remember_tree(self):
@@ -95,7 +98,7 @@ class MCTS(object):
         for v in memory:
             key = v[0]
             val = v[1]
-            self.tree_memory[key] += val  # 더하면 P는 신뢰안됨 (보완필요)
+            self.tree_memory[key] += val
 
     def _cal_puct(self):
         if self.node_memory[0] in self.tree_memory:
@@ -132,7 +135,7 @@ class MCTS(object):
             else:
                 self.edge_memory[i][self.action_memory[i][1]
                                     ][self.action_memory[i][2]][1] -= reward
-        self._reset_episode()
+        self._reset_rom()
 
     def cal_pi(self, tau=0):
         for i in range(len(self.edge_memory)):
@@ -156,8 +159,10 @@ if __name__ == "__main__":
     # 셀프 플레이 인스턴스 생성
     selfplay = MCTS()
     selfplay.seed(2018)
-    # 기록용
+    # 통계용 딕트
     result = {1: 0, 0: 0, -1: 0}
+    PLAYER_rating = Rating()
+    OPPONENT_rating = Rating()
     # train data 생성
     for e in range(episode_count):
         state = env.reset()
@@ -166,10 +171,10 @@ if __name__ == "__main__":
         selfplay.first_turn = selfplay.np_random.choice(2, replace=False)
         done = False
         while not done:
-            # state 타입 tuple로 변환하기 (dict의 key로 쓰려고)
+            # state를 hash로 변환하기 (dict의 key로 쓰려고)
             state_copy = state.copy()
-            state_tuple = tuple(state_copy.flatten())
-            selfplay.node_memory.appendleft(state_tuple)
+            state_hash = hash(state_copy.tostring())
+            selfplay.node_memory.appendleft(state_hash)
             selfplay.state_memory.appendleft(state)
             # 액션 고르기
             action = selfplay.select_action(state)
@@ -179,15 +184,16 @@ if __name__ == "__main__":
             print(state[PLAYER] + state[OPPONENT] * 2)
             # 보상 백업
             selfplay.backup(reward, info)
+            # 통계 딕트에 기록
             result[reward] += 1
     # 에피소드 정리
     print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%%' %
           (result[1], result[-1], result[0], result[1] / episode_count * 100))
-
-    # with h5py.File('edge_memory.h5', 'w') as hf:
-    # hf.create_dataset("edge_memory", data=edge_memory)
-    # print('node: {}'.format(node_memory), '\n')
-    # print('edge: {}'.format(edge_memory), '\n')
-
+    '''# 데이터 저장
+    with h5py.File('state_memory.hdf5', 'w') as hf:
+        hf.create_dataset("zero_data_set", data=selfplay.state_memory)
+    with h5py.File('edge_memory.hdf5', 'w') as hf:
+        hf.create_dataset("zero_data_set", data=selfplay.edge_memory)
     # 신경망 학습
     # 신경망 평가
+    '''
