@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-import envs
-
-import gym
+from tictactoe_env import TicTacToeEnv
 from gym.utils import seeding
-
 import numpy as np
 import matplotlib.pyplot as plt
 import h5py
@@ -15,7 +12,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-episode_count = 1600
+episode_count = 2
 
 
 # 에이전트 클래스 (실제 플레이 용, 예시)
@@ -39,20 +36,23 @@ class ZeroAgent(object):
 # edge[좌표행][좌표열][요소번호]로 요소 접근
 class MCTS(object):
     def __init__(self):
-        self.edge = np.zeros((3, 3, 4), 'float')
-        self.pi = np.zeros((3, 3), 'float')
-        self.puct_memory = np.zeros((3, 3), 'float')
         self.state_memory = deque(maxlen=9 * episode_count)
         self.node_memory = deque(maxlen=9 * episode_count)
         self.edge_memory = deque(maxlen=9 * episode_count)
         self.pi_memory = deque(maxlen=9 * episode_count)
-        self.action_memory = deque(maxlen=9)
         self.tree_memory = defaultdict(lambda: 0)
-        self.pr = None
-        self.legal_move_n = 0
-        self.total_visit = 0
-        self.first_turn = PLAYER or OPPONENT
-        self.action_count = -1
+        self.action_memory = None
+        self.puct = None
+        self.edge = None
+        self.pi = None
+        self.legal_move_n = None
+        self.total_visit = None
+        self.first_turn = None
+        self.action_count = None
+        self.board = None
+        self.state = None
+        self._reset_step()
+        self._reset_episode()
 
         # 하이퍼파라미터
         self.c_puct = 5
@@ -63,25 +63,28 @@ class MCTS(object):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def _reset_ram(self):
+    def _reset_step(self):
         self.edge = np.zeros((3, 3, 4), 'float')
         self.pi = np.zeros((3, 3), 'float')
-        self.puct_memory = np.zeros((3, 3), 'float')
+        self.puct = np.zeros((3, 3), 'float')
         self.total_visit = 0
-        self.pr = 0
+        self.legal_move_n = 0
 
-    def _reset_rom(self):
+    def _reset_episode(self):
         self.action_memory = deque(maxlen=9)
         self.action_count = -1
+        self.board = np.zeros((3, 3), 'float')
+        self.state = np.zeros((3, 3, 3), 'float')
 
     def select_action(self, state):
         self.action_count += 1
         self.state = state
         # 호출될 때마다 첫턴 기준 교대로 행동주체 바꿈, 최종 action에 붙여줌
         user_type = (self.first_turn + self.action_count) % 2
-        self.make_edge()
+        self.init_edge()
         self._cal_puct()
-        tmp = np.argwhere(self.puct_memory == self.puct_memory.max())
+        print(self.puct)
+        tmp = np.argwhere(self.puct == self.puct.max())
         # 착수금지, 동점 처리
         while True:
             move_target = tmp[self.np_random.choice(
@@ -92,76 +95,87 @@ class MCTS(object):
             if sum(list(map(int, is_empty))) == 1:
                 # array 두개 붙여서 action 구성
                 action = np.r_[user_type, move_target]
-                # 방문횟수 +1
-                self.edge[move_target[0]][move_target[1]][N] += 1
-                self.edge_memory.appendleft(self.edge)
                 self.action_memory.appendleft(action)
-                self._reset_ram()
+                self.edge_memory.appendleft(self.edge)
+                print(self.edge)
+                print(action)
+                self._reset_step()
                 return action
+
+    def init_edge(self, pr=0):
+        if pr == 0:
+            self.board = self.state[PLAYER] + self.state[OPPONENT]
+            self.empty_loc = np.asarray(np.where(self.board == 0)).transpose()
+            self.legal_move_n = self.empty_loc.shape[0]
+            print(self.empty_loc)
+            pr = 1 / self.legal_move_n
+            for i in range(self.legal_move_n):
+                self.edge[self.empty_loc[i][0]
+                          ][self.empty_loc[i][1]][P] = pr
+        else:
+            for i in range(3):
+                for k in range(3):
+                    self.edge[i][k][P] = pr[i][k]
 
     def _cal_puct(self):
         # 지금까지의 액션을 반영한 트리 구성 하기
         memory = list(zip(self.node_memory, self.edge_memory))
         for v in memory:
-            state = v[0]
-            edge = v[1]
-            self.tree_memory[state] += edge  # N,W 계산
-        # 트리에서 현재 state의 edge를 찾아 NWQP를 사용하여 하나의 PUCT값 계산
-        # 9개의 좌표에 맞는 PUCT 매칭 
-        # 계산된 최종 NWQP를 트리에 저장
+            key = v[0]
+            value = v[1]
+            self.tree_memory[key] += value  # N,W 계산
+        # 트리에서 현재 state의 edge를 찾아 NWQP를 사용하여 PUCT값 계산
+        # 9개의 좌표에 맞는 PUCT값 매칭한 PUCT
+        # 계산된 NWQP를 최종 트리에 업데이트
         if self.node_memory[0] in self.tree_memory:
             edge = self.tree_memory[self.node_memory[0]]
             for i in range(3):
                 for k in range(3):
                     self.total_visit += edge[i][k][N]
-                    self.puct_memory[i][k] = self.c_puct * \
-                        edge[i][k][P] / (1 + edge[i][k][N])
             for c in range(3):
                 for r in range(3):
-                    if edge[c][r][0] != 0:
-                        edge[c][r][2] = edge[c][r][W] / edge[c][r][N]
-                    self.puct_memory[c][r] = self.puct_memory[c][r] * \
-                        math.sqrt(self.total_visit - edge[c][r][N]) + \
-                        edge[c][r][Q]
-
-    def make_edge(self, pr=0):
-        self.pr = pr
-        self.board = self.state[PLAYER] + self.state[OPPONENT]
-        self.empty_loc = np.asarray(np.where(self.board == 0)).transpose()
-        self.legal_move_n = self.empty_loc.shape[0]
-        if self.pr == 0:
-            self.pr = 1 / self.legal_move_n
-        for i in range(self.legal_move_n):
-            self.edge[self.empty_loc[i][0]][self.empty_loc[i][1]][P] = self.pr
+                    if edge[c][r][N] != 0:
+                        # Q 업데이트
+                        edge[c][r][Q] = edge[c][r][W] / edge[c][r][N]
+                    # P 업데이트
+                    edge[c][r][P] = self.edge[c][r][P]
+                    self.puct[c][r] = edge[c][r][Q] + self.c_puct * \
+                        edge[c][r][P] * \
+                        math.sqrt(self.total_visit -
+                                  edge[c][r][N]) / (1 + edge[c][r][N])
+            self.edge = edge
 
     def backup(self, reward, info):
         steps = info['steps']
         for i in range(steps):
             if self.action_memory[i][0] == PLAYER:
                 self.edge_memory[i][self.action_memory[i][1]
-                                    ][self.action_memory[i][2]][1] += reward
+                                    ][self.action_memory[i][2]][W] += reward
             else:
                 self.edge_memory[i][self.action_memory[i][1]
-                                    ][self.action_memory[i][2]][1] -= reward
-        self._reset_rom()
+                                    ][self.action_memory[i][2]][W] -= reward
+            self.edge_memory[i][self.action_memory[i][1]
+                                ][self.action_memory[i][2]][N] += 1
+        self._reset_episode()
 
     def cal_pi(self, tau=0):
-        for i in range(len(self.edge_memory)):
-            for r in range(3):
-                for c in range(3):
-                    self.pi[r][c] = self.edge_memory[i][r][c][3]
-            self.pi_memory.appendleft(self._softmax(self.pi.flatten()))
-        return self.pi_memory
+        if tau == 0:
+            for i in range(len(self.edge_memory)):
+                for r in range(3):
+                    for c in range(3):
+                        self.pi[r][c] = self.edge_memory[i][r][c][N]
+                self.pi_memory.appendleft(self._softmax(self.pi.flatten()))
+            return self.pi_memory
 
-    def _softmax(self, N):
-        e_x = np.exp(N - np.max(N))
+    def _softmax(self, visit_count):
+        e_x = np.exp(visit_count - np.max(visit_count))
         pi = e_x / e_x.sum(axis=0)
         return np.reshape(pi, (3, 3))
 
 
 if __name__ == "__main__":
     # 환경 생성 및 시드 설정
-    env = gym.make('TicTacToe-v0')
+    env = TicTacToeEnv()
     env.seed(2018)
     # 셀프 플레이 인스턴스 생성
     selfplay = MCTS()
@@ -185,8 +199,10 @@ if __name__ == "__main__":
             selfplay.node_memory.appendleft(state_hash)
             # raw state 저장
             selfplay.state_memory.appendleft(state)
+            print(state[PLAYER] + state[OPPONENT] * 2)
             # action 선택하기
             action = selfplay.select_action(state)
+            print(selfplay.tree_memory)
             # action 진행
             state, reward, done, info = env.step(action)
         if done:
@@ -196,6 +212,8 @@ if __name__ == "__main__":
             selfplay.backup(reward, info)
             # 결과 dict에 기록
             result[reward] += 1
+            # print(len(selfplay.node_memory))
+            # print(selfplay.edge_memory)
             if env.mark_O == PLAYER:
                 play_mark_O += 1
                 if reward == 1:
