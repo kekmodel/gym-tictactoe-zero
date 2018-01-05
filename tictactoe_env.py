@@ -70,7 +70,8 @@ class TicTacToeEnv(gym.Env):
 
     def _reset(self):  # 상태 리셋 함수
         # 상태 초기화 (3*3 개짜리배열 3장) 2진으로만 해결하기 위해!
-        self.state = np.zeros((self.board_size, self.board_size, self.board_n))
+        self.state = np.zeros(
+            (self.board_size, self.board_size, self.board_n), 'float')
         self.step_count = 0  # 액션 진행 횟수 0
         self.viewer = None   # 뷰어 리셋
         self.mark_O = None  # O 주체 리셋

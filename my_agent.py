@@ -12,7 +12,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-episode_count = 2
+episode_count = 100
 
 
 # 에이전트 클래스 (실제 플레이 용, 예시)
@@ -40,7 +40,7 @@ class MCTS(object):
         self.node_memory = deque(maxlen=9 * episode_count)
         self.edge_memory = deque(maxlen=9 * episode_count)
         self.pi_memory = deque(maxlen=9 * episode_count)
-        self.tree_memory = defaultdict(lambda: 0)
+        self.tree_memory = None
         self.action_memory = None
         self.puct = None
         self.edge = None
@@ -69,6 +69,7 @@ class MCTS(object):
         self.puct = np.zeros((3, 3), 'float')
         self.total_visit = 0
         self.legal_move_n = 0
+        self.tree_memory = defaultdict(lambda: 0)
 
     def _reset_episode(self):
         self.action_memory = deque(maxlen=9)
@@ -96,9 +97,8 @@ class MCTS(object):
                 # array 두개 붙여서 action 구성
                 action = np.r_[user_type, move_target]
                 self.action_memory.appendleft(action)
-                self.edge_memory.appendleft(self.edge)
-                print(self.edge)
-                print(action)
+                self.edge_memory[0] = self.edge
+                self.tree_memory[self.node_memory[0]] = self.edge
                 self._reset_step()
                 return action
 
@@ -107,8 +107,7 @@ class MCTS(object):
             self.board = self.state[PLAYER] + self.state[OPPONENT]
             self.empty_loc = np.asarray(np.where(self.board == 0)).transpose()
             self.legal_move_n = self.empty_loc.shape[0]
-            print(self.empty_loc)
-            pr = 1 / self.legal_move_n
+            pr = round(1 / self.legal_move_n, 5)
             for i in range(self.legal_move_n):
                 self.edge[self.empty_loc[i][0]
                           ][self.empty_loc[i][1]][P] = pr
@@ -116,14 +115,16 @@ class MCTS(object):
             for i in range(3):
                 for k in range(3):
                     self.edge[i][k][P] = pr[i][k]
+        self.edge_memory.appendleft(self.edge)
 
     def _cal_puct(self):
         # 지금까지의 액션을 반영한 트리 구성 하기
         memory = list(zip(self.node_memory, self.edge_memory))
+        # N,W 계산
         for v in memory:
             key = v[0]
             value = v[1]
-            self.tree_memory[key] += value  # N,W 계산
+            self.tree_memory[key] += value
         # 트리에서 현재 state의 edge를 찾아 NWQP를 사용하여 PUCT값 계산
         # 9개의 좌표에 맞는 PUCT값 매칭한 PUCT
         # 계산된 NWQP를 최종 트리에 업데이트
@@ -139,11 +140,11 @@ class MCTS(object):
                         edge[c][r][Q] = edge[c][r][W] / edge[c][r][N]
                     # P 업데이트
                     edge[c][r][P] = self.edge[c][r][P]
-                    self.puct[c][r] = edge[c][r][Q] + self.c_puct * \
-                        edge[c][r][P] * \
-                        math.sqrt(self.total_visit -
-                                  edge[c][r][N]) / (1 + edge[c][r][N])
-            self.edge = edge
+                    self.puct[c][r] = round(edge[c][r][Q] + self.c_puct * \
+                        edge[c][r][P] * math.sqrt(
+                        self.total_visit - edge[c][r][N]) / \
+                        (1 + edge[c][r][N]), 5)
+            self.tree_memory[self.node_memory[0]] = edge
 
     def backup(self, reward, info):
         steps = info['steps']
@@ -202,7 +203,6 @@ if __name__ == "__main__":
             print(state[PLAYER] + state[OPPONENT] * 2)
             # action 선택하기
             action = selfplay.select_action(state)
-            print(selfplay.tree_memory)
             # action 진행
             state, reward, done, info = env.step(action)
         if done:
@@ -213,11 +213,11 @@ if __name__ == "__main__":
             # 결과 dict에 기록
             result[reward] += 1
             # print(len(selfplay.node_memory))
-            # print(selfplay.edge_memory)
             if env.mark_O == PLAYER:
                 play_mark_O += 1
                 if reward == 1:
                     win_mark_O += 1
+    # print(selfplay.tree_memory)
     # 에피소드 통계 내기
     print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%% PlayMarkO: %d WinMarkO: %d' %
           (result[1], result[-1], result[0], result[1] / episode_count * 100, play_mark_O, win_mark_O))
