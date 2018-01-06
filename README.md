@@ -1,5 +1,7 @@
 # gym-tictactoe
 ![tictactoe](./img/Tic_Tac_Toe.gif)
+
+TicTacToe 예시
 ----------------------------
 ### <일반인이 도전해보는 강화학습>
 ## 첫번째 프로젝트: gym 기반으로 틱택토 환경 만들어 보기
