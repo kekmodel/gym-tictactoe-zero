@@ -12,7 +12,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-episode_count = 100
+episode_count = 400
 
 
 # 에이전트 클래스 (실제 플레이 용, 예시)
@@ -46,6 +46,7 @@ class MCTS(object):
         self.edge = None
         self.pi = None
         self.legal_move_n = None
+        self.empty_loc = None
         self.total_visit = None
         self.first_turn = None
         self.action_count = None
@@ -69,6 +70,7 @@ class MCTS(object):
         self.puct = np.zeros((3, 3), 'float')
         self.total_visit = 0
         self.legal_move_n = 0
+        self.empty_loc = None
         self.tree_memory = defaultdict(lambda: 0)
 
     def _reset_episode(self):
@@ -85,7 +87,17 @@ class MCTS(object):
         self.init_edge()
         self._cal_puct()
         print(self.puct)
-        tmp = np.argwhere(self.puct == self.puct.max())
+        puct = self.puct.tolist()
+        for i, v in enumerate(puct):
+            for k, s in enumerate(v):
+                if [i, k] not in self.empty_loc.tolist():
+                    puct[i][k] = -99999
+        self.puct = np.asarray(puct)
+        tmp = np.argwhere(self.puct == self.puct.max()).tolist()
+        for i, v in enumerate(tmp):
+            if v not in self.empty_loc.tolist():
+                del tmp[i]
+        tmp = np.asarray(tmp)
         # 착수금지, 동점 처리
         while True:
             move_target = tmp[self.np_random.choice(
@@ -140,9 +152,9 @@ class MCTS(object):
                         edge[c][r][Q] = edge[c][r][W] / edge[c][r][N]
                     # P 업데이트
                     edge[c][r][P] = self.edge[c][r][P]
-                    self.puct[c][r] = round(edge[c][r][Q] + self.c_puct * \
-                        edge[c][r][P] * math.sqrt(
-                        self.total_visit - edge[c][r][N]) / \
+                    self.puct[c][r] = round(edge[c][r][Q] + self.c_puct *
+                                            edge[c][r][P] * math.sqrt(
+                        self.total_visit - edge[c][r][N]) /
                         (1 + edge[c][r][N]), 5)
             self.tree_memory[self.node_memory[0]] = edge
 
@@ -221,11 +233,10 @@ if __name__ == "__main__":
     # 에피소드 통계 내기
     print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%% PlayMarkO: %d WinMarkO: %d' %
           (result[1], result[-1], result[0], result[1] / episode_count * 100, play_mark_O, win_mark_O))
-    '''# 데이터 저장
+    # 데이터 저장
     with h5py.File('state_memory.hdf5', 'w') as hf:
         hf.create_dataset("zero_data_set", data=selfplay.state_memory)
     with h5py.File('edge_memory.hdf5', 'w') as hf:
         hf.create_dataset("zero_data_set", data=selfplay.edge_memory)
     # 신경망 학습
     # 신경망 평가
-    '''
