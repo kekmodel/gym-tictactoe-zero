@@ -2,7 +2,6 @@
 from tictactoe_env import TicTacToeEnv
 from gym.utils import seeding
 import numpy as np
-import matplotlib.pyplot as plt
 import h5py
 import math
 from collections import deque, defaultdict
@@ -86,7 +85,6 @@ class MCTS(object):
         user_type = (self.first_turn + self.action_count) % 2
         self.init_edge()
         self._cal_puct()
-        print(self.puct)
         puct = self.puct.tolist()
         for i, v in enumerate(puct):
             for k, s in enumerate(v):
@@ -171,7 +169,7 @@ class MCTS(object):
                                 ][self.action_memory[i][2]][N] += 1
         self._reset_episode()
 
-    def cal_pi(self, tau=0):
+    def _cal_pi(self, tau=0):
         if tau == 0:
             for i in range(len(self.edge_memory)):
                 for r in range(3):
@@ -212,7 +210,7 @@ if __name__ == "__main__":
             selfplay.node_memory.appendleft(state_hash)
             # raw state 저장
             selfplay.state_memory.appendleft(state)
-            print(state[PLAYER] + state[OPPONENT] * 2)
+            # print(state[PLAYER] + state[OPPONENT] * 2)
             # action 선택하기
             action = selfplay.select_action(state)
             # action 진행
@@ -229,7 +227,6 @@ if __name__ == "__main__":
                 play_mark_O += 1
                 if reward == 1:
                     win_mark_O += 1
-    # print(selfplay.tree_memory)
     # 에피소드 통계 내기
     print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%% PlayMarkO: %d WinMarkO: %d' %
           (result[1], result[-1], result[0], result[1] / episode_count * 100, play_mark_O, win_mark_O))

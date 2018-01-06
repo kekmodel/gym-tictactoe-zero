@@ -1,3 +1,6 @@
 /__pycache__
 /.idea
 /.DS_Store
+/my_agent_new.py
+/edge_memory.hdf5
+/state_meory.hdf5
