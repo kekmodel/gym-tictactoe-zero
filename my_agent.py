@@ -136,7 +136,7 @@ class MCTS(object):
             value = v[1]
             self.tree_memory[key] += value
         # 트리에서 현재 state의 edge를 찾아 NWQP를 사용하여 PUCT값 계산
-        # 9개의 좌표에 맞는 PUCT값 매칭한 PUCT
+        # 9개의 좌표에 맞는 PUCT값 매칭
         # 계산된 NWQP를 최종 트리에 업데이트
         if self.node_memory[0] in self.tree_memory:
             edge = self.tree_memory[self.node_memory[0]]
