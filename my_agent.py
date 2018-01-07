@@ -2,7 +2,6 @@
 from tictactoe_env import TicTacToeEnv
 from gym.utils import seeding
 import numpy as np
-import time
 import h5py
 import math
 from collections import deque, defaultdict
@@ -12,7 +11,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-episode_count = 100
+episode_count = 400
 
 
 # 에이전트 클래스 (실제 플레이 용, 예시)
@@ -42,7 +41,7 @@ class MCTS(object):
         self.edge_memory = deque(maxlen=9 * episode_count)
         self.piq_memory = deque(maxlen=9 * episode_count)
 
-        # reset steap member
+        # reset step member
         self.tree_memory = None
         self.pr = None
         self.puct = None
@@ -91,7 +90,7 @@ class MCTS(object):
     def select_action(self, state):
         self.action_count += 1
         # save raw state
-        self.state_memory.appendleft(state)
+        self.state_memory.appendleft(state.flatten())
         self.state = np.copy(state)
         # state를 hash로 변환 (dict의 key로 쓰려고)
         state_hash = hash(self.state.tostring())
@@ -101,59 +100,58 @@ class MCTS(object):
         user_type = (self.first_turn + self.action_count) % 2
         self.init_edge()
         self._cal_puct()
-        print(self.puct, file=f)
+        print(self.puct)
+        # 빈자리가 아닌 곳은 -9999로 최댓값 방지
         puct = self.puct.tolist()
         for i, v in enumerate(puct):
             for k, s in enumerate(v):
                 if [i, k] not in self.empty_loc.tolist():
                     puct[i][k] = -9999
+        # PUCT가 최댓값인 곳 찾기
         self.puct = np.asarray(puct)
-        tmp = np.argwhere(self.puct == self.puct.max()).tolist()
-        for i, v in enumerate(tmp):
-            if v not in self.empty_loc.tolist():
-                del tmp[i]
-        tmp = np.asarray(tmp)
-        # 착수금지, 동점 처리
-        while True:
-            move_target = tmp[self.np_random.choice(
-                tmp.shape[0], replace=False)]
-            is_empty = []
-            for i in range(self.legal_move_n):
-                is_empty.append(np.array_equiv(self.empty_loc[i], move_target))
-            if sum(list(map(int, is_empty))) == 1:
-                # array 두개 붙여서 action 구성
-                action = np.r_[user_type, move_target]
-                self.action_memory.appendleft(action)
-                self.edge_memory[0] = self.edge
-                self.tree_memory[self.node_memory[0]] = self.edge
-                self._reset_step()
-                return action
+        puct_max = np.argwhere(self.puct == self.puct.max()).tolist()
+        # 동점 처리
+        move_target = puct_max[self.np_random.choice(
+            len(puct_max), replace=False)]
+        # 두 배열을 붙여서 최종 action 구성
+        action = np.r_[user_type, move_target]
+        self.action_memory.appendleft(action)
+        self.edge_memory[0] = self.edge
+        self.tree_memory[self.node_memory[0]] = self.edge
+        self._reset_step()
+        return action
 
     def init_edge(self, pr=0):
+        # 들어온 상태에서 가능한 action 자리의 엣지를 초기화
+        # 자리당  NWQP 4가지 요소 저장
+        # 사전확률이 들어 온것이 없으면
         if pr == 0:
+            # 빈 자리의 좌표와 개수를 저장하고 이를 이용해 동일 확률을 계산
             self.board = self.state[PLAYER] + self.state[OPPONENT]
             self.empty_loc = np.asarray(np.where(self.board == 0)).transpose()
             self.legal_move_n = self.empty_loc.shape[0]
             prob = round(1 / self.legal_move_n, 5)
-            # root node 면
+            # root node 일땐 확률에 노이즈를 줘라
             if self.action_count == 0:
                 self.pr = (1 - self.epsilon) * prob + self.epsilon * \
                     self.np_random.dirichlet(
                         self.alpha * np.ones(self.legal_move_n))
-            else:
+            else:  # 아니면 랜덤 확률로 n분의 1
                 self.pr = prob * np.ones(self.legal_move_n)
+            # 빈자리의 엣지에 넣기
             for i in range(self.legal_move_n):
                 self.edge[self.empty_loc[i][0]
                           ][self.empty_loc[i][1]][P] = self.pr[i]
-        else:
+        else:  # 사전확률 값이 있으면 그걸로 넣기
             self.pr = pr
             for i in range(3):
                 for k in range(3):
                     self.edge[i][k][P] = self.pr[i][k]
-        # edge 저장
+        # edge 메모리에 저장
         self.edge_memory.appendleft(self.edge)
 
     def _cal_puct(self):
+        # PUCT 계산하는 놈
         # 지금까지의 액션을 반영한 트리 구성 하기
         memory = list(zip(self.node_memory, self.edge_memory))
         # N,W 계산
@@ -163,7 +161,7 @@ class MCTS(object):
             self.tree_memory[key] += value
         # 트리에서 현재 state의 edge를 찾아 NWQP를 사용하여 PUCT값 계산
         # 9개의 좌표에 맞는 PUCT값 매칭
-        # 계산된 NWQP를 최종 트리에 업데이트
+        # 계산된 NWQP를 최종 edge에 업데이트
         if self.node_memory[0] in self.tree_memory:
             edge = self.tree_memory[self.node_memory[0]]
             for i in range(3):
@@ -205,8 +203,6 @@ class MCTS(object):
 
 
 if __name__ == "__main__":
-    start = time.time()
-    f = open("data/result.txt", "w")
     # 환경 생성 및 시드 설정
     env = TicTacToeEnv()
     env.seed(2018)
@@ -217,12 +213,10 @@ if __name__ == "__main__":
     result = {1: 0, 0: 0, -1: 0}
     play_mark_O = 0
     win_mark_O = 0
-    # train data 생성용
+    # train data 생성
     for e in range(episode_count):
         state = env.reset()
         print('-' * 22, '\nepisode: %d' % (e + 1))
-        f = open("data/result.txt", "a")
-        print('-' * 22, '\nepisode: %d' % (e + 1), file=f)
         # 첫턴을 나와 상대 중 누가 할지 정하기
         selfplay.first_turn = selfplay.np_random.choice(2, replace=False)
         # 첫턴인 경우 기록
@@ -230,46 +224,32 @@ if __name__ == "__main__":
             play_mark_O += 1
         done = False
         while not done:
-            # state 텍스트 파일에 기록
-            print(state[PLAYER] + state[OPPONENT] * 2, file=f)
+            # 보드 상황 출력
+            print(state[PLAYER] + state[OPPONENT] * 2)
             # action 선택하기
             action = selfplay.select_action(state)
             # action 진행
             state, reward, done, info = env.step(action)
         if done:
             # 승부난 후 보드 보기: 플레이어 착수:1 상대착수:2
-            print(state[PLAYER] + state[OPPONENT] * 2, file=f)
+            print(state[PLAYER] + state[OPPONENT] * 2)
             # 보상을 edge에 백업
             selfplay.backup(reward, info)
             # 결과 dict에 기록
             result[reward] += 1
-            # 결과를 텍스트 파일에 기록
             if reward == 1:
-                print('You Win!', info, file=f)
                 if env.mark_O == PLAYER:
                     win_mark_O += 1
-            elif reward == -1:
-                print('You Lose!', info, file=f)
-            else:
-                print('Draw!', info, file=f)
-        # train data 저장
-        if e % 1 == 0:
-            with h5py.File('data/state_memory.hdf5', 'w') as h5s:
-                h5s.create_dataset("state", data=selfplay.state_memory)
-            with h5py.File('data/edge_memory.hdf5', 'w') as h5e:
-                h5e.create_dataset("edge", data=selfplay.edge_memory)
-
-    # 통계 출력
-    # 화면
+    # 에피소드 통계
     print('-' * 22, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%% PlayMarkO: %d WinMarkO: %d' %
           (result[1], result[-1], result[0], result[1] / episode_count * 100, play_mark_O, win_mark_O))
-    # 텍스트 파일
-    print('-' * 22, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%% PlayMarkO: %d WinMarkO: %d' %
-          (result[1], result[-1], result[0], result[1] / episode_count * 100, play_mark_O, win_mark_O), file=f)
-    f.close()
-    finish = round(float(time.time() - start), 1)
-    # data 불러오기
-    '''
+    # data save
+    with h5py.File('data/state_memory.hdf5', 'w') as hf:
+        hf.create_dataset("state", data=selfplay.state_memory)
+    with h5py.File('data/edge_memory.hdf5', 'w') as hf:
+        hf.create_dataset("edge", data=selfplay.edge_memory)
+
+    # date load
     hfs = h5py.File('data/state_memory.hdf5', 'r+')
     state_memory = hfs.get('state')
     state_memory = deque(state_memory)
@@ -278,6 +258,5 @@ if __name__ == "__main__":
     edge_memory = hfe.get('edge')
     edge_memory = deque(edge_memory)
     hfe.close()
-    print('state: {}'.format(state_memory))
+    # print('state: {}'.format(state_memory))
     # print('edge: {}'.format(edge_memory))
-    '''

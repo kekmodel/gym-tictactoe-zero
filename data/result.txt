@@ -36,9 +36,9 @@ episode: 1
 [[ 0.  0.  0.]
  [ 0.  0.  0.]
  [ 0.  0.  0.]]
+You Win! {'steps': 6}
 [[ 1.  0.  2.]
  [ 1.  2.  0.]
  [ 1.  0.  2.]]
-You Win! {'steps': 6}
 ---------------------- 
 Win: 1 Lose: 0 Draw: 0 Winrate: 100.0% PlayMarkO: 0 WinMarkO: 0
