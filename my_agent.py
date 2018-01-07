@@ -30,9 +30,9 @@ class ZeroAgent(object):
 
 # 몬테카를로 트리 탐색 클래스 (train 데이타 생성 용)
 # edge는 현재 state에서 착수 가능한 모든 action
-# edge 구성: (3*3*4)array: 9개 좌표에 4개의 요소 매칭
-# 4개의 요소: (N, W, Q, P) N: edge 방문횟수 W: 보상누적값 Q: 보상평균(W/N) P: edge 선택확률
-# edge[좌표행][좌표열][요소번호]로 요소 접근
+# edge 구성: (3*3*4)array: 9개 좌표에 4개의 정보 매칭
+# 4개의 정보: (N, W, Q, P) N: edge 방문횟수, W: 보상누적값, Q: 보상평균(W/N), P: edge 선택확률
+# edge[좌표행][좌표열][번호]로 접근
 class MCTS(object):
     def __init__(self):
         # memories
@@ -41,7 +41,7 @@ class MCTS(object):
         self.edge_memory = deque(maxlen=9 * episode_count)
         self.piq_memory = deque(maxlen=9 * episode_count)
 
-        # reset step member
+        # reset_step member
         self.tree_memory = None
         self.pr = None
         self.puct = None
@@ -52,19 +52,20 @@ class MCTS(object):
         self.total_visit = None
         self.first_turn = None
 
-        # reset episode member
+        # reset_episode member
         self.action_memory = None
         self.action_count = None
         self.board = None
         self.state = None
 
-        self._reset_step()
-        self._reset_episode()
-
-        # 하이퍼파라미터
+        # hyperparameter
         self.c_puct = 5
         self.epsilon = 0.25
         self.alpha = 1.5
+
+        # meeber 초기화 및 시드 생성
+        self._reset_step()
+        self._reset_episode()
         self.seed()
 
     def seed(self, seed=None):
@@ -91,10 +92,10 @@ class MCTS(object):
         self.action_count += 1
         # save raw state
         self.state_memory.appendleft(state.flatten())
-        self.state = np.copy(state)
         # state를 hash로 변환 (dict의 key로 쓰려고)
+        self.state = np.copy(state)
         state_hash = hash(self.state.tostring())
-        # hash 저장
+        # 변환한 state를 node로 부르자. 저장!
         self.node_memory.appendleft(state_hash)
         # 호출될 때마다 첫턴 기준 교대로 행동주체 바꿈, 최종 action에 붙여줌
         user_type = (self.first_turn + self.action_count) % 2
@@ -122,9 +123,10 @@ class MCTS(object):
         return action
 
     def init_edge(self, pr=0):
-        # 들어온 상태에서 가능한 action 자리의 엣지를 초기화
-        # 자리당  NWQP 4가지 요소 저장
-        # 사전확률이 들어 온것이 없으면
+        '''들어온 상태에서 가능한 action 자리의 엣지를 초기화 (P값 배치)
+           빈자리를 검색하여 규칙위반 방지 및 랜덤 확률 생성
+        '''
+        # 들어 온 사전확률이 없으면
         if pr == 0:
             # 빈 자리의 좌표와 개수를 저장하고 이를 이용해 동일 확률을 계산
             self.board = self.state[PLAYER] + self.state[OPPONENT]
@@ -142,7 +144,7 @@ class MCTS(object):
             for i in range(self.legal_move_n):
                 self.edge[self.empty_loc[i][0]
                           ][self.empty_loc[i][1]][P] = self.pr[i]
-        else:  # 사전확률 값이 있으면 그걸로 넣기
+        else:  # 사전확률 값이 들어오면 그걸로 넣기
             self.pr = pr
             for i in range(3):
                 for k in range(3):
@@ -151,17 +153,15 @@ class MCTS(object):
         self.edge_memory.appendleft(self.edge)
 
     def _cal_puct(self):
-        # PUCT 계산하는 놈
-        # 지금까지의 액션을 반영한 트리 구성 하기
+        '''9개의 좌표에 PUCT값을 계산하여 매칭'''
+        # 지금까지의 액션을 반영한 트리 구성 하기. dict{node: edge}로 해봄
         memory = list(zip(self.node_memory, self.edge_memory))
-        # N,W 계산
+        # 지금까지의 동일한 state에 대한 edge의 N,W 누적
+        # Q,P는 덧셈이라 손상되므로 보정함
         for v in memory:
             key = v[0]
             value = v[1]
             self.tree_memory[key] += value
-        # 트리에서 현재 state의 edge를 찾아 NWQP를 사용하여 PUCT값 계산
-        # 9개의 좌표에 맞는 PUCT값 매칭
-        # 계산된 NWQP를 최종 edge에 업데이트
         if self.node_memory[0] in self.tree_memory:
             edge = self.tree_memory[self.node_memory[0]]
             for i in range(3):
@@ -170,17 +170,20 @@ class MCTS(object):
             for c in range(3):
                 for r in range(3):
                     if edge[c][r][N] != 0:
-                        # Q 업데이트
+                        # Q 보정
                         edge[c][r][Q] = edge[c][r][W] / edge[c][r][N]
-                    # P 업데이트
+                    # P 보정
                     edge[c][r][P] = self.edge[c][r][P]
+                    # PUCT 계산! 소수점 아래 5자리
                     self.puct[c][r] = round(edge[c][r][Q] + self.c_puct *
                                             edge[c][r][P] * math.sqrt(
                         self.total_visit - edge[c][r][N]) /
                         (1 + edge[c][r][N]), 5)
+            # 보정된 edge를 최종 트리에 업데이트
             self.tree_memory[self.node_memory[0]] = edge
 
     def backup(self, reward, info):
+        '''에피소드가 끝나면 지나 온 엣지의 N과 W를 업데이트 함'''
         steps = info['steps']
         for i in range(steps):
             if self.action_memory[i][0] == PLAYER:
@@ -258,5 +261,5 @@ if __name__ == "__main__":
     edge_memory = hfe.get('edge')
     edge_memory = deque(edge_memory)
     hfe.close()
-    # print('state: {}'.format(state_memory))
+    print('state: {}'.format(state_memory))
     # print('edge: {}'.format(edge_memory))
