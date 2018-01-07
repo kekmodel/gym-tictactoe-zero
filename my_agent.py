@@ -11,7 +11,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-episode_count = 400
+episode_count = 100
 
 
 # 에이전트 클래스 (실제 플레이 용, 예시)
@@ -63,7 +63,7 @@ class MCTS(object):
         self.epsilon = 0.25
         self.alpha = 1.5
 
-        # meeber 초기화 및 시드 생성
+        # member 초기화 및 시드 생성
         self._reset_step()
         self._reset_episode()
         self.seed()
@@ -101,7 +101,7 @@ class MCTS(object):
         user_type = (self.first_turn + self.action_count) % 2
         self.init_edge()
         self._cal_puct()
-        print(self.puct)
+        # print(self.puct)
         # 빈자리가 아닌 곳은 -9999로 최댓값 방지
         puct = self.puct.tolist()
         for i, v in enumerate(puct):
@@ -117,8 +117,6 @@ class MCTS(object):
         # 두 배열을 붙여서 최종 action 구성
         action = np.r_[user_type, move_target]
         self.action_memory.appendleft(action)
-        self.edge_memory[0] = self.edge
-        self.tree_memory[self.node_memory[0]] = self.edge
         self._reset_step()
         return action
 
@@ -132,7 +130,7 @@ class MCTS(object):
             self.board = self.state[PLAYER] + self.state[OPPONENT]
             self.empty_loc = np.asarray(np.where(self.board == 0)).transpose()
             self.legal_move_n = self.empty_loc.shape[0]
-            prob = round(1 / self.legal_move_n, 5)
+            prob = 1 / self.legal_move_n
             # root node 일땐 확률에 노이즈를 줘라
             if self.action_count == 0:
                 self.pr = (1 - self.epsilon) * prob + self.epsilon * \
@@ -174,16 +172,16 @@ class MCTS(object):
                         edge[c][r][Q] = edge[c][r][W] / edge[c][r][N]
                     # P 보정
                     edge[c][r][P] = self.edge[c][r][P]
-                    # PUCT 계산! 소수점 아래 5자리
-                    self.puct[c][r] = round(edge[c][r][Q] + self.c_puct *
-                                            edge[c][r][P] * math.sqrt(
-                        self.total_visit - edge[c][r][N]) /
-                        (1 + edge[c][r][N]), 5)
-            # 보정된 edge를 최종 트리에 업데이트
+                    # PUCT 계산!
+                    self.puct[c][r] = edge[c][r][Q] + \
+                        self.c_puct * edge[c][r][P] * \
+                        math.sqrt(self.total_visit - edge[c][r][N]) / \
+                        (1 + edge[c][r][N])
+            # 보정한 edge를 최종 트리에 업데이트
             self.tree_memory[self.node_memory[0]] = edge
 
     def backup(self, reward, info):
-        '''에피소드가 끝나면 지나 온 엣지의 N과 W를 업데이트 함'''
+        '''에피소드가 끝나면 지나 온 edge의 N과 W를 업데이트 함'''
         steps = info['steps']
         for i in range(steps):
             if self.action_memory[i][0] == PLAYER:
@@ -227,14 +225,14 @@ if __name__ == "__main__":
             play_mark_O += 1
         done = False
         while not done:
-            # 보드 상황 출력
+            # 보드 상황 출력: 내 착수:1, 상대 착수:2
             print(state[PLAYER] + state[OPPONENT] * 2)
             # action 선택하기
             action = selfplay.select_action(state)
             # action 진행
             state, reward, done, info = env.step(action)
         if done:
-            # 승부난 후 보드 보기: 플레이어 착수:1 상대착수:2
+            # 승부난 보드 보기: 내 착수:1, 상대 착수:2
             print(state[PLAYER] + state[OPPONENT] * 2)
             # 보상을 edge에 백업
             selfplay.backup(reward, info)
@@ -261,5 +259,5 @@ if __name__ == "__main__":
     edge_memory = hfe.get('edge')
     edge_memory = deque(edge_memory)
     hfe.close()
-    print('state: {}'.format(state_memory))
+    # print('state: {}'.format(state_memory))
     # print('edge: {}'.format(edge_memory))
