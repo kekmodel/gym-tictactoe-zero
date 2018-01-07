@@ -131,20 +131,20 @@ class TicTacToeEnv(gym.Env):
                         reward = 1  # 보상 1
                         done = True  # 게임 끝
                         info = {'steps': self.step_count}  # step 수 기록
-                        print('You Win!')  # 승리 메세지 출력
+                        print('You Win!', info)  # 승리 메세지 출력
                         return self.state, reward, done, info  # 필수 값 리턴!
                     else:  # 주체가 상대면 패배
                         reward = -1  # 보상 -1
                         done = True  # 게임 끝
                         info = {'steps': self.step_count}  # step 수 기록
-                        print('You Lose!')  # 너 짐
+                        print('You Lose!', info)  # 너 짐
                         return self.state, reward, done, info  # 필수 값 리턴!
         # 다 돌려봤는데 승부난게 없더라 근데 O식별용 2번보드에 들어있는게 5개면? 비김
         if np.count_nonzero(self.state[2]) == 5:
             reward = 0  # 보상 0
             done = True  # 게임 끝
-            print('Draw!')  # 비김
             info = {'steps': self.step_count}
+            print('Draw!', info)  # 비김
             return self.state, reward, done, info
         else:  # 이거 다~~~ 아니면 다음 수 둬야지
             reward = 0
