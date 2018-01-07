@@ -2,8 +2,4 @@
 /.idea
 /.DS_Store
 /my_agent_new.py
-/edge_memory.hdf5
-/state_memory.hdf5
-/20000ep_edge_memory.hdf5
-/20000ep_state_memory.hdf5
-/20000ep_Result.txt
+/my_agent_old.py
