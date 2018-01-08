@@ -259,5 +259,3 @@ if __name__ == "__main__":
     edge_memory = hfe.get('edge')
     edge_memory = deque(edge_memory)
     hfe.close()
-    # print('state: {}'.format(state_memory))
-    # print('edge: {}'.format(edge_memory))
