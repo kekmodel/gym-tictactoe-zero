@@ -29,7 +29,7 @@ https://github.com/openai/gym
 
 --> 오기로 하다보니 어느 정도 성과가 나기 시작!!(오? 재능 발견?)
 
---> 여러분도 함께 해요~~~ :P (위에 주소로 페이스북 친추걸고 같이 스터디해요!)
+--> 여러분도 함께 해요~~~ :P (페이스북 친추걸고 같이 스터디해요! https://www.facebook.com/kekmodel)
 
 ### 1. OpenAI Gym기반 틱택토 환경만들기 (완료)
 - git, text editor, jupyter 등 개발환경 설정
