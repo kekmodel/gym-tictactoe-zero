@@ -1,5 +1,5 @@
 /__pycache__
 /.idea
 /.DS_Store
-/my_agent_new.py
-/my_agent_train.py
+/agent_drl.py
+/agent_train.py
