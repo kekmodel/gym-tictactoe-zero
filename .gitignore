@@ -3,3 +3,4 @@
 /.DS_Store
 /agent_drl.py
 /agent_train.py
+data/.DS_Store
