@@ -76,16 +76,16 @@ class MCTS(object):
         self.action_count += 1
         # save raw state
         self.state_memory.appendleft(state.flatten())
-        # state를 hash로 변환 (dict의 key로 쓰려고)
+        # state를 문자열로 변환 (dict의 key로 쓰려고)
         self.state = np.copy(state)
-        state_hash = hash(self.state.tostring())
+        state_str = self.state.tostring()
         # 변환한 state를 node로 부르자. 저장!
-        self.node_memory.appendleft(state_hash)
+        self.node_memory.appendleft(state_str)
         # 호출될 때마다 첫턴 기준 교대로 행동주체 바꿈, 최종 action에 붙여줌
         user_type = (self.first_turn + self.action_count) % 2
         self.init_edge()
         self._cal_puct()
-        # print(self.puct)
+        print(self.puct)  # 점수 확인용
         # 빈자리가 아닌 곳은 -9999로 최댓값 방지
         puct = self.puct.tolist()
         for i, v in enumerate(puct):
@@ -208,7 +208,7 @@ if __name__ == "__main__":
             # action 진행
             state, reward, done, info = env.step(action)
         if done:
-            # 승부난 보드 보기: 내 착수:1, 상대 착수:2
+            # 승부난 보드 보기
             print(state[PLAYER] + state[OPPONENT] * 2)
             # 보상을 edge에 백업
             selfplay.backup(reward, info)
@@ -220,7 +220,6 @@ if __name__ == "__main__":
     # 에피소드 통계
     print('-' * 22, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%% PlayMarkO: %d WinMarkO: %d' %
           (result[1], result[-1], result[0], result[1] / episode_count * 100, play_mark_O, win_mark_O))
-    env.close()
     # data save
     np.save('data/state_memory.npy', selfplay.state_memory)
     np.save('data/edge_memory.npy', selfplay.edge_memory)
