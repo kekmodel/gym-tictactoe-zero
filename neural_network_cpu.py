@@ -18,7 +18,7 @@ class NeuralNetwork(nn.Module):
         self.conv1_relu = nn.ReLU(inplace=True)
         self.conv2 = nn.Conv2d(4, 4, kernel_size=3, padding=1)
         self.conv2_bn = nn.BatchNorm2d(4)
-        # forward엔 여기에 skip connection 추가하기
+        # forward엔 여기에 skip connection 추가 필요
         self.conv2_relu = nn.ReLU(inplace=True)
 
         # 정책 헤드: 정책함수 인풋 받는 곳
