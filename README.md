@@ -53,7 +53,7 @@ https://github.com/openai/gym
 
 12월 18일: state 타입 수정 (알파고 제로 방식)
 
-12월 19일: 틱택토 환경 정식버전 완성
+12월 19일: 틱택토 환경 정식버전 완성 (tictactoe_env.py)
 
 ### 2. 에이전트 만들기
 - 파이썬 중급 공부
@@ -87,14 +87,15 @@ https://github.com/openai/gym
 
 1월 3일: (state, edge) set을 hdf5로 저장 구현
 
-1월 6일: PUCT-MCTS 정식버전 구현
+1월 6일: PUCT-MCTS 정식버전 구현 (mcts_zero.py)
 
              - 알고리즘 오류 수정, overflow 잡기
              - 20,000 episode 데이터 저장
              - 완료시 Slack에 메시지 보내는 기능 추가
 
-1월 10일: Agent 프로토타입 구현(RL)
+1월 10일: RL Agent 프로토타입 구현 (agent_rl.py)
 
+              - 딥러닝 없이 순수 강화학습만 활용한 버전
               - 데이터로 트리 재구현               
               - edge의 방문횟수를 softmax를 사용해 확률로 전환
               - 정책함수 구현
