@@ -8,7 +8,7 @@ gym을 설치한 후 실행하면 돌아갑니다. 파이썬 3.5로 만들었습
 
 약간의 허접한 렌더링도 지원합니다.ㅋ
 
-gym폴더가 gym-tictactoe폴더가 있는 곳에 있어야 합니다..
+gym폴더와 gym-tictactoe폴더가 같은 곳에 있어야 합니다..
 
 https://github.com/openai/gym
 
