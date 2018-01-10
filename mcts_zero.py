@@ -2,7 +2,6 @@
 from tictactoe_env import TicTacToeEnv
 from gym.utils import seeding
 import numpy as np
-import h5py
 import math
 from collections import deque, defaultdict
 
@@ -25,7 +24,6 @@ class MCTS(object):
         self.state_memory = deque(maxlen=9 * episode_count)
         self.node_memory = deque(maxlen=9 * episode_count)
         self.edge_memory = deque(maxlen=9 * episode_count)
-        self.pi_memory = deque(maxlen=9 * episode_count)
 
         # reset_step member
         self.tree_memory = None
@@ -224,7 +222,5 @@ if __name__ == "__main__":
           (result[1], result[-1], result[0], result[1] / episode_count * 100, play_mark_O, win_mark_O))
     env.close()
     # data save
-    with h5py.File('data/state_memory.hdf5', 'w') as hf:
-        hf.create_dataset("state", data=selfplay.state_memory)
-    with h5py.File('data/edge_memory.hdf5', 'w') as hf:
-        hf.create_dataset("edge", data=selfplay.edge_memory)
+    np.save('data/state_memory.npy', selfplay.state_memory)
+    np.save('data/edge_memory.npy', selfplay.edge_memory)
