@@ -74,6 +74,10 @@ https://github.com/openai/gym
     - ResNet
     - 선형대수학 기초
 - PyTorch 기초 공부
+- 평가방법 공부
+    - ELO Rating
+    - Bayes Elo Rating
+    - WHR
 - ing...
 
 12월 19일: 코딩 시작
