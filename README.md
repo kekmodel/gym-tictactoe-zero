@@ -74,6 +74,7 @@ https://github.com/openai/gym
     - ResNet
     - 선형대수학 기초
 - PyTorch 기초 공부
+- ing...
 
 12월 19일: 코딩 시작
 
@@ -96,7 +97,7 @@ https://github.com/openai/gym
 1월 10일: RL Agent 프로토타입 구현 (agent_rl.py)
 
               - 딥러닝 없이 순수 강화학습만 활용한 버전
-              - 데이터로 트리 재구현               
+              - 데이터로 트리 재구현 
               - edge의 방문횟수를 softmax를 사용해 확률로 전환
               - 정책함수 구현
 
