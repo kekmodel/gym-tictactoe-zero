@@ -12,6 +12,10 @@ gym폴더와 gym-tictactoe폴더가 같은 곳에 있어야 합니다..
 
 https://github.com/openai/gym
 
+h5py도 씁니다. 
+    
+    pip intall h5py
+
 
 ### 저는..?!
 
