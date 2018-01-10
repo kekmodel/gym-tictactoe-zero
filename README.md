@@ -78,19 +78,26 @@ https://github.com/openai/gym
 
 12월 19일: 코딩 시작
 
-12월 25일: 간단한 ResNet 구현 (PyTorch)
+12월 25일: PyTorch로 간단한 ResNet 구현 (neural_network_cpu.py)
 
 12월 31일: state를 hash로 바꿔 다뤄봄
+
+             - dict의 key로 쓸려고
+             - 검색 속도 빨라짐
+             - 뭘 기준으로 바뀌는지는 공부 필요
 
 <2018년>
 
 1월 1일: PUCT-MCTS 프로토타입 구현
+           
+             - dict로 접근해보았음
 
-1월 3일: (state, edge) set을 hdf5로 저장 구현
+1월 3일: (state, edge) set을 hdf5로 저장 구현 (data/)
 
 1월 6일: PUCT-MCTS 정식버전 구현 (mcts_zero.py)
 
-             - 알고리즘 오류 수정, overflow 잡기
+             - 알고리즘 오류 수정
+             - 첫번째 state에 Dirichlet 노이즈 설정(e-greedy) 
              - 20,000 episode 데이터 저장
              - 완료시 Slack에 메시지 보내는 기능 추가
 
