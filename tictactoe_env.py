@@ -318,7 +318,6 @@ if __name__ == "__main__":
     import time
     env = TicTacToeEnv()
     state = env.reset()
-    print(env.action_space.high)
     print(state)
     print('Start!')
 
