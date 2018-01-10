@@ -111,6 +111,7 @@ https://github.com/openai/gym
               - 데이터로 트리 재구현 
               - edge의 방문횟수를 softmax를 사용해 확률로 전환
               - 정책함수 구현
+              - self Play 전적 400전 400무
 
 ing...
 
