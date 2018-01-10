@@ -31,7 +31,7 @@ https://github.com/openai/gym
 
 --> 여러분도 함께 해요~~~ :P (위에 주소로 페이스북 친추걸고 같이 스터디해요!)
 
-### 1. OpenAI Gym기반 틱택토 환경만들기
+### 1. OpenAI Gym기반 틱택토 환경만들기 (완료)
 - git, text editor, jupyter 등 개발환경 설정
 - 파이썬 기초 공부
     - 기본 문법
@@ -55,7 +55,7 @@ https://github.com/openai/gym
 
 12월 19일: 틱택토 환경 정식버전 완성 (tictactoe_env.py)
 
-### 2. 에이전트 만들기
+### 2. 에이전트 만들기 (진행중)
 - 파이썬 중급 공부
 - 강화학습 공부
     - Marcov Decision Process
