@@ -1,4 +1,4 @@
-import logging  # 로그 제공 모듈, 생략해도 됨
+import logging  # 로그 제공 모듈
 import gym   # 환경 제공 모듈
 from gym import spaces   # 공간 정의 클래스
 from gym.utils import seeding   # 시드 제공 클래스
