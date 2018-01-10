@@ -222,6 +222,7 @@ if __name__ == "__main__":
     # 에피소드 통계
     print('-' * 22, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%% PlayMarkO: %d WinMarkO: %d' %
           (result[1], result[-1], result[0], result[1] / episode_count * 100, play_mark_O, win_mark_O))
+    env.close()
     # data save
     with h5py.File('data/state_memory.hdf5', 'w') as hf:
         hf.create_dataset("state", data=selfplay.state_memory)
