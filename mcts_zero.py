@@ -10,7 +10,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-episode_count = 20000
+episode_count = 400
 
 
 # 몬테카를로 트리 탐색 클래스 (최초 train 데이터 생성 용)
@@ -46,6 +46,7 @@ class MCTS(object):
         self.c_puct = 5
         self.epsilon = 0.25
         self.alpha = 1.5
+        self.expand_count = 40
 
         # member 초기화 및 시드 생성
         self._reset_step()
@@ -69,15 +70,15 @@ class MCTS(object):
     def _reset_episode(self):
         self.action_memory = deque(maxlen=9)
         self.action_count = -1
-        self.board = np.zeros((3, 3), 'float')
-        self.state = np.zeros((3, 3, 3), 'float')
+        self.board = None
+        self.state = None
 
     def select_action(self, state):
         self.action_count += 1
-        # save raw state
+        self.state = state
+        # save state
         self.state_memory.appendleft(state.flatten())
         # state를 문자열로 변환 (dict의 key로 쓰려고)
-        self.state = np.copy(state)
         state_str = self.state.tostring()
         # 변환한 state를 node로 부르자. 저장!
         self.node_memory.appendleft(state_str)
@@ -107,6 +108,7 @@ class MCTS(object):
     def init_edge(self, pr=0):
         '''들어온 상태에서 가능한 action 자리의 엣지를 초기화 (P값 배치)
            빈자리를 검색하여 규칙위반 방지 및 랜덤 확률 생성
+           root node, expand node 확인 후 노이즈 줌 (e-greedy)
         '''
         # 들어 온 사전확률이 없으면
         if pr == 0:
@@ -115,8 +117,9 @@ class MCTS(object):
             self.empty_loc = np.asarray(np.where(self.board == 0)).transpose()
             self.legal_move_n = self.empty_loc.shape[0]
             prob = 1 / self.legal_move_n
-            # root node 일땐 확률에 노이즈를 줘라
-            if self.action_count == 0:
+            count = self.node_memory.count(self.state.tostring())
+            # root node or expand node 이면
+            if self.action_count == 0 or count >= self.expand_count:
                 self.pr = (1 - self.epsilon) * prob + self.epsilon * \
                     self.np_random.dirichlet(
                         self.alpha * np.ones(self.legal_move_n))
@@ -221,5 +224,6 @@ if __name__ == "__main__":
     print('-' * 22, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%% PlayMarkO: %d WinMarkO: %d' %
           (result[1], result[-1], result[0], result[1] / episode_count * 100, play_mark_O, win_mark_O))
     # data save
+    print("data saved")
     np.save('data/state_memory.npy', selfplay.state_memory)
     np.save('data/edge_memory.npy', selfplay.edge_memory)
