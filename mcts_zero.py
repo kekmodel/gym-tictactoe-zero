@@ -10,7 +10,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-episode_count = 2400
+episode_count = 800
 
 
 # 몬테카를로 트리 탐색 클래스 (최초 train 데이터 생성 용)
@@ -30,7 +30,6 @@ class MCTS(object):
         self.pr = None
         self.puct = None
         self.edge = None
-        self.pi = None
         self.legal_move_n = None
         self.empty_loc = None
         self.total_visit = None
@@ -58,9 +57,8 @@ class MCTS(object):
         return [seed]
 
     def _reset_step(self):
-        self.edge = np.zeros((3, 3, 4), 'float')
-        self.pi = np.zeros((3, 3), 'float')
-        self.puct = np.zeros((3, 3), 'float')
+        self.edge = np.zeros((3, 3, 4), 'float64')
+        self.puct = np.zeros((3, 3), 'float64')
         self.total_visit = 0
         self.legal_move_n = 0
         self.empty_loc = None

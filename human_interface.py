@@ -31,10 +31,8 @@ class ZeroTree(object):
         self._cal_pi()
 
     def _load_data(self):
-        state_memory = np.load('data/state_memory.npy')
-        self.state_memory = deque(state_memory)
-        edge_memory = np.load('data/edge_memory.npy')
-        self.edge_memory = deque(edge_memory)
+        self.state_memory = np.load('data/state_memory.npy')
+        self.edge_memory = np.load('data/edge_memory.npy')
 
     def _make_tree(self):
         for v in self.state_memory:
@@ -62,7 +60,7 @@ class ZeroTree(object):
 
     def get_pi(self, state):
         self.state = state.copy()
-        board = self.state[PLAYER] + self.state[OPPONENT] * 2
+        board = self.state[PLAYER] + self.state[OPPONENT]
         if tuple(state.flatten()) in self.state_data:
             i = tuple(self.state.flatten())
             j = self.state_data.index(i)
@@ -71,8 +69,9 @@ class ZeroTree(object):
             return pi
         else:
             empty_loc = np.asarray(np.where(board == 0)).transpose()
+            print("empty_loc: {}".format(empty_loc))
             legal_move_n = empty_loc.shape[0]
-            pi = np.zeros((3, 3, 3), 'float')
+            pi = np.zeros((3, 3, 4), 'float64')
             prob = 1 / legal_move_n
             pr = (1 - self.epsilon) * prob + self.epsilon * \
                 np.random.dirichlet(self.alpha * np.ones(legal_move_n))
@@ -123,8 +122,8 @@ class ZeroAgent(object):
 
     def reset_episode(self):
         self.action_count = -1
-        self.board = np.zeros((3, 3), 'float')
-        self.state = np.zeros((3, 3, 3), 'float')
+        self.board = None
+        self.state = None
 
     def select_action(self, state, mode='self'):
         if mode == 'self':
