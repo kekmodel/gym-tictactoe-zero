@@ -48,15 +48,9 @@ class ZeroTree(object):
             for r in range(3):
                 for c in range(3):
                     self.visit_count.append(v[r][c][0])
-            self.pi_data.append(self.softmax(self.visit_count))
-
-    def softmax(self, visit_count):
-        for i in range(9):
-            self.e_x.append(
-                np.exp(visit_count[i] - np.max(visit_count)))
-        for j in range(9):
-            self.pi_val.append(self.e_x[j] / np.sum(self.e_x, axis=0))
-        return np.asarray(self.pi_val).reshape((3, 3))
+            for i in range(9):
+                self.pi_val.append(self.visit_count[i] / sum(self.visit_count))
+            self.pi_data.append(np.asarray(self.pi_val).reshape((3, 3)))
 
     def get_pi(self, state):
         self.state = state.copy()

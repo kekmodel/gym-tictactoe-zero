@@ -161,7 +161,7 @@ class MCTS(object):
                     # PUCT 계산!
                     self.puct[c][r] = edge[c][r][Q] + \
                         self.c_puct * edge[c][r][P] * \
-                        math.sqrt(self.total_visit - edge[c][r][N]) / \
+                        math.sqrt(self.total_visit) / \
                         (1 + edge[c][r][N])
             # 보정한 edge를 최종 트리에 업데이트
             self.tree_memory[self.node_memory[0]] = edge
