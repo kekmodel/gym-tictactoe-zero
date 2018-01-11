@@ -217,15 +217,15 @@ if __name__ == "__main__":
             env.render()
         if done:
             import time
+            env.render()
             # 승부난 보드 보기: 내 착수:1, 상대 착수:2
             print("- FINAL BOARD -")
             print(state[PLAYER] + state[OPPONENT] * 2)
-            time.sleep(0.4)
+            time.sleep(1)
             # 결과 dict에 기록
             result[reward] += 1
             my_agent.reset_episode()
             my_agent.ai_agent.reset_episode()
-        env.close()
     # 에피소드 통계
     print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%%' %
           (result[1], result[-1], result[0], result[1] / episode_count * 100))
