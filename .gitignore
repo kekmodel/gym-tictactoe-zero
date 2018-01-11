@@ -3,4 +3,5 @@
 /.DS_Store
 /agent_drl.py
 /agent_train.py
+/human_old.py
 data/.DS_Store
