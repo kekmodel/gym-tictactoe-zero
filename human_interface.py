@@ -2,7 +2,6 @@
 from tictactoe_env import TicTacToeEnv
 from gym.utils import seeding
 import numpy as np
-import h5py
 from collections import deque, defaultdict
 
 
@@ -32,14 +31,10 @@ class ZeroTree(object):
         self._cal_pi()
 
     def _load_data(self):
-        hfs = h5py.File('data/state_memory.hdf5', 'r')
-        state_memory = hfs.get('state')
-        self.state_memory = deque(state_memory)
-        hfs.close()
-        hfe = h5py.File('data/edge_memory.hdf5', 'r')
-        edge_memory = hfe.get('edge')
-        self.edge_memory = deque(edge_memory)
-        hfe.close()
+        self.state_memory = np.load('data/state_memory.npy')
+        # self.state_memory = deque(state_memory)
+        self.edge_memory = np.load('data/edge_memory.npy')
+        # self.edge_memory = deque(edge_memory)
 
     def _make_tree(self):
         for v in self.state_memory:
@@ -215,6 +210,7 @@ if __name__ == "__main__":
         done = False
         env.render()
         while not done:
+            print("---- BOARD ----")
             print(state[PLAYER] + state[OPPONENT] * 2)
             # action 선택하기 (셀프 모드)
             action = my_agent.select_action(state)
@@ -223,10 +219,10 @@ if __name__ == "__main__":
             env.render()
         if done:
             # 승부난 보드 보기: 내 착수:1, 상대 착수:2
+            print("- FINAL BOARD -")
             print(state[PLAYER] + state[OPPONENT] * 2)
             # 결과 dict에 기록
             result[reward] += 1
-            env.reset()
             my_agent.reset_episode()
             my_agent.ai_agent.reset_episode()
         env.close()
