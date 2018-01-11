@@ -86,7 +86,7 @@ class MCTS(object):
         user_type = (self.first_turn + self.action_count) % 2
         self.init_edge()
         self._cal_puct()
-        print("- PUCT Score -")
+        print("* PUCT Score *")
         print(self.puct)  # 점수 확인용
         # 빈자리가 아닌 곳은 -9999로 최댓값 방지
         puct = self.puct.tolist()

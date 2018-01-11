@@ -31,10 +31,10 @@ class ZeroTree(object):
         self._cal_pi()
 
     def _load_data(self):
-        self.state_memory = np.load('data/state_memory.npy')
-        # self.state_memory = deque(state_memory)
-        self.edge_memory = np.load('data/edge_memory.npy')
-        # self.edge_memory = deque(edge_memory)
+        state_memory = np.load('data/state_memory.npy')
+        self.state_memory = deque(state_memory)
+        edge_memory = np.load('data/edge_memory.npy')
+        self.edge_memory = deque(edge_memory)
 
     def _make_tree(self):
         for v in self.state_memory:
@@ -67,7 +67,7 @@ class ZeroTree(object):
             i = tuple(self.state.flatten())
             j = self.state_data.index(i)
             pi = self.pi_data[j]
-            print('-- zero policy --')
+            print('"zero policy"')
             return pi
         else:
             empty_loc = np.asarray(np.where(board == 0)).transpose()
@@ -75,10 +75,10 @@ class ZeroTree(object):
             pi = np.zeros((3, 3, 3), 'float')
             prob = 1 / legal_move_n
             pr = (1 - self.epsilon) * prob + self.epsilon * \
-                self.np_random.dirichlet(self.alpha * np.ones(legal_move_n))
+                np.random.dirichlet(self.alpha * np.ones(legal_move_n))
             for i in range(legal_move_n):
                 pi[empty_loc[i][0]][empty_loc[i][1]][P] = pr[i]
-            print('- random policy -')
+            print('"random policy"')
             return pi
 
 
@@ -106,7 +106,7 @@ class ZeroAgent(object):
         self.reset_episode()
         self.seed()
 
-    def seed(self, seed=None):
+    def seed(self, seed=0):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
