@@ -69,9 +69,8 @@ class ZeroTree(object):
             return pi
         else:
             empty_loc = np.asarray(np.where(board == 0)).transpose()
-            print("empty_loc: {}".format(empty_loc))
             legal_move_n = empty_loc.shape[0]
-            pi = np.zeros((3, 3, 4), 'float64')
+            pi = np.zeros((3, 3), 'float64')
             prob = 1 / legal_move_n
             pr = (1 - self.epsilon) * prob + self.epsilon * \
                 np.random.dirichlet(self.alpha * np.ones(legal_move_n))
