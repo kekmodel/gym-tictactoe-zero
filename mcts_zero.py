@@ -10,7 +10,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-episode_count = 400
+episode_count = 2400
 
 
 # 몬테카를로 트리 탐색 클래스 (최초 train 데이터 생성 용)
@@ -86,6 +86,7 @@ class MCTS(object):
         user_type = (self.first_turn + self.action_count) % 2
         self.init_edge()
         self._cal_puct()
+        print("- PUCT Score -")
         print(self.puct)  # 점수 확인용
         # 빈자리가 아닌 곳은 -9999로 최댓값 방지
         puct = self.puct.tolist()
@@ -205,6 +206,7 @@ if __name__ == "__main__":
         done = False
         while not done:
             # 보드 상황 출력: 내 착수:1, 상대 착수:2
+            print("---- BOARD ----")
             print(state[PLAYER] + state[OPPONENT] * 2)
             # action 선택하기
             action = selfplay.select_action(state)
@@ -212,6 +214,7 @@ if __name__ == "__main__":
             state, reward, done, info = env.step(action)
         if done:
             # 승부난 보드 보기
+            print("- FINAL BOARD -")
             print(state[PLAYER] + state[OPPONENT] * 2)
             # 보상을 edge에 백업
             selfplay.backup(reward, info)
