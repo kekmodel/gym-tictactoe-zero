@@ -2,6 +2,7 @@
 from tictactoe_env import TicTacToeEnv
 from gym.utils import seeding
 import numpy as np
+from decimal import Decimal
 from collections import deque, defaultdict
 
 
@@ -9,7 +10,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-episode_count = 10
+episode_count = 5
 
 
 class ZeroTree(object):
@@ -22,10 +23,8 @@ class ZeroTree(object):
         # hyperparameter
         self.epsilon = 0.25
         self.alpha = 1.5
+        self.temperature = 0.67
 
-        self.visit_count = deque(maxlen=9)
-        self.pi_val = deque(maxlen=9)
-        self.e_x = deque(maxlen=9)
         self.state_data = deque(maxlen=len(self.tree_memory))
         self.pi_data = deque(maxlen=len(self.tree_memory))
         self._cal_pi()
@@ -44,13 +43,17 @@ class ZeroTree(object):
 
     def _cal_pi(self):
         for k, v in self.tree_memory.items():
+            tmp = []
+            visit_count = []
+            pi_val = []
             self.state_data.append(k)
             for r in range(3):
                 for c in range(3):
-                    self.visit_count.append(v[r][c][0])
+                    visit_count.append(Decimal(v[r][c][0] / self.temperature))
             for i in range(9):
-                self.pi_val.append(self.visit_count[i] / sum(self.visit_count))
-            self.pi_data.append(np.asarray(self.pi_val).reshape((3, 3)))
+                tmp.append(np.exp(visit_count[i]) / np.exp(visit_count).sum())
+            pi_val = np.random.multinomial(1, tmp, 1)
+            self.pi_data.append(np.asarray(pi_val).reshape((3, 3)))
 
     def get_pi(self, state):
         self.state = state.copy()
@@ -131,6 +134,7 @@ class ZeroAgent(object):
             return action
         elif mode == 'human':
             pi = self.model.get_pi(state)
+            print(pi)
             choice = self.np_random.choice(
                 9, 1, p=pi.flatten(), replace=False)
             move_target = self.action_space[choice[0]]
