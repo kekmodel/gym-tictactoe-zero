@@ -226,6 +226,8 @@ if __name__ == "__main__":
             result[reward] += 1
             my_agent.reset_episode()
             my_agent.ai_agent.reset_episode()
+            env.close()
+        env.close()
     # 에피소드 통계
     print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%%' %
           (result[1], result[-1], result[0], result[1] / episode_count * 100))
