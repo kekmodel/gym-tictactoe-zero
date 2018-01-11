@@ -70,12 +70,12 @@ class ZeroTree(object):
         else:
             empty_loc = np.asarray(np.where(board == 0)).transpose()
             legal_move_n = empty_loc.shape[0]
-            pi = np.zeros((3, 3), 'float64')
+            pi = np.zeros((3, 3), 'float')
             prob = 1 / legal_move_n
             pr = (1 - self.epsilon) * prob + self.epsilon * \
                 np.random.dirichlet(self.alpha * np.ones(legal_move_n))
             for i in range(legal_move_n):
-                pi[empty_loc[i][0]][empty_loc[i][1]][P] = pr[i]
+                pi[empty_loc[i][0]][empty_loc[i][1]] = pr[i]
             print('"random policy"')
             return pi
 
@@ -216,9 +216,11 @@ if __name__ == "__main__":
             state, reward, done, info = env.step(action)
             env.render()
         if done:
+            import time
             # 승부난 보드 보기: 내 착수:1, 상대 착수:2
             print("- FINAL BOARD -")
             print(state[PLAYER] + state[OPPONENT] * 2)
+            time.sleep(0.4)
             # 결과 dict에 기록
             result[reward] += 1
             my_agent.reset_episode()

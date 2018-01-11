@@ -57,8 +57,8 @@ class MCTS(object):
         return [seed]
 
     def _reset_step(self):
-        self.edge = np.zeros((3, 3, 4), 'float64')
-        self.puct = np.zeros((3, 3), 'float64')
+        self.edge = np.zeros((3, 3, 4), 'float')
+        self.puct = np.zeros((3, 3), 'float')
         self.total_visit = 0
         self.legal_move_n = 0
         self.empty_loc = None
