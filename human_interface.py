@@ -214,7 +214,7 @@ if __name__ == "__main__":
             state, reward, done, info = env.step(action)
         if done:
             import time
-            env.render()
+            # env.render()
             # 승부난 보드 보기: 내 착수:1, 상대 착수:2
             print("- FINAL BOARD -")
             print(state[PLAYER] + state[OPPONENT] * 2)
