@@ -44,7 +44,7 @@ class MCTS(object):
         # hyperparameter
         self.c_puct = 5
         self.epsilon = 0.25
-        self.alpha = 1.5
+        self.alpha = 3
         self.expand_count = 40
 
         # member 초기화 및 시드 생성
@@ -77,7 +77,7 @@ class MCTS(object):
         # save state
         self.state_memory.appendleft(state.flatten())
         # state를 문자열로 변환 (dict의 key로 쓰려고)
-        state_str = self.state.tostring()
+        state_str = hash(self.state.tostring())
         # 변환한 state를 node로 부르자. 저장!
         self.node_memory.appendleft(state_str)
         # 호출될 때마다 첫턴 기준 교대로 행동주체 바꿈, 최종 action에 붙여줌
@@ -96,8 +96,7 @@ class MCTS(object):
         self.puct = np.asarray(puct)
         puct_max = np.argwhere(self.puct == self.puct.max()).tolist()
         # 동점 처리
-        move_target = puct_max[self.np_random.choice(
-            len(puct_max), replace=False)]
+        move_target = puct_max[np.random.choice(len(puct_max))]
         # 두 배열을 붙여서 최종 action 구성
         action = np.r_[user_type, move_target]
         self.action_memory.appendleft(action)
@@ -116,11 +115,11 @@ class MCTS(object):
             self.empty_loc = np.asarray(np.where(self.board == 0)).transpose()
             self.legal_move_n = self.empty_loc.shape[0]
             prob = 1 / self.legal_move_n
-            count = self.node_memory.count(self.state.tostring())
+            count = self.node_memory.count(hash(self.state.tostring()))
             # root node or expand node 이면
             if self.action_count == 0 or count >= self.expand_count:
                 self.pr = (1 - self.epsilon) * prob + self.epsilon * \
-                    self.np_random.dirichlet(
+                    np.random.dirichlet(
                         self.alpha * np.ones(self.legal_move_n))
             else:  # 아니면 랜덤 확률로 n분의 1
                 self.pr = prob * np.ones(self.legal_move_n)
@@ -184,10 +183,8 @@ class MCTS(object):
 if __name__ == "__main__":
     # 환경 생성 및 시드 설정
     env = TicTacToeEnv()
-    env.seed(2018)
     # 셀프 플레이 인스턴스 생성
     selfplay = MCTS()
-    selfplay.seed(2018)
     # 통계용
     result = {1: 0, 0: 0, -1: 0}
     play_mark_O = 0
@@ -197,7 +194,7 @@ if __name__ == "__main__":
         state = env.reset()
         print('-' * 22, '\nepisode: %d' % (e + 1))
         # 첫턴을 나와 상대 중 누가 할지 정하기
-        selfplay.first_turn = selfplay.np_random.choice(2, replace=False)
+        selfplay.first_turn = np.random.choice(2)
         # 첫턴인 경우 기록
         if selfplay.first_turn == PLAYER:
             play_mark_O += 1

@@ -10,7 +10,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-episode_count = 10
+episode_count = 800
 
 
 class ZeroTree(object):
@@ -55,15 +55,9 @@ class ZeroTree(object):
             for r in range(3):
                 for c in range(3):
                     self.visit_count.append(v[r][c][0])
-            self.pi_data.append(self.softmax(self.visit_count))
-
-    def softmax(self, visit_count):
-        for i in range(9):
-            self.e_x.append(
-                np.exp(visit_count[i] - np.max(visit_count)))
-        for j in range(9):
-            self.pi_val.append(self.e_x[j] / np.sum(self.e_x, axis=0))
-        return np.asarray(self.pi_val).reshape((3, 3))
+            for i in range(9):
+                self.pi_val.append(self.visit_count[i] / sum(self.visit_count))
+            self.pi_data.append(np.asarray(self.pi_val).reshape((3, 3)))
 
     def get_pi(self, state):
         self.state = state.copy()
@@ -74,8 +68,8 @@ class ZeroTree(object):
             pi = self.pi_data[j]
             # print("----- board -----")
             # print(board)
-            print('-- zero policy --')
-            # print(pi.round(decimals=4))
+            print('"* zero policy *"')
+            print(pi.round(decimals=4))
             return pi
         else:
             empty_loc = np.asarray(np.where(board == 0)).transpose()
@@ -88,8 +82,8 @@ class ZeroTree(object):
                 pi[empty_loc[i][0]][empty_loc[i][1]][P] = pr[i]
             # print("----- board -----")
             # print(board)
-            print('- random policy -')
-            # print(pi.round(decimals=4))
+            print('* random policy *')
+            print(pi.round(decimals=4))
             return pi
 
 
@@ -205,11 +199,10 @@ class HumanAgent(object):
 if __name__ == "__main__":
     # 환경 생성 및 시드 설정
     env = TicTacToeEnv()
-    env.seed(2018)
+    env.seed(0)
     # 에이전트 생성 및 시드 생성
-    # my_agent = ZeroAgent()
-    # my_agent.seed(2018)
-    my_agent = HumanAgent()
+    my_agent = ZeroAgent()
+    my_agent.seed(0)
     # 통계용
     result = {1: 0, 0: 0, -1: 0}
     # play game
@@ -219,26 +212,42 @@ if __name__ == "__main__":
         # 첫턴을 나와 상대 중 누가 할지 정하기
         my_agent.first_turn = np.random.choice(2, replace=False)
         env.mark_O = my_agent.first_turn
-        user_type = {PLAYER: 'You', OPPONENT: 'AI'}
-        print('First Turn: {}'.format(user_type[my_agent.first_turn]))
+        # user_type = {PLAYER: 'You', OPPONENT: 'AI'}
+        # print('First Turn: {}'.format(user_type[my_agent.first_turn]))
         done = False
-        env.render()
         while not done:
+            print("---- BOARD ----")
             print(state[PLAYER] + state[OPPONENT] * 2)
             # action 선택하기 (셀프 모드)
-            action = my_agent.select_action(state)
+            action = my_agent.select_action(state, mode='self')
             # action 진행
             state, reward, done, info = env.step(action)
-            env.render()
         if done:
             # 승부난 보드 보기: 내 착수:1, 상대 착수:2
+            print("- FINAL BOARD -")
             print(state[PLAYER] + state[OPPONENT] * 2)
+            my_agent.reset_episode()
             # 결과 dict에 기록
             result[reward] += 1
-            env.reset()
-            my_agent.reset_episode()
-            my_agent.ai_agent.reset_episode()
-        env.close()
     # 에피소드 통계
     print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%%' %
           (result[1], result[-1], result[0], result[1] / episode_count * 100))
+
+
+'''
+    def _cal_pi(self):
+        for k, v in self.tree_memory.items():
+            self.state_data.append(k)
+            for r in range(3):
+                for c in range(3):
+                    self.visit_count.append(v[r][c][0])
+            self.pi_data.append(self.softmax(self.visit_count))
+
+    def softmax(self, visit_count):
+        for i in range(9):
+            self.e_x.append(
+                np.exp(visit_count[i] - np.max(visit_count)))
+        for j in range(9):
+            self.pi_val.append(self.e_x[j] / np.sum(self.e_x, axis=0))
+        return np.asarray(self.pi_val).reshape((3, 3))
+'''

@@ -30,8 +30,8 @@ class ZeroTree(object):
         self._cal_pi()
 
     def _load_data(self):
-        self.state_memory = np.load('data/state_memory.npy')
-        self.edge_memory = np.load('data/edge_memory.npy')
+        self.state_memory = np.load('data/state_memory_24000_b.npy')
+        self.edge_memory = np.load('data/edge_memory_24000_b.npy')
 
     def _make_tree(self):
         for v in self.state_memory:
@@ -49,9 +49,11 @@ class ZeroTree(object):
             self.state_data.append(k)
             for r in range(3):
                 for c in range(3):
-                    visit_count.append(Decimal(v[r][c][0] / self.temperature))
+                    visit_count.append(
+                        Decimal(v[r][c][0]) / Decimal(self.temperature))
             for i in range(9):
-                tmp.append(np.exp(visit_count[i]) / np.exp(visit_count).sum())
+                tmp.append(np.exp(visit_count[i]) /
+                           np.sum(np.exp(visit_count)))
             pi_val = np.random.multinomial(1, tmp, 1)
             self.pi_data.append(np.asarray(pi_val).reshape((3, 3)))
 
@@ -126,8 +128,7 @@ class ZeroAgent(object):
             self.action_count += 1
             user_type = (self.first_turn + self.action_count) % 2
             pi = self.model.get_pi(state)
-            choice = self.np_random.choice(
-                9, 1, p=pi.flatten(), replace=False)
+            choice = np.random.choice(9, 1, p=pi.flatten())
             move_target = self.action_space[choice[0]]
             action = np.r_[user_type, move_target]
             self._reset_step()
@@ -135,8 +136,7 @@ class ZeroAgent(object):
         elif mode == 'human':
             pi = self.model.get_pi(state)
             print(pi)
-            choice = self.np_random.choice(
-                9, 1, p=pi.flatten(), replace=False)
+            choice = np.random.choice(9, 1, p=pi.flatten())
             move_target = self.action_space[choice[0]]
             action = np.r_[OPPONENT, move_target]
             self._reset_step()
@@ -190,7 +190,6 @@ class HumanAgent(object):
 if __name__ == "__main__":
     # 환경 생성 및 시드 설정
     env = TicTacToeEnv()
-    env.seed(2018)
     my_agent = HumanAgent()
     # 통계용
     result = {1: 0, 0: 0, -1: 0}
@@ -200,19 +199,19 @@ if __name__ == "__main__":
         print('-' * 15, '\nepisode: %d' % (e + 1))
         # 첫턴을 나와 상대 중 누가 할지 정하기
         my_agent.first_turn = np.random.choice(2, replace=False)
+        # my_agent.first_turn = PLAYER
         env.mark_O = my_agent.first_turn
         user_type = {PLAYER: 'You', OPPONENT: 'AI'}
         print('First Turn: {}'.format(user_type[my_agent.first_turn]))
         done = False
-        env.render()
         while not done:
+            env.render()
             print("---- BOARD ----")
             print(state[PLAYER] + state[OPPONENT] * 2)
-            # action 선택하기 (셀프 모드)
+            # action 선택하기
             action = my_agent.select_action(state)
             # action 진행
             state, reward, done, info = env.step(action)
-            env.render()
         if done:
             import time
             env.render()
@@ -225,7 +224,7 @@ if __name__ == "__main__":
             my_agent.reset_episode()
             my_agent.ai_agent.reset_episode()
             env.close()
-        env.close()
+        # env.close()
     # 에피소드 통계
     print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%%' %
           (result[1], result[-1], result[0], result[1] / episode_count * 100))

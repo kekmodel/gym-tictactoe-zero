@@ -4,4 +4,9 @@
 /agent_drl.py
 /agent_train.py
 /human_old.py
+/data.ipynb
 data/.DS_Store
+data/edge_memory.hdf5
+data/edge_memory_20000_a.npy
+data/state_memory_20000_a.npy
+

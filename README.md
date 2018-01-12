@@ -12,12 +12,12 @@ gym폴더와 gym-tictactoe폴더가 같은 곳에 있으면 안전합니다.
 
 ### 저는..?!
 
-알파고를 사랑하는 호기심 많은 보통사람 
+알파고를 사랑하는 호기심 많은 남자사람 
 
     코딩 수준: 코딩의 코자도 모르는 코린이 (파이썬을 공부한지 2주 정도에서 시작)
-    전공: 기억을 상실한 산업공학 학사 02학번(?)
-    직업: 겨우 밥벌어 먹는 수학 강사
-    강화 학습 수준: 반도의 흔한 알파고 빠돌이
+    전공: 기억을 상실한 산업공학 학사 02학번(?!)
+    직업: 동네 수학 강사
+    강화 학습 수준: 딥마인드, 알파고, 알파고...
     영어 수준: 구글 번역 성애자
 
 당.연.히 --> 삽질의 삽질의 삽질의 연속... (파도 파도 끝이 없는..)
@@ -27,6 +27,7 @@ gym폴더와 gym-tictactoe폴더가 같은 곳에 있으면 안전합니다.
 --> 오기로 하다보니 어느 정도 성과가 나기 시작!!(오? 재능 발견?)
 
 --> 여러분도 함께 해요~~~ :P (페이스북 친추걸고 같이 스터디해요! https://www.facebook.com/kekmodel)
+
 
 
 ## python 3 설치
@@ -72,6 +73,9 @@ Anaconda 설치 (https://www.anaconda.com/download)
 
 
 ## git 설치 (https://git-scm.com/downloads)
+    
+        웹 페이지 참조
+
 
 
 ## gym 설치 
@@ -81,25 +85,37 @@ Anaconda 설치 (https://www.anaconda.com/download)
         pip install -e .
 
 
+
 ## gym-tictactoe 설치 (제가 만든 거)
     
         git clone https://github.com/kekmodel/gym-tictactoe.git
 
 
-## 실행방법
+## 파일 구성
 
-    text editor or IDE 로 build (단, human_interface.py 는 interpreter 환경만 됨)
+text editor or IDE 로 buld 
 
-### AI와 한판 붙고 싶다면? (허접함 주의)
+단, human_interface.py 는 interpreter 환경에서만 됨 (e.g. console)
+        
+        tictactoe_env.py        강화학습 환경 제공
+        mcts_zero.py            신경망이 학습할 최초 데이터 생성(PUCT-MCTS 알고리즘)
+        agent_rl.py             강확학습용 에이전트
+        neural_network_cpu.py   정책, 가치망 (ResNet-pytorch)
+        human_interface.py      사람과 대결하는 인터페이스
+        data/state_memory.npy   모든 step의 state가 저장됨
+        data/edge_memory.npy    모든 step의 edge(action 정보)가 저장됨
+
+
+### AI와 한판 붙고 싶다면? (아직 허접함)
 
         cd gym-tictactoe
         python human_interface.py
 
-default: 10판 승부, 선공 랜덤, 착수: 1 ~ 9번 (콘솔창에;;) 
+default: 15판 승부, 선공 랜덤, 착수: 1 ~ 9번 (콘솔창에;;) 
 
-    [1][2][3]
-    [4][5][6]
-    [7][8][9] 
+        [1][2][3]
+        [4][5][6]
+        [7][8][9] 
 
 
 ## 프로젝트 진행 상황
@@ -188,12 +204,15 @@ default: 10판 승부, 선공 랜덤, 착수: 1 ~ 9번 (콘솔창에;;)
 
 1월 11일: Human interface 구현
 
-              - 사람과 처음으로 게임을 함: 고수에겐 약함
-              - AI가 선일 때는 무적이나 상대가 선일 땐 특정 상태에서 탐험부족으로 최적 판단 못함
-                  -> expand 과정을 추가하여 탐험확률 높임, episode 회수 2배 증가시킴 
+              - 사람과 처음으로 게임을 함: WOW!!! 
+              - AI가 선일 때는 강하지만 상대가 선일 땐 특정 상태에서 탐험부족으로 최적 판단 못함
+                  -> expand 과정을 추가하여 탐험확률 높임
               - 방문횟수가 0인데 확률은 0이 아닌 경우가 있어서 반칙패 생김
-                  -> 정책함수의 확률 계산 방법을 softmax에서 일반평균법으로 바꿈
-                  -> 너무 약해져서 softmax로 복귀 -> temperature 추가, 1 hot 인코딩 추가
+                  -> 정책함수의 확률 계산 방법을 softmax에서 일반평균법으로 바꿈(실패)
+                  -> 너무 약해져서 softmax로 복귀 -> softmax temperature 추가, 1 hot 인코딩 추가
+                  -> 많이 좋아짐. 그러나 경험이 부족한 state에선 여전히 이상행동(신경망으로 학습할 필요성)
+                  -> 탐험률 파라미터인 alpha 값을 1.5 -> 3 으로 두배 상승시켜서 데이터를 다시 생성할까 생각 중 
+              - 저장 형식을 hdf5 -> npy 교채. 로딩 속도 확실히 빨라짐
 
 ing...
 
