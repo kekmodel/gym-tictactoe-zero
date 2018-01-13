@@ -8,7 +8,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-episode_count = 32000
+episode_count = 800
 
 
 # 몬테카를로 트리 탐색 클래스 (최초 train 데이터 생성 용)

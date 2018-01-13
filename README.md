@@ -112,7 +112,7 @@ text editor or IDE 로 build
         cd gym-tictactoe
         python human_interface.py
 
-default: 5판 승부, 선공 랜덤, 착수: 1 ~ 9번 (콘솔창에;;) 
+default: 5판 승부, 선공 AI, 착수: 1 ~ 9번 (콘솔창에;;)
 
         [1][2][3]
         [4][5][6]
