@@ -101,7 +101,7 @@ text editor or IDE 로 build
         tictactoe_env.py        강화학습 환경 제공
         mcts_zero.py            신경망이 학습할 최초 데이터 생성(PUCT-MCTS 알고리즘)
         agent_rl.py             강확학습용 에이전트
-        neural_network_cpu.py   정책, 가치망 (ResNet-pytorch)
+        neural_network_cpu.py   정책, 가치망 cpu버전 (ResNet-pytorch)
         human_interface.py      사람과 대결하는 인터페이스
         data/state_memory.npy   모든 step의 state가 저장됨
         data/edge_memory.npy    모든 step의 edge(action 정보)가 저장됨

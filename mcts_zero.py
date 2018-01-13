@@ -137,7 +137,7 @@ class MCTS(object):
 
     def _cal_puct(self):
         '''9개의 좌표에 PUCT값을 계산하여 매칭'''
-        # 지금까지의 액션을 반영한 트리 구성 하기. dict{node: edge}로 해봄
+        # 지금까지의 액션을 반영한 트리 구성 하기. dict{node: edge}
         memory = list(zip(self.node_memory, self.edge_memory))
         # 지금까지의 동일한 state에 대한 edge의 N,W 누적
         # Q,P는 덧셈이라 손상되므로 보정함

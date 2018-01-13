@@ -28,7 +28,7 @@ class ZeroTree(object):
         self.state_data = deque(maxlen=len(self.tree_memory))
         self.pi_data = deque(maxlen=len(self.tree_memory))
         self._cal_pi()
-
+    # 로드할 데이터
     def _load_data(self):
         self.state_memory = np.load('data/state_memory_24000_b.npy')
         self.edge_memory = np.load('data/edge_memory_24000_b.npy')
@@ -55,7 +55,7 @@ class ZeroTree(object):
                 tmp.append(np.exp(visit_count[i]) /
                            np.sum(np.exp(visit_count)))
             pi_val = np.random.multinomial(1, tmp, 1)
-            self.pi_data.append(np.asarray(pi_val).reshape((3, 3)))
+            self.pi_data.append(np.asarray(pi_val, 'float32').reshape((3, 3)))
 
     def get_pi(self, state):
         self.state = state.copy()
