@@ -127,7 +127,7 @@ class TicTacToeEnv(gym.Env):
                                 [[1, 0, 0], [0, 1, 0], [0, 0, 1]]], 'float32')
         for i in range(2):
             for k in range(8):  # 0,1번 보드가 승리패턴과 일치하면
-                # 바이너리 배열은 패턴을 포함할때 서로 곱(행렬곱아님)하면 패턴 자신이 나옴; 
+                # 바이너리 배열은 패턴을 포함할때 서로 곱(행렬곱아님)하면 패턴 자신이 나옴;
                 # 고민하다 발견
                 if np.array_equal(
                         self.state[i] * win_pattern[k], win_pattern[k]):

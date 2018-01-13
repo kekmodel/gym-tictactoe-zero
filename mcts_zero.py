@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from tictactoe_env import TicTacToeEnv
-from gym.utils import seeding
 import numpy as np
-import math
 from collections import deque, defaultdict
 
 
@@ -10,7 +8,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-episode_count = 800
+episode_count = 32000
 
 
 # 몬테카를로 트리 탐색 클래스 (최초 train 데이터 생성 용)
@@ -42,7 +40,7 @@ class MCTS(object):
         self.state = None
 
         # hyperparameter
-        self.c_puct = 5
+        self.c_puct = 25
         self.epsilon = 0.25
         self.alpha = 3
         self.expand_count = 40
@@ -50,18 +48,14 @@ class MCTS(object):
         # member 초기화 및 시드 생성
         self._reset_step()
         self._reset_episode()
-        self.seed()
-
-    def seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
 
     def _reset_step(self):
-        self.edge = np.zeros((3, 3, 4), 'float')
-        self.puct = np.zeros((3, 3), 'float')
+        self.edge = np.zeros((3, 3, 4))
+        self.puct = np.zeros((3, 3))
         self.total_visit = 0
         self.legal_move_n = 0
         self.empty_loc = None
+        self.state_hash = None
         self.pr = 0
         self.tree_memory = defaultdict(lambda: 0)
 
@@ -76,16 +70,16 @@ class MCTS(object):
         self.state = state
         # save state
         self.state_memory.appendleft(state.flatten())
-        # state를 문자열로 변환 (dict의 key로 쓰려고)
-        state_str = hash(self.state.tostring())
+        # state를 문자열 -> hash로 변환 (dict의 key로 쓰려고)
+        self.state_hash = hash(self.state.tostring())
         # 변환한 state를 node로 부르자. 저장!
-        self.node_memory.appendleft(state_str)
+        self.node_memory.appendleft(self.state_hash)
         # 호출될 때마다 첫턴 기준 교대로 행동주체 바꿈, 최종 action에 붙여줌
         user_type = (self.first_turn + self.action_count) % 2
         self.init_edge()
         self._cal_puct()
         print("* PUCT Score *")
-        print(self.puct)  # 점수 확인용
+        print(self.puct.round(decimals=2))  # 점수 확인용
         # 빈자리가 아닌 곳은 -9999로 최댓값 방지
         puct = self.puct.tolist()
         for i, v in enumerate(puct):
@@ -112,10 +106,10 @@ class MCTS(object):
         if pr == 0:
             # 빈 자리의 좌표와 개수를 저장하고 이를 이용해 동일 확률을 계산
             self.board = self.state[PLAYER] + self.state[OPPONENT]
-            self.empty_loc = np.asarray(np.where(self.board == 0)).transpose()
+            self.empty_loc = np.argwhere(self.board == 0)
             self.legal_move_n = self.empty_loc.shape[0]
             prob = 1 / self.legal_move_n
-            count = self.node_memory.count(hash(self.state.tostring()))
+            count = self.node_memory.count(self.state_hash)
             # root node or expand node 이면
             if self.action_count == 0 or count >= self.expand_count:
                 self.pr = (1 - self.epsilon) * prob + self.epsilon * \
@@ -123,6 +117,7 @@ class MCTS(object):
                         self.alpha * np.ones(self.legal_move_n))
             else:  # 아니면 랜덤 확률로 n분의 1
                 self.pr = prob * np.ones(self.legal_move_n)
+
             # 빈자리의 엣지에 넣기
             for i in range(self.legal_move_n):
                 self.edge[self.empty_loc[i][0]
@@ -160,7 +155,7 @@ class MCTS(object):
                     # PUCT 계산!
                     self.puct[c][r] = edge[c][r][Q] + \
                         self.c_puct * edge[c][r][P] * \
-                        math.sqrt(self.total_visit) / \
+                        np.sqrt(self.total_visit) / \
                         (1 + edge[c][r][N])
             # 보정한 edge를 최종 트리에 업데이트
             self.tree_memory[self.node_memory[0]] = edge
@@ -219,8 +214,10 @@ if __name__ == "__main__":
                 if env.mark_O == PLAYER:
                     win_mark_O += 1
     # 에피소드 통계
-    print('-' * 22, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%% PlayMarkO: %d WinMarkO: %d' %
-          (result[1], result[-1], result[0], result[1] / episode_count * 100, play_mark_O, win_mark_O))
+    print('-' * 22, '\nWin: %d   Lose: %d   Draw: %d   Winrate: %0.1f%%   \
+PlayMarkO: %d   WinMarkO: %d' %
+          (result[1], result[-1], result[0], result[1] / episode_count * 100,
+           play_mark_O, win_mark_O))
     # data save
     print("data saved")
     np.save('data/state_memory.npy', selfplay.state_memory)

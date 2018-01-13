@@ -22,12 +22,13 @@ class ZeroTree(object):
 
         # hyperparameter
         self.epsilon = 0.25
-        self.alpha = 1.5
+        self.alpha = 3
         self.temperature = 0.67
 
         self.state_data = deque(maxlen=len(self.tree_memory))
         self.pi_data = deque(maxlen=len(self.tree_memory))
         self._cal_pi()
+
     # 로드할 데이터
     def _load_data(self):
         self.state_memory = np.load('data/state_memory_24000_b.npy')
@@ -45,7 +46,7 @@ class ZeroTree(object):
         for k, v in self.tree_memory.items():
             tmp = []
             visit_count = []
-            pi_val = []
+            # pi_val = []
             self.state_data.append(k)
             for r in range(3):
                 for c in range(3):
@@ -54,8 +55,8 @@ class ZeroTree(object):
             for i in range(9):
                 tmp.append(np.exp(visit_count[i]) /
                            np.sum(np.exp(visit_count)))
-            pi_val = np.random.multinomial(1, tmp, 1)
-            self.pi_data.append(np.asarray(pi_val, 'float32').reshape((3, 3)))
+            # pi_val = np.random.multinomial(1, tmp, 1)
+            self.pi_data.append(np.asarray(tmp, 'float32').reshape((3, 3)))
 
     def get_pi(self, state):
         self.state = state.copy()
@@ -205,7 +206,7 @@ if __name__ == "__main__":
         print('First Turn: {}'.format(user_type[my_agent.first_turn]))
         done = False
         while not done:
-            env.render()
+            # env.render()
             print("---- BOARD ----")
             print(state[PLAYER] + state[OPPONENT] * 2)
             # action 선택하기
@@ -223,8 +224,7 @@ if __name__ == "__main__":
             result[reward] += 1
             my_agent.reset_episode()
             my_agent.ai_agent.reset_episode()
-            env.close()
-        # env.close()
+            # env.close()
     # 에피소드 통계
     print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%%' %
           (result[1], result[-1], result[0], result[1] / episode_count * 100))
