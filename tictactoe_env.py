@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging  # 로그 제공 모듈
 import gym   # 환경 제공 모듈
 from gym import spaces   # 공간 정의 클래스
@@ -37,7 +38,8 @@ OPPONENT = 1  # 상대 식별 변수
 
 class TicTacToeEnv(gym.Env):
     """gym.Env를 상속하여 틱택토 게임 환경 클래스 정의
-        gym.Env: OpenAI Gym의 주요 클래스, 환경 뒤에서 이루어지는 동작 캡슐화(gym/core.py 참조)
+        gym.Env: OpenAI Gym의 주요 클래스, 환경 뒤에서 이루어지는 동작 캡슐화
+        (gym/core.py 참조)
     """
     # _render()의 리턴 타입 구분
     metadata = {'render.modes': ['human', 'rgb_array']}
@@ -125,8 +127,10 @@ class TicTacToeEnv(gym.Env):
                                 [[1, 0, 0], [0, 1, 0], [0, 0, 1]]], 'float32')
         for i in range(2):
             for k in range(8):  # 0,1번 보드가 승리패턴과 일치하면
-                # 바이너리 배열은 패턴을 포함할때 서로 곱(행렬곱아님)하면 패턴 자신이 나옴; 고민하다 발견
-                if np.array_equal(self.state[i] * win_pattern[k], win_pattern[k]):
+                # 바이너리 배열은 패턴을 포함할때 서로 곱(행렬곱아님)하면 패턴 자신이 나옴; 
+                # 고민하다 발견
+                if np.array_equal(
+                        self.state[i] * win_pattern[k], win_pattern[k]):
                     if i == PLAYER:  # 주체인 i가 플레이어면 승리
                         reward = 1  # 보상 1
                         done = True  # 게임 끝
