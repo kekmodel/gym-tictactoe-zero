@@ -8,7 +8,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-episode_count = 800
+EPISODE = 16000
 
 
 # 몬테카를로 트리 탐색 클래스 (최초 train 데이터 생성 용)
@@ -19,9 +19,9 @@ episode_count = 800
 class MCTS(object):
     def __init__(self):
         # memories
-        self.state_memory = deque(maxlen=9 * episode_count)
-        self.node_memory = deque(maxlen=9 * episode_count)
-        self.edge_memory = deque(maxlen=9 * episode_count)
+        self.state_memory = deque(maxlen=9 * EPISODE)
+        self.node_memory = deque(maxlen=9 * EPISODE)
+        self.edge_memory = deque(maxlen=9 * EPISODE)
 
         # reset_step member
         self.tree_memory = None
@@ -44,6 +44,7 @@ class MCTS(object):
         self.epsilon = 0.25
         self.alpha = 3
         self.expand_count = 40
+        self.decay = 0.99
 
         # member 초기화 및 시드 생성
         self._reset_step()
@@ -68,7 +69,7 @@ class MCTS(object):
     def select_action(self, state):
         self.action_count += 1
         self.state = state
-        # save state (flatten안하면 값이 바뀜 버그인듯?)
+        # save state (flatten 안하고 넣으면 값이 바뀜 버그인듯?)
         self.state_memory.appendleft(state.flatten())
         # state를 문자열 -> hash로 변환 (dict의 key로 쓰려고)
         self.state_hash = hash(self.state.tostring())
@@ -166,10 +167,12 @@ class MCTS(object):
         for i in range(steps):
             if self.action_memory[i][0] == PLAYER:
                 self.edge_memory[i][self.action_memory[i][1]
-                                    ][self.action_memory[i][2]][W] += reward
+                                    ][self.action_memory[i][2]
+                                      ][W] += reward * self.decay**i
             else:
                 self.edge_memory[i][self.action_memory[i][1]
-                                    ][self.action_memory[i][2]][W] -= reward
+                                    ][self.action_memory[i][2]
+                                      ][W] -= reward * self.decay**i
             self.edge_memory[i][self.action_memory[i][1]
                                 ][self.action_memory[i][2]][N] += 1
         self._reset_episode()
@@ -185,7 +188,7 @@ if __name__ == "__main__":
     play_mark_O = 0
     win_mark_O = 0
     # train data 생성
-    for e in range(episode_count):
+    for e in range(EPISODE):
         state = env.reset()
         print('-' * 22, '\nepisode: %d' % (e + 1))
         # 첫턴을 나와 상대 중 누가 할지 정하기
@@ -216,7 +219,7 @@ if __name__ == "__main__":
     # 에피소드 통계
     print('-' * 22, '\nWin: %d   Lose: %d   Draw: %d   Winrate: %0.1f%%   \
 PlayMarkO: %d   WinMarkO: %d' %
-          (result[1], result[-1], result[0], result[1] / episode_count * 100,
+          (result[1], result[-1], result[0], result[1] / EPISODE * 100,
            play_mark_O, win_mark_O))
     # data save
     print("data saved")

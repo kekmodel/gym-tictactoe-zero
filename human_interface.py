@@ -9,7 +9,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-EPISODE_COUNT = 5
+EPISODE = 5
 
 
 class ZeroTree(object):
@@ -30,8 +30,8 @@ class ZeroTree(object):
 
     # 로드할 데이터
     def _load_data(self):
-        self.state_memory = np.load('data/state_memory_16000_c.npy')
-        self.edge_memory = np.load('data/edge_memory_16000_c.npy')
+        self.state_memory = np.load('data/state_memory_16000_d.npy')
+        self.edge_memory = np.load('data/edge_memory_16000_d.npy')
 
     def _make_tree(self):
         for v in self.state_memory:
@@ -191,7 +191,7 @@ if __name__ == "__main__":
     # play game
     mode = input("Play mode >> 1.Text 2.Graphic: ")
     if mode == '1':
-        for e in range(EPISODE_COUNT):
+        for e in range(EPISODE):
             state = env.reset()
             print('-' * 15, '\nepisode: %d' % (e + 1))
             # 선공 정하고 교대로 하기
@@ -219,7 +219,7 @@ if __name__ == "__main__":
                 my_agent.reset_episode()
                 my_agent.ai_agent.reset_episode()
     if mode == '2':
-        for e in range(EPISODE_COUNT):
+        for e in range(EPISODE):
             state = env.reset()
             print('-' * 15, '\nepisode: %d' % (e + 1))
             # 선공 정하고 교대로 하기
@@ -251,4 +251,4 @@ if __name__ == "__main__":
             env.close()
     # 에피소드 통계
     print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%%' %
-          (result[1], result[-1], result[0], result[1] / EPISODE_COUNT * 100))
+          (result[1], result[-1], result[0], result[1] / EPISODE * 100))
