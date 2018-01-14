@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from tictactoe_env import TicTacToeEnv
-from gym.utils import seeding
 import numpy as np
 from decimal import Decimal
 from collections import deque, defaultdict
@@ -31,8 +30,8 @@ class ZeroTree(object):
 
     # 로드할 데이터
     def _load_data(self):
-        self.state_memory = np.load('data/state_memory_24000_r.npy')
-        self.edge_memory = np.load('data/edge_memory_24000_r.npy')
+        self.state_memory = np.load('data/state_memory_16000_c.npy')
+        self.edge_memory = np.load('data/edge_memory_16000_c.npy')
 
     def _make_tree(self):
         for v in self.state_memory:
@@ -46,7 +45,7 @@ class ZeroTree(object):
         for k, v in self.tree_memory.items():
             tmp = []
             visit_count = []
-            # pi_val = []
+            pi_val = []
             self.state_data.append(k)
             for r in range(3):
                 for c in range(3):
@@ -55,8 +54,8 @@ class ZeroTree(object):
             for i in range(9):
                 tmp.append(np.exp(visit_count[i]) /
                            np.sum(np.exp(visit_count)))
-            # pi_val = np.random.multinomial(1, tmp, 1)
-            self.pi_data.append(np.asarray(tmp, 'float').reshape((3, 3)))
+            pi_val = np.random.multinomial(1, tmp, 1)
+            self.pi_data.append(np.asarray(pi_val, 'float').reshape((3, 3)))
 
     def get_pi(self, state):
         self.state = state.copy()
@@ -68,7 +67,7 @@ class ZeroTree(object):
             print('"zero policy"')
             return pi
         else:
-            empty_loc = np.asarray(np.where(board == 0)).transpose()
+            empty_loc = np.argwhere(board == 0)
             legal_move_n = empty_loc.shape[0]
             pi = np.zeros((3, 3))
             prob = 1 / legal_move_n
@@ -102,11 +101,6 @@ class ZeroAgent(object):
         # member 초기화 및 시드 생성
         self._reset_step()
         self.reset_episode()
-        self.seed()
-
-    def seed(self, seed=0):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
 
     def _action_space(self):
         action_space = []
