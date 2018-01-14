@@ -9,7 +9,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-episode_count = 5
+EPISODE_COUNT = 5
 
 
 class ZeroTree(object):
@@ -189,7 +189,7 @@ if __name__ == "__main__":
     # 통계용
     result = {1: 0, 0: 0, -1: 0}
     # play game
-    for e in range(episode_count):
+    for e in range(EPISODE_COUNT):
         state = env.reset()
         print('-' * 15, '\nepisode: %d' % (e + 1))
         # 첫턴을 나와 상대 중 누가 할지 정하기
@@ -221,4 +221,4 @@ if __name__ == "__main__":
             # env.close() : 렌더링 보드 보려면 주석 지우기
     # 에피소드 통계
     print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%%' %
-          (result[1], result[-1], result[0], result[1] / episode_count * 100))
+          (result[1], result[-1], result[0], result[1] / EPISODE_COUNT * 100))
