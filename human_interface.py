@@ -22,7 +22,7 @@ class ZeroTree(object):
         # hyperparameter
         self.epsilon = 0.25
         self.alpha = 3
-        self.temperature = 0.67
+        self.temperature = 1.5
 
         self.state_data = deque(maxlen=len(self.tree_memory))
         self.pi_data = deque(maxlen=len(self.tree_memory))
@@ -50,7 +50,7 @@ class ZeroTree(object):
             for r in range(3):
                 for c in range(3):
                     visit_count.append(
-                        Decimal(v[r][c][0]) / Decimal(self.temperature))
+                        Decimal(v[r][c][0]) * Decimal(self.temperature))
             for i in range(9):
                 tmp.append(np.exp(visit_count[i]) /
                            np.sum(np.exp(visit_count)))
@@ -122,16 +122,16 @@ class ZeroAgent(object):
         if mode == 'self':
             self.action_count += 1
             user_type = (self.first_turn + self.action_count) % 2
-            pi = self.model.get_pi(state)
-            choice = np.random.choice(9, 1, p=pi.flatten())
+            _pi = self.model.get_pi(state)
+            choice = np.random.choice(9, 1, p=_pi.flatten(), replace=False)
             move_target = self.action_space[choice[0]]
             action = np.r_[user_type, move_target]
             self._reset_step()
             return action
         elif mode == 'human':
-            pi = self.model.get_pi(state)
-            print((pi * 100).round())
-            choice = np.random.choice(9, 1, p=pi.flatten())
+            _pi = self.model.get_pi(state)
+            print(_pi.round())
+            choice = np.random.choice(9, 1, p=_pi.flatten(), replace=False)
             move_target = self.action_space[choice[0]]
             action = np.r_[OPPONENT, move_target]
             self._reset_step()
@@ -189,36 +189,66 @@ if __name__ == "__main__":
     # 통계용
     result = {1: 0, 0: 0, -1: 0}
     # play game
-    for e in range(EPISODE_COUNT):
-        state = env.reset()
-        print('-' * 15, '\nepisode: %d' % (e + 1))
-        # 첫턴을 나와 상대 중 누가 할지 정하기
-        my_agent.first_turn = ((OPPONENT + e) % 2)
-        # 환경에 알려주기
-        env.mark_O = my_agent.first_turn
-        user_type = {PLAYER: 'You', OPPONENT: 'AI'}
-        print('First Turn: {}'.format(user_type[my_agent.first_turn]))
-        done = False
-        while not done:
-            # env.render() : 렌더링 보드 보려면 주석 지우기
-            print("---- BOARD ----")
-            print(state[PLAYER] + state[OPPONENT] * 2)
-            # action 선택하기
-            action = my_agent.select_action(state)
-            # action 진행
-            state, reward, done, info = env.step(action)
-        if done:
-            import time
-            # env.render() : 렌더링 보드 보려면 주석 지우기
-            # 승부난 보드 보기: 내 착수:1, 상대 착수:2
-            print("- FINAL BOARD -")
-            print(state[PLAYER] + state[OPPONENT] * 2)
-            time.sleep(1)
-            # 결과 dict에 기록
-            result[reward] += 1
-            my_agent.reset_episode()
-            my_agent.ai_agent.reset_episode()
-            # env.close() : 렌더링 보드 보려면 주석 지우기
+    mode = input("Play mode >> 1.Text 2.Graphic: ")
+    if mode == '1':
+        for e in range(EPISODE_COUNT):
+            state = env.reset()
+            print('-' * 15, '\nepisode: %d' % (e + 1))
+            # 선공 정하고 교대로 하기
+            my_agent.first_turn = ((PLAYER + e) % 2)
+            # 환경에 알려주기
+            env.mark_O = my_agent.first_turn
+            user_type = {PLAYER: 'You', OPPONENT: 'AI'}
+            print('First Turn: {}'.format(user_type[my_agent.first_turn]))
+            done = False
+            while not done:
+                print("---- BOARD ----")
+                print(state[PLAYER] + state[OPPONENT] * 2)
+                # action 선택하기
+                action = my_agent.select_action(state)
+                # action 진행
+                state, reward, done, info = env.step(action)
+            if done:
+                import time
+                # 승부난 보드 보기: 내 착수:1, 상대 착수:2
+                print("- FINAL BOARD -")
+                print(state[PLAYER] + state[OPPONENT] * 2)
+                time.sleep(1)
+                # 결과 dict에 기록
+                result[reward] += 1
+                my_agent.reset_episode()
+                my_agent.ai_agent.reset_episode()
+    if mode == '2':
+        for e in range(EPISODE_COUNT):
+            state = env.reset()
+            print('-' * 15, '\nepisode: %d' % (e + 1))
+            # 선공 정하고 교대로 하기
+            my_agent.first_turn = ((PLAYER + e) % 2)
+            # 환경에 알려주기
+            env.mark_O = my_agent.first_turn
+            user_type = {PLAYER: 'You', OPPONENT: 'AI'}
+            print('First Turn: {}'.format(user_type[my_agent.first_turn]))
+            done = False
+            while not done:
+                env.render()
+                print("---- BOARD ----")
+                print(state[PLAYER] + state[OPPONENT] * 2)
+                # action 선택하기
+                action = my_agent.select_action(state)
+                # action 진행
+                state, reward, done, info = env.step(action)
+            if done:
+                import time
+                env.render()
+                # 승부난 보드 보기: 내 착수:1, 상대 착수:2
+                print("- FINAL BOARD -")
+                print(state[PLAYER] + state[OPPONENT] * 2)
+                time.sleep(1)
+                # 결과 dict에 기록
+                result[reward] += 1
+                my_agent.reset_episode()
+                my_agent.ai_agent.reset_episode()
+            env.close()
     # 에피소드 통계
     print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%%' %
           (result[1], result[-1], result[0], result[1] / EPISODE_COUNT * 100))

@@ -68,7 +68,7 @@ class MCTS(object):
     def select_action(self, state):
         self.action_count += 1
         self.state = state
-        # save state
+        # save state (flatten안하면 값이 바뀜 버그인듯?)
         self.state_memory.appendleft(state.flatten())
         # state를 문자열 -> hash로 변환 (dict의 key로 쓰려고)
         self.state_hash = hash(self.state.tostring())
