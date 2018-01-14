@@ -173,7 +173,7 @@ default: 5판 승부, 선공 AI, 착수: 1 ~ 9번 (콘솔창에;;)
 
 12월 19일: 코딩 시작
 
-12월 25일: **<U>PyTorch로 간단한 ResNet 구현</U>** (neural_network_cpu.py)
+12월 25일: <U>**PyTorch로 간단한 ResNet 구현**</U> (neural_network_cpu.py)
 
 12월 31일: state를 hash로 바꿔 다뤄봄
 

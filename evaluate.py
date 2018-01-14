@@ -9,7 +9,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-EPISODE = 400
+EPISODE = 800
 
 
 class ZeroTree(object):
@@ -85,8 +85,8 @@ class ZeroTree(object):
 class AgentPlayer(object):
     def __init__(self):
         # 모델 불러오기
-        self.model = ZeroTree(state_path='data/state_memory_24000_r.npy',
-                              edge_path='data/edge_memory_24000_r.npy')
+        self.model = ZeroTree(state_path='data/state_memory_16000_c.npy',
+                              edge_path='data/edge_memory_16000_c.npy')
 
         # action space 좌표 공간 구성
         self.action_space = self._action_space()
