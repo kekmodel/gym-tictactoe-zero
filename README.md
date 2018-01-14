@@ -100,11 +100,13 @@ text editor or IDE 로 build
         
         tictactoe_env.py        강화학습 환경 제공
         mcts_zero.py            신경망이 학습할 최초 데이터 생성(PUCT-MCTS 알고리즘)
-        agent_rl.py             강확학습용 에이전트
+        agent_rl.py             강화학습용 에이전트
         neural_network_cpu.py   정책, 가치망 cpu버전 (ResNet-pytorch)
         human_interface.py      사람과 대결하는 인터페이스
+        evaluate.py             에이전트 vs 에이전트 붙여서 데이터 저장
         data/state_memory.npy   모든 step의 state가 저장됨
         data/edge_memory.npy    모든 step의 edge(action 정보)가 저장됨
+
 
 
 ### AI와 한판 붙고 싶다면? (아직 허접함)
@@ -143,7 +145,7 @@ default: 5판 승부, 선공 AI, 착수: 1 ~ 9번 (콘솔창에;;)
 
 12월 18일: state 타입 수정 (알파고 제로 방식)
 
-12월 19일: 틱택토 환경 정식버전 완성 (tictactoe_env.py)
+12월 19일: **틱택토 환경 정식버전 완성** (tictactoe_env.py)
 
 ## 2. 에이전트 만들기 (진행중)
 - 파이썬 중급 공부
@@ -172,7 +174,7 @@ default: 5판 승부, 선공 AI, 착수: 1 ~ 9번 (콘솔창에;;)
 
 12월 19일: 코딩 시작
 
-12월 25일: PyTorch로 간단한 ResNet 구현 (neural_network_cpu.py)
+12월 25일: **PyTorch로 간단한 ResNet 구현** (neural_network_cpu.py)
 
 12월 31일: state를 hash로 바꿔 다뤄봄
 
@@ -188,7 +190,7 @@ default: 5판 승부, 선공 AI, 착수: 1 ~ 9번 (콘솔창에;;)
 
 1월 3일: (state, edge) set을 hdf5로 저장 구현 (data/)
 
-1월 6일: PUCT-MCTS 정식버전 구현 (mcts_zero.py)
+1월 6일: **PUCT-MCTS 정식버전 구현** (mcts_zero.py)
 
              - 알고리즘 오류 수정
              - 첫번째 state에 Dirichlet 노이즈 설정(e-greedy) 
@@ -198,7 +200,7 @@ default: 5판 승부, 선공 AI, 착수: 1 ~ 9번 (콘솔창에;;)
              - 완료시 Slack에 메시지 보내는 기능 추가
                 - 개인용
 
-1월 10일: RL Agent 프로토타입 구현 (agent_rl.py)
+1월 10일: **RL Agent 프로토타입 구현** (agent_rl.py)
 
               - 딥러닝 없이 순수 강화학습만 활용한 버전
               - 데이터로 트리 재구현 
@@ -206,7 +208,7 @@ default: 5판 승부, 선공 AI, 착수: 1 ~ 9번 (콘솔창에;;)
               - 최적 정책함수 구현
               - self Play 전적 1600전 1600무
 
-1월 11일: Human interface 구현
+1월 11일: **Human interface 구현** (human_interface.py)
 
               - 사람과 처음으로 게임을 함: 지인들에게 테스트 
                   - 자신이 경험해본 상황에선 강하지만 경험이 부족한 상황에선 최적 판단 못함
@@ -229,9 +231,11 @@ default: 5판 승부, 선공 AI, 착수: 1 ~ 9번 (콘솔창에;;)
               - hyperparameter 추가
                   - 보상에 감가율(decay) 적용
                       - 더 빨리 승부를 내는 것에 가중치를 주기 위해 
-              - human_interface.py
+              - human_interface.py 업데이트
                   - 모드 선택 추가: text & graphic
                   - code 다듬기
+
+1월 15일: 에이전트끼리 플레이하는 평가 프로토 타입 구현 (evaluate.py)
 
 ing...
 
