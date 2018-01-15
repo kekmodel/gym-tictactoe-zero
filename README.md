@@ -113,7 +113,7 @@ text editor or IDE 로 build
         cd gym-tictactoe
         python human_interface.py
 
-default: 5판 승부, 선공 AI, 착수: 1 ~ 9번 (콘솔창에;;)
+default: 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에;;)
 
         [1][2][3]
         [4][5][6]
@@ -173,7 +173,7 @@ default: 5판 승부, 선공 AI, 착수: 1 ~ 9번 (콘솔창에;;)
 
 12월 19일: 코딩 시작
 
-12월 25일: <U>**PyTorch로 간단한 ResNet 구현**</U> (neural_network_cpu.py)
+12월 25일: **PyTorch로 간단한 ResNet 구현** (neural_network_cpu.py)
 
 12월 31일: state를 hash로 바꿔 다뤄봄
 
@@ -189,7 +189,7 @@ default: 5판 승부, 선공 AI, 착수: 1 ~ 9번 (콘솔창에;;)
 
 1월 3일: (state, edge) set을 hdf5로 저장 구현 (data/)
 
-1월 6일: **<U>PUCT-MCTS 정식버전 구현</U>** (mcts_zero.py)
+1월 6일: **PUCT-MCTS 정식버전 구현** (mcts_zero.py)
 
              - 알고리즘 오류 수정
              - 첫번째 state에 Dirichlet 노이즈 설정(e-greedy) 
@@ -199,7 +199,7 @@ default: 5판 승부, 선공 AI, 착수: 1 ~ 9번 (콘솔창에;;)
              - 완료시 Slack에 메시지 보내는 기능 추가
                 - 개인용
 
-1월 10일: **<U>RL Agent 프로토타입 구현</U>** (agent_rl.py -> human_interface.py에 통합)
+1월 10일: **RL Agent 프로토타입 구현** (agent_rl.py -> human_interface.py에 통합)
 
               - 딥러닝 없이 순수 강화학습만 활용한 버전
               - 데이터로 트리 재구현 
@@ -207,7 +207,7 @@ default: 5판 승부, 선공 AI, 착수: 1 ~ 9번 (콘솔창에;;)
               - 최적 정책함수 구현
               - self Play 전적 1600전 1600무
 
-1월 11일: **<U>Human interface 구현</U>** (human_interface.py)
+1월 11일: Human interface 프로토 타입 구현 
 
               - 사람과 처음으로 게임을 함: 지인들에게 테스트 
                   - 자신이 경험해본 상황에선 강하지만 경험이 부족한 상황에선 최적 판단 못함
@@ -229,12 +229,26 @@ default: 5판 승부, 선공 AI, 착수: 1 ~ 9번 (콘솔창에;;)
               - 탐험률이 가장 높은 hyperparameter 로 튜닝
               - hyperparameter 추가
                   - 보상에 감가율(decay) 적용
-                      - 더 빨리 승부를 내는 것에 가중치를 주기 위해 
+                      - 더 빨리 승부를 내는 것에 가중치를 주기 위해
               - human_interface.py 업데이트
                   - 모드 선택 추가: text & graphic
                   - code 다듬기
 
 1월 15일: 에이전트끼리 플레이하는 평가 프로토 타입 구현 (evaluate.py)
+
+              - 평가를 통해 hyperparameter 재수정 
+                  - expand, decay 삭제, c_puct: 1, alpha: 3
+              - 평가 방법 
+                  - 각 hyperparameter 조합으로 2400 에피소드를 돌려서 sample 생성
+                  - sample로 만든 에이전트끼리 2400 에피소드씩 대결
+                  - 5번 시행해서 승률 높은 쪽 선택
+              - 해당 파일을 신경망 학습에 사용할 예정
+
+1월 16일: **Human interface 정식 버전 완성** (human_interface.py)
+
+              - AI의 첫번째, 두번째 수는 확률이 최댓값인 곳만 선택, 그 이후엔 확률에 따라 선택
+                  - 훨씬 자연스러운 행동
+                  - softmax -> 일반 확률법 확정
 
 ing...
 

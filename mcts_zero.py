@@ -8,7 +8,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-EPISODE = 16000
+EPISODE = 2400
 
 
 # 몬테카를로 트리 탐색 클래스 (최초 train 데이터 생성 용)
@@ -40,11 +40,9 @@ class MCTS(object):
         self.state = None
 
         # hyperparameter
-        self.c_puct = 25
+        self.c_puct = 1
         self.epsilon = 0.25
         self.alpha = 3
-        self.expand_count = 40
-        self.decay = 0.99
 
         # member 초기화 및 시드 생성
         self._reset_step()
@@ -110,9 +108,8 @@ class MCTS(object):
             self.empty_loc = np.argwhere(self.board == 0)
             self.legal_move_n = self.empty_loc.shape[0]
             prob = 1 / self.legal_move_n
-            count = self.node_memory.count(self.state_hash)
-            # root node or expand node 이면
-            if self.action_count == 0 or count >= self.expand_count:
+            # root node 면
+            if self.action_count == 0:
                 self.pr = (1 - self.epsilon) * prob + self.epsilon * \
                     np.random.dirichlet(
                         self.alpha * np.ones(self.legal_move_n))
@@ -168,11 +165,11 @@ class MCTS(object):
             if self.action_memory[i][0] == PLAYER:
                 self.edge_memory[i][self.action_memory[i][1]
                                     ][self.action_memory[i][2]
-                                      ][W] += reward * self.decay**i
+                                      ][W] += reward
             else:
                 self.edge_memory[i][self.action_memory[i][1]
                                     ][self.action_memory[i][2]
-                                      ][W] -= reward * self.decay**i
+                                      ][W] -= reward
             self.edge_memory[i][self.action_memory[i][1]
                                 ][self.action_memory[i][2]][N] += 1
         self._reset_episode()
@@ -182,7 +179,7 @@ if __name__ == "__main__":
     # 환경 생성 및 시드 설정
     env = TicTacToeEnv()
     # 셀프 플레이 인스턴스 생성
-    selfplay = MCTS()
+    zero_play = MCTS()
     # 통계용
     result = {1: 0, 0: 0, -1: 0}
     play_mark_O = 0
@@ -191,10 +188,10 @@ if __name__ == "__main__":
     for e in range(EPISODE):
         state = env.reset()
         print('-' * 22, '\nepisode: %d' % (e + 1))
-        # 첫턴을 나와 상대 중 누가 할지 정하기
-        selfplay.first_turn = np.random.choice(2)
+        # 선공 정하고 교대로 하기
+        zero_play.first_turn = ((OPPONENT + e) % 2)
         # 첫턴인 경우 기록
-        if selfplay.first_turn == PLAYER:
+        if zero_play.first_turn == PLAYER:
             play_mark_O += 1
         done = False
         while not done:
@@ -202,7 +199,7 @@ if __name__ == "__main__":
             print("---- BOARD ----")
             print(state[PLAYER] + state[OPPONENT] * 2)
             # action 선택하기
-            action = selfplay.select_action(state)
+            action = zero_play.select_action(state)
             # action 진행
             state, reward, done, info = env.step(action)
         if done:
@@ -210,7 +207,7 @@ if __name__ == "__main__":
             print("- FINAL BOARD -")
             print(state[PLAYER] + state[OPPONENT] * 2)
             # 보상을 edge에 백업
-            selfplay.backup(reward, info)
+            zero_play.backup(reward, info)
             # 결과 dict에 기록
             result[reward] += 1
             if reward == 1:
@@ -223,5 +220,5 @@ PlayMarkO: %d   WinMarkO: %d' %
            play_mark_O, win_mark_O))
     # data save
     print("data saved")
-    np.save('data/state_memory.npy', selfplay.state_memory)
-    np.save('data/edge_memory.npy', selfplay.edge_memory)
+    np.save('data/state_memory.npy', zero_play.state_memory)
+    np.save('data/edge_memory.npy', zero_play.edge_memory)

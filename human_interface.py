@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from tictactoe_env import TicTacToeEnv
 import numpy as np
-from decimal import Decimal
 from collections import deque, defaultdict
 
 
@@ -22,7 +21,6 @@ class ZeroTree(object):
         # hyperparameter
         self.epsilon = 0.25
         self.alpha = 3
-        self.temperature = 1.5
 
         self.state_data = deque(maxlen=len(self.tree_memory))
         self.pi_data = deque(maxlen=len(self.tree_memory))
@@ -30,8 +28,8 @@ class ZeroTree(object):
 
     # 로드할 데이터
     def _load_data(self):
-        self.state_memory = np.load('data/state_memory_16000_d.npy')
-        self.edge_memory = np.load('data/edge_memory_16000_d.npy')
+        self.state_memory = np.load('data/state_memory_24000_r.npy')
+        self.edge_memory = np.load('data/edge_memory_24000_r.npy')
 
     def _make_tree(self):
         for v in self.state_memory:
@@ -45,17 +43,13 @@ class ZeroTree(object):
         for k, v in self.tree_memory.items():
             tmp = []
             visit_count = []
-            pi_val = []
             self.state_data.append(k)
             for r in range(3):
                 for c in range(3):
-                    visit_count.append(
-                        Decimal(v[r][c][0]) * Decimal(self.temperature))
+                    visit_count.append(v[r][c][0])
             for i in range(9):
-                tmp.append(np.exp(visit_count[i]) /
-                           np.sum(np.exp(visit_count)))
-            pi_val = np.random.multinomial(1, tmp, 1)
-            self.pi_data.append(np.asarray(pi_val, 'float').reshape((3, 3)))
+                tmp.append(visit_count[i] / sum(visit_count))
+            self.pi_data.append(np.asarray(tmp, 'float').reshape((3, 3)))
 
     def get_pi(self, state):
         self.state = state.copy()
@@ -130,8 +124,15 @@ class ZeroAgent(object):
             return action
         elif mode == 'human':
             _pi = self.model.get_pi(state)
-            print(_pi.round())
-            choice = np.random.choice(9, 1, p=_pi.flatten(), replace=False)
+            if self.action_count < 2:
+                pi_max = np.argwhere(_pi == _pi.max()).tolist()
+                target = pi_max[np.random.choice(len(pi_max))]
+                one_hot_pi = np.zeros((3, 3), 'int')
+                one_hot_pi[target[0]][target[1]] = 1
+                choice = np.random.choice(
+                    9, 1, p=one_hot_pi.flatten(), replace=False)
+            else:
+                choice = np.random.choice(9, 1, p=_pi.flatten(), replace=False)
             move_target = self.action_space[choice[0]]
             action = np.r_[OPPONENT, move_target]
             self._reset_step()

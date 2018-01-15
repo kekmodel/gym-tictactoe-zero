@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from tictactoe_env import TicTacToeEnv
 import numpy as np
-from decimal import Decimal
 from collections import deque, defaultdict
 
 
@@ -9,7 +8,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-EPISODE = 800
+EPISODE = 1200
 
 
 class ZeroTree(object):
@@ -24,7 +23,6 @@ class ZeroTree(object):
         # hyperparameter
         self.epsilon = 0.25
         self.alpha = 3
-        self.temperature = 1.5
 
         self.state_data = deque(maxlen=len(self.tree_memory))
         self.pi_data = deque(maxlen=len(self.tree_memory))
@@ -47,17 +45,13 @@ class ZeroTree(object):
         for k, v in self.tree_memory.items():
             tmp = []
             visit_count = []
-            pi_val = []
             self.state_data.append(k)
             for r in range(3):
                 for c in range(3):
-                    visit_count.append(
-                        Decimal(v[r][c][0]) * Decimal(self.temperature))
+                    visit_count.append(v[r][c][0])
             for i in range(9):
-                tmp.append(np.exp(visit_count[i]) /
-                           np.sum(np.exp(visit_count)))
-            pi_val = np.random.multinomial(1, tmp, 1)
-            self.pi_data.append(np.asarray(pi_val, 'float').reshape((3, 3)))
+                tmp.append(visit_count[i] / sum(visit_count))
+            self.pi_data.append(np.asarray(tmp, 'float').reshape((3, 3)))
 
     def get_pi(self, state):
         self.state = state.copy()
@@ -85,8 +79,8 @@ class ZeroTree(object):
 class AgentPlayer(object):
     def __init__(self):
         # 모델 불러오기
-        self.model = ZeroTree(state_path='data/state_memory_16000_c.npy',
-                              edge_path='data/edge_memory_16000_c.npy')
+        self.model = ZeroTree(state_path='data/state_memory_ne.npy',
+                              edge_path='data/edge_memory_ne.npy')
 
         # action space 좌표 공간 구성
         self.action_space = self._action_space()
@@ -147,8 +141,8 @@ class AgentPlayer(object):
 class AgentOppnent(object):
     def __init__(self):
         # 모델 불러오기
-        self.model = ZeroTree(state_path='data/state_memory_16000_d.npy',
-                              edge_path='data/edge_memory_16000_d.npy')
+        self.model = ZeroTree(state_path='data/state_memory.npy',
+                              edge_path='data/edge_memory.npy')
 
         # action space 좌표 공간 구성
         self.action_space = self._action_space()
@@ -263,7 +257,7 @@ if __name__ == "__main__":
         action_memory = deque(maxlen=9)
         print('-' * 15, '\nepisode: %d' % (e + 1))
         # 선공 정하고 교대로 하기
-        selfplay.first_turn = ((PLAYER + e) % 2)
+        selfplay.first_turn = ((OPPONENT + e) % 2)
         if selfplay.first_turn == PLAYER:
             play_mark_O += 1
         # 환경에 알려주기
@@ -298,17 +292,17 @@ if __name__ == "__main__":
                                                         ][W] += reward
                 else:
                     edge_memory[i][action_memory[i][1]][action_memory[i][2]
-                                                        ][W] += -reward
+                                                        ][W] -= reward
             selfplay.reset_episode()
             selfplay.agent_player.reset_episode()
             selfplay.agent_oppnent.reset_episode()
         # data save
-        if (e + 1) % 400 == 0:
+        if (e + 1) % 4000 == 0:
             print('data saved')
             np.save('data/self_state_memory.npy', state_memory)
             np.save('data/self_edge_memory.npy', edge_memory)
-            # 에피소드 통계
-            print('-' * 22, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%% \
+        # 에피소드 통계
+    print('-' * 22, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%% \
 PlayMarkO: %d WinMarkO: %d' %
-                  (result[1], result[-1], result[0], result[1] / (e + 1) * 100,
-                   play_mark_O, win_mark_O))
+          (result[1], result[-1], result[0], result[1] / (e + 1) * 100,
+           play_mark_O, win_mark_O))
