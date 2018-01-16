@@ -79,8 +79,8 @@ class ZeroTree(object):
 class AgentPlayer(object):
     def __init__(self):
         # 모델 불러오기
-        self.model = ZeroTree(state_path='data/state_memory_10000_f.npy',
-                              edge_path='data/edge_memory_10000_f.npy')
+        self.model = ZeroTree(state_path='data/state_memory_10000_f1.npy',
+                              edge_path='data/edge_memory_10000_f1.npy')
 
         # action space 좌표 공간 구성
         self.action_space = self._action_space()
@@ -141,8 +141,8 @@ class AgentPlayer(object):
 class AgentOppnent(object):
     def __init__(self):
         # 모델 불러오기
-        self.model = ZeroTree(state_path='data/state_memory_10000_f2.npy',
-                              edge_path='data/edge_memory_10000_f2.npy')
+        self.model = ZeroTree(state_path='data/state_memory_10000_f1.npy',
+                              edge_path='data/edge_memory_10000_f1.npy')
 
         # action space 좌표 공간 구성
         self.action_space = self._action_space()
