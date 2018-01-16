@@ -28,8 +28,8 @@ class ZeroTree(object):
 
     # 로드할 데이터
     def _load_data(self):
-        self.state_memory = np.load('data/state_memory_24000_r.npy')
-        self.edge_memory = np.load('data/edge_memory_24000_r.npy')
+        self.state_memory = np.load('data/state_memory_10000_f.npy')
+        self.edge_memory = np.load('data/edge_memory_10000_f.npy')
 
     def _make_tree(self):
         for v in self.state_memory:
