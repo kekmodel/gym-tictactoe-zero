@@ -97,6 +97,8 @@ Anaconda 설치 (https://www.anaconda.com/download)
 text editor or IDE 로 build 
 
 단, human_interface.py 는 interpreter 환경에서만 됨 (e.g. console)
+\* jupyter notebook에서 오류 시: pip install pyglet==1.2.4  
+
         
         tictactoe_env.py        강화학습 환경 제공
         mcts_zero.py            신경망이 학습할 최초 데이터 생성(PUCT-MCTS 알고리즘)
