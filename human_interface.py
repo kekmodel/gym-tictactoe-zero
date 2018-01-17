@@ -126,7 +126,6 @@ class ZeroAgent(object):
             self.action_count += 1
             _pi = self.model.get_pi(state)
             if self.action_count < 2:
-                print(self.action_count)
                 pi_max = np.argwhere(_pi == _pi.max()).tolist()
                 target = pi_max[np.random.choice(len(pi_max))]
                 one_hot_pi = np.zeros((3, 3), 'int')
