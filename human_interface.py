@@ -28,8 +28,8 @@ class ZeroTree(object):
 
     # 로드할 데이터
     def _load_data(self):
-        self.state_memory = np.load('data/state_memory_10000_f.npy')
-        self.edge_memory = np.load('data/edge_memory_10000_f.npy')
+        self.state_memory = np.load('data/state_memory_25000_f1.npy')
+        self.edge_memory = np.load('data/edge_memory_25000_f1.npy')
 
     def _make_tree(self):
         for v in self.state_memory:
@@ -92,7 +92,7 @@ class ZeroAgent(object):
         self.board = None
         self.state = None
 
-        # member 초기화 및 시드 생성
+        # member 초기화
         self._reset_step()
         self.reset_episode()
 
@@ -117,22 +117,24 @@ class ZeroAgent(object):
             self.action_count += 1
             user_type = (self.first_turn + self.action_count) % 2
             _pi = self.model.get_pi(state)
-            choice = np.random.choice(9, 1, p=_pi.flatten(), replace=False)
+            choice = np.random.choice(9, 1, p=_pi.flatten())
             move_target = self.action_space[choice[0]]
             action = np.r_[user_type, move_target]
             self._reset_step()
             return action
         elif mode == 'human':
+            self.action_count += 1
             _pi = self.model.get_pi(state)
             if self.action_count < 2:
+                print(self.action_count)
                 pi_max = np.argwhere(_pi == _pi.max()).tolist()
                 target = pi_max[np.random.choice(len(pi_max))]
                 one_hot_pi = np.zeros((3, 3), 'int')
                 one_hot_pi[target[0]][target[1]] = 1
                 choice = np.random.choice(
-                    9, 1, p=one_hot_pi.flatten(), replace=False)
+                    9, 1, p=one_hot_pi.flatten())
             else:
-                choice = np.random.choice(9, 1, p=_pi.flatten(), replace=False)
+                choice = np.random.choice(9, 1, p=_pi.flatten())
             move_target = self.action_space[choice[0]]
             action = np.r_[OPPONENT, move_target]
             self._reset_step()

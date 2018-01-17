@@ -11,6 +11,7 @@ N, W, Q, P = 0, 1, 2, 3
 EPISODE = 2400
 
 
+# MCTS에서 생성한 데이터로 Tree 구성 {state: sum(edge)}인 dict.
 class ZeroTree(object):
     def __init__(self, state_path='path', edge_path='path'):
         self.state_path = state_path
@@ -79,8 +80,8 @@ class ZeroTree(object):
 class AgentPlayer(object):
     def __init__(self):
         # 모델 불러오기
-        self.model = ZeroTree(state_path='data/state_memory_10000_f1.npy',
-                              edge_path='data/edge_memory_10000_f1.npy')
+        self.model = ZeroTree(state_path='data/state_memory_20000_f1.npy',
+                              edge_path='data/edge_memory_20000_f1.npy')
 
         # action space 좌표 공간 구성
         self.action_space = self._action_space()
@@ -122,27 +123,29 @@ class AgentPlayer(object):
             self.action_count += 1
             user_type = self.first_turn
             _pi = self.model.get_pi(state)
-            choice = np.random.choice(9, 1, p=_pi.flatten(), replace=False)
+            if self.action_count < 2:
+                pi_max = np.argwhere(_pi == _pi.max()).tolist()
+                target = pi_max[np.random.choice(len(pi_max))]
+                one_hot_pi = np.zeros((3, 3), 'int')
+                one_hot_pi[target[0]][target[1]] = 1
+                choice = np.random.choice(
+                    9, 1, p=one_hot_pi.flatten())
+            else:
+                choice = np.random.choice(9, 1, p=_pi.flatten())
             move_target = self.action_space[choice[0]]
             action = np.r_[user_type, move_target]
             self._reset_step()
             return action
         elif mode == 'human':
-            _pi = self.model.get_pi(state)
-            print(_pi.round())
-            choice = np.random.choice(9, 1, p=_pi.flatten(), replace=False)
-            move_target = self.action_space[choice[0]]
-            action = np.r_[OPPONENT, move_target]
-            self._reset_step()
-            return action
+            print("You are not human")
 
 
 # 상대 에이전트
 class AgentOppnent(object):
     def __init__(self):
         # 모델 불러오기
-        self.model = ZeroTree(state_path='data/state_memory_10000_f1.npy',
-                              edge_path='data/edge_memory_10000_f1.npy')
+        self.model = ZeroTree(state_path='data/state_memory_20000_f.npy',
+                              edge_path='data/edge_memory_20000_f.npy')
 
         # action space 좌표 공간 구성
         self.action_space = self._action_space()
