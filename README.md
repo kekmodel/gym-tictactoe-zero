@@ -96,7 +96,8 @@ Anaconda 설치 (https://www.anaconda.com/download)
 
 text editor or IDE 로 build 
 
-단, human_interface.py 는 interpreter 환경에서만 됨 (e.g. console)
+단, human_interface.py 는 interpreter 환경에서만 됨 (e.g. console, IPython)
+
 \* jupyter notebook에서 human_interface.ipynb 사용가능
 \* 오류 시: pip install pyglet==1.2.4  
 
@@ -115,6 +116,9 @@ text editor or IDE 로 build
 
         cd gym-tictactoe
         python human_interface.py
+
+        또는 jupyter notebook에서 human_interface.ipynb 실행
+
 
 default: 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에;;)
 
