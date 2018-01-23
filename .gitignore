@@ -1,11 +1,10 @@
 /__pycache__
 /.idea
 /.DS_Store
-/agent_drl.py
-/agent_train.py
 /human_old.py
 /data.ipynb
 /.ipynb_checkpoints
+/evaluate.py
 data/.DS_Store
 data/edge_memory.hdf5
 data/edge_memory_20000_a.npy
