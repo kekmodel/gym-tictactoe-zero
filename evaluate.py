@@ -80,8 +80,8 @@ class ZeroTree(object):
 class AgentPlayer(object):
     def __init__(self):
         # 모델 불러오기
-        self.model = ZeroTree(state_path='data/state_memory_20000_f1.npy',
-                              edge_path='data/edge_memory_20000_f1.npy')
+        self.model = ZeroTree(state_path='data/state_memory_30000.npy',
+                              edge_path='data/edge_memory_30000.npy')
 
         # action space 좌표 공간 구성
         self.action_space = self._action_space()
@@ -118,12 +118,11 @@ class AgentPlayer(object):
         self.first_turn = None
 
     def select_action(self, state, mode='self'):
-        if mode == 'self':
             self.first_turn = PLAYER
             self.action_count += 1
             user_type = self.first_turn
             _pi = self.model.get_pi(state)
-            if self.action_count < 2:
+            if self.action_count < 3:
                 pi_max = np.argwhere(_pi == _pi.max()).tolist()
                 target = pi_max[np.random.choice(len(pi_max))]
                 one_hot_pi = np.zeros((3, 3), 'int')
@@ -136,16 +135,14 @@ class AgentPlayer(object):
             action = np.r_[user_type, move_target]
             self._reset_step()
             return action
-        elif mode == 'human':
-            print("You are not human")
 
 
 # 상대 에이전트
 class AgentOppnent(object):
     def __init__(self):
         # 모델 불러오기
-        self.model = ZeroTree(state_path='data/state_memory_20000_f.npy',
-                              edge_path='data/edge_memory_20000_f.npy')
+        self.model = ZeroTree(state_path='data/state_memory_25000_f1.npy',
+                              edge_path='data/edge_memory_25000_f1.npy')
 
         # action space 좌표 공간 구성
         self.action_space = self._action_space()
@@ -181,23 +178,22 @@ class AgentOppnent(object):
         self.board = None
         self.state = None
 
-    def select_action(self, state, mode='self'):
-        if mode == 'self':
+    def select_action(self, state):
             self.first_turn = OPPONENT
             self.action_count += 1
             user_type = self.first_turn
             _pi = self.model.get_pi(state)
-            choice = np.random.choice(9, 1, p=_pi.flatten(), replace=False)
+            if self.action_count < 3:
+                pi_max = np.argwhere(_pi == _pi.max()).tolist()
+                target = pi_max[np.random.choice(len(pi_max))]
+                one_hot_pi = np.zeros((3, 3), 'int')
+                one_hot_pi[target[0]][target[1]] = 1
+                choice = np.random.choice(
+                    9, 1, p=one_hot_pi.flatten())
+            else:
+                choice = np.random.choice(9, 1, p=_pi.flatten())
             move_target = self.action_space[choice[0]]
             action = np.r_[user_type, move_target]
-            self._reset_step()
-            return action
-        elif mode == 'human':
-            _pi = self.model.get_pi(state)
-            print(_pi.round())
-            choice = np.random.choice(9, 1, p=_pi.flatten(), replace=False)
-            move_target = self.action_space[choice[0]]
-            action = np.r_[OPPONENT, move_target]
             self._reset_step()
             return action
 
@@ -227,20 +223,20 @@ class AgentVsAgent(object):
         if self.first_turn == PLAYER:
             if self.action_count % 2 == 0:
                 print("Agent Player's turn!")
-                action = self.agent_player.select_action(state, mode='self')
+                action = self.agent_player.select_action(state)
                 return action
             else:
                 print("Agent Opponent's turn!")
-                action = self.agent_oppnent.select_action(state, mode='self')
+                action = self.agent_oppnent.select_action(state)
                 return action
         else:
             if self.action_count % 2 == 0:
                 print("Agent Opponent's turn!")
-                action = self.agent_oppnent.select_action(state, mode='self')
+                action = self.agent_oppnent.select_action(state)
                 return action
             else:
                 print("Agent Player's turn!")
-                action = self.agent_player.select_action(state, mode='self')
+                action = self.agent_player.select_action(state)
                 return action
 
 
@@ -305,7 +301,7 @@ if __name__ == "__main__":
             np.save('data/self_state_memory.npy', state_memory)
             np.save('data/self_edge_memory.npy', edge_memory)
         # 에피소드 통계
-    print('-' * 22, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%% \
-PlayMarkO: %d WinMarkO: %d' %
+    print('-' * 22, '\nWin:%d \tLose:%d \tDraw:%d \tWinrate: %0.1f%% \n\
+PlayMarkO:%d \tWinMarkO:%d' %
           (result[1], result[-1], result[0], result[1] / (e + 1) * 100,
            play_mark_O, win_mark_O))

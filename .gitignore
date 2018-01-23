@@ -5,6 +5,7 @@
 /agent_train.py
 /human_old.py
 /data.ipynb
+/.ipynb_checkpoints
 data/.DS_Store
 data/edge_memory.hdf5
 data/edge_memory_20000_a.npy
