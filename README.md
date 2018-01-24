@@ -98,7 +98,7 @@ text editor or IDE 로 build
 
 단, human_interface.py 는 interpreter 환경에서만 됨 (e.g. console, IPython)
 
-\* jupyter notebook에서 human_interface.ipynb 사용가능
+\* jupyter notebook 사용가능
 
 \* 오류 시: pip install pyglet==1.2.4  
 
