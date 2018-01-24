@@ -42,7 +42,8 @@ class MCTS(object):
         # hyperparameter
         self.c_puct = 1
         self.epsilon = 0.25
-        self.alpha = 3
+        self.alpha = 0.5
+        self.expand_count = 100
 
         # member 초기화
         self._reset_step()
@@ -108,8 +109,9 @@ class MCTS(object):
             self.empty_loc = np.argwhere(self.board == 0)
             self.legal_move_n = self.empty_loc.shape[0]
             prob = 1 / self.legal_move_n
-            # root node 면
-            if self.action_count == 0:
+            count = self.node_memory.count(hash(self.state.tostring()))
+            # root node or expand node 이면
+            if self.action_count == 0 or count >= self.expand_count:
                 self.pr = (1 - self.epsilon) * prob + self.epsilon * \
                     np.random.dirichlet(
                         self.alpha * np.ones(self.legal_move_n))
