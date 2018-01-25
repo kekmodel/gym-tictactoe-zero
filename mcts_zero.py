@@ -160,9 +160,9 @@ class MCTS(object):
             # 보정한 edge를 최종 트리에 업데이트
             self.tree_memory[self.node_memory[0]] = edge
 
-    def backup(self, reward, info):
+    def backup(self, reward):
         '''에피소드가 끝나면 지나 온 edge의 N과 W를 업데이트 함'''
-        steps = info['steps']
+        steps = self.action_count + 1
         for i in range(steps):
             if self.action_memory[i][0] == PLAYER:
                 self.edge_memory[i][self.action_memory[i][1]
@@ -210,7 +210,7 @@ if __name__ == "__main__":
             print("- FINAL BOARD -")
             print(state[PLAYER] + state[OPPONENT] * 2)
             # 보상을 edge에 백업
-            zero_play.backup(reward, info)
+            zero_play.backup(reward)
             # 결과 dict에 기록
             result[reward] += 1
             if reward == 1:
