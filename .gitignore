@@ -1,11 +1,5 @@
 /__pycache__
 /.idea
 /.DS_Store
-/human_interface_new.py
-/mcts_zero_new.py
-/data.ipynb
 /.ipynb_checkpoints
-/test.ipynb
 data/.DS_Store
-data/edge_memory_20000_a.npy
-data/state_memory_20000_a.npy
