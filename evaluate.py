@@ -8,7 +8,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-EPISODE = 2400
+EPISODE = 1600
 
 
 # MCTS에서 생성한 데이터로 Tree 구성 {state: sum(edge)}인 dict.

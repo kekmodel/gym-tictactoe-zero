@@ -20,7 +20,7 @@ class ZeroTree(object):
 
         # hyperparameter
         self.epsilon = 0.25
-        self.alpha = 3
+        self.alpha = 0.5
 
         self.state_data = deque(maxlen=len(self.tree_memory))
         self.pi_data = deque(maxlen=len(self.tree_memory))
@@ -28,8 +28,8 @@ class ZeroTree(object):
 
     # 로드할 데이터
     def _load_data(self):
-        self.state_memory = np.load('data/state_memory_25000_f1.npy')
-        self.edge_memory = np.load('data/edge_memory_25000_f1.npy')
+        self.state_memory = np.load('data/state_memory_25000_ti.npy')
+        self.edge_memory = np.load('data/edge_memory_25000_ti.npy')
 
     def _make_tree(self):
         for v in self.state_memory:
@@ -125,7 +125,7 @@ class ZeroAgent(object):
         elif mode == 'human':
             self.action_count += 1
             _pi = self.model.get_pi(state)
-            if self.action_count < 0:
+            if self.action_count < 1:
                 pi_max = np.argwhere(_pi == _pi.max()).tolist()
                 target = pi_max[np.random.choice(len(pi_max))]
                 one_hot_pi = np.zeros((3, 3), 'int')

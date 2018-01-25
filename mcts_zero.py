@@ -8,7 +8,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-EPISODE = 2400
+EPISODE = 1600
 
 
 # 몬테카를로 트리 탐색 클래스 (최초 train 데이터 생성 용)
@@ -56,6 +56,7 @@ class MCTS(object):
         self.legal_move_n = 0
         self.empty_loc = None
         self.state_hash = None
+        self.new_state = None
         self.pr = 0
         self.tree_memory = defaultdict(lambda: 0)
 
@@ -63,19 +64,24 @@ class MCTS(object):
         self.action_memory = deque(maxlen=9)
         self.action_count = -1
         self.board = None
-        self.state = None
+        plane = np.zeros((3, 3)).flatten()
+        self.my_history = deque([plane, plane, plane, plane], maxlen=4)
+        self.your_history = deque([plane, plane, plane, plane], maxlen=4)
+        self.first_turn = None
+        self.user_type = None
 
     def select_action(self, state):
         self.action_count += 1
-        self.state = state
+        # 호출될 때마다 첫턴 기준 교대로 행동주체 바꿈, 최종 action에 붙여줌
+        self.user_type = (self.first_turn + self.action_count) % 2
+        self.state = state.copy()
+        self.new_state = self.convert_state(state)
         # save state (flatten 안하고 넣으면 값이 바뀜 버그인듯?)
-        self.state_memory.appendleft(state.flatten())
+        self.state_memory.appendleft(self.new_state)
         # state를 문자열 -> hash로 변환 (dict의 key로 쓰려고)
-        self.state_hash = hash(self.state.tostring())
+        self.state_hash = hash(self.new_state.tostring())
         # 변환한 state를 node로 부르자. 저장!
         self.node_memory.appendleft(self.state_hash)
-        # 호출될 때마다 첫턴 기준 교대로 행동주체 바꿈, 최종 action에 붙여줌
-        user_type = (self.first_turn + self.action_count) % 2
         self.init_edge()
         self._cal_puct()
         print("* PUCT Score *")
@@ -92,10 +98,20 @@ class MCTS(object):
         # 동점 처리
         move_target = puct_max[np.random.choice(len(puct_max))]
         # 두 배열을 붙여서 최종 action 구성
-        action = np.r_[user_type, move_target]
+        action = np.r_[self.user_type, move_target]
         self.action_memory.appendleft(action)
         self._reset_step()
         return action
+
+    def convert_state(self, state):
+        if abs(self.user_type - 1) == PLAYER:
+            self.my_history.appendleft(state[PLAYER].flatten())
+        else:
+            self.your_history.appendleft(state[OPPONENT].flatten())
+        new_state = np.r_[np.array(self.my_history).flatten(),
+                          np.array(self.your_history).flatten(),
+                          self.state[2].flatten()]
+        return new_state
 
     def init_edge(self, pr=0):
         '''들어온 상태에서 가능한 action 자리의 엣지를 초기화 (P값 배치)
@@ -160,9 +176,9 @@ class MCTS(object):
             # 보정한 edge를 최종 트리에 업데이트
             self.tree_memory[self.node_memory[0]] = edge
 
-    def backup(self, reward, info):
+    def backup(self, reward):
         '''에피소드가 끝나면 지나 온 edge의 N과 W를 업데이트 함'''
-        steps = info['steps']
+        steps = self.action_count + 1
         for i in range(steps):
             if self.action_memory[i][0] == PLAYER:
                 self.edge_memory[i][self.action_memory[i][1]
@@ -201,7 +217,7 @@ if __name__ == "__main__":
             # 보드 상황 출력: 내 착수:1, 상대 착수:2
             print("---- BOARD ----")
             print(state[PLAYER] + state[OPPONENT] * 2)
-            # action 선택하기
+            # action 선택하기=
             action = zero_play.select_action(state)
             # action 진행
             state, reward, done, info = env.step(action)
@@ -210,7 +226,7 @@ if __name__ == "__main__":
             print("- FINAL BOARD -")
             print(state[PLAYER] + state[OPPONENT] * 2)
             # 보상을 edge에 백업
-            zero_play.backup(reward, info)
+            zero_play.backup(reward)
             # 결과 dict에 기록
             result[reward] += 1
             if reward == 1:

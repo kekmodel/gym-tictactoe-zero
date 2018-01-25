@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-import logging  # 로그 제공 모듈
 import gym   # 환경 제공 모듈
 from gym import spaces   # 공간 정의 클래스
 from gym.utils import seeding   # 시드 제공 클래스
 import numpy as np   # 배열 제공 모듈
 
 
-logger = logging.getLogger(__name__)   # 실행 로그 남기기, 생략해도 됨
 ''' 소개 -----------------------------------------------------------
 # 규칙: O, X 를 번갈아 가면서 표시하고 3개 연속으로 한줄을 채우면 승리, 무승부 있음
 # state: (3, 3, 3) 넘파이 배열: 3*3 평면 3장
