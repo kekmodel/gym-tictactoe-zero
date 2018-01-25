@@ -8,7 +8,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-EPISODE = 2400
+EPISODE = 1600
 
 
 # 몬테카를로 트리 탐색 클래스 (최초 train 데이터 생성 용)
@@ -180,7 +180,6 @@ class MCTS(object):
 if __name__ == "__main__":
     # 환경 생성 및 시드 설정
     env = TicTacToeEnv()
-    np.random.seed(1)
     # 셀프 플레이 인스턴스 생성
     zero_play = MCTS()
     # 통계용
@@ -192,7 +191,7 @@ if __name__ == "__main__":
         state = env.reset()
         print('-' * 22, '\nepisode: %d' % (e + 1))
         # 선공 정하고 교대로 하기
-        zero_play.first_turn = ((OPPONENT + e) % 2)
+        zero_play.first_turn = (OPPONENT + e) % 2
         # 첫턴인 경우 기록
         if zero_play.first_turn == PLAYER:
             play_mark_O += 1

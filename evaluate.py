@@ -23,7 +23,7 @@ class ZeroTree(object):
 
         # hyperparameter
         self.epsilon = 0.25
-        self.alpha = 3
+        self.alpha = 0.5
 
         self.state_data = deque(maxlen=len(self.tree_memory))
         self.pi_data = deque(maxlen=len(self.tree_memory))
@@ -80,8 +80,8 @@ class ZeroTree(object):
 class AgentPlayer(object):
     def __init__(self):
         # 모델 불러오기
-        self.model = ZeroTree(state_path='data/state_memory_30000.npy',
-                              edge_path='data/edge_memory_30000.npy')
+        self.model = ZeroTree(state_path='data/state_memory_25000_ti.npy',
+                              edge_path='data/edge_memory_25000_ti.npy')
 
         # action space 좌표 공간 구성
         self.action_space = self._action_space()
@@ -122,7 +122,7 @@ class AgentPlayer(object):
             self.action_count += 1
             user_type = self.first_turn
             _pi = self.model.get_pi(state)
-            if self.action_count < 3:
+            if self.action_count < 1:
                 pi_max = np.argwhere(_pi == _pi.max()).tolist()
                 target = pi_max[np.random.choice(len(pi_max))]
                 one_hot_pi = np.zeros((3, 3), 'int')
@@ -183,7 +183,7 @@ class AgentOppnent(object):
             self.action_count += 1
             user_type = self.first_turn
             _pi = self.model.get_pi(state)
-            if self.action_count < 3:
+            if self.action_count < 0:
                 pi_max = np.argwhere(_pi == _pi.max()).tolist()
                 target = pi_max[np.random.choice(len(pi_max))]
                 one_hot_pi = np.zeros((3, 3), 'int')
