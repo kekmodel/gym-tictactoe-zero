@@ -8,7 +8,7 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-EPISODE = 1600
+EPISODE = 25000
 
 
 # 몬테카를로 트리 탐색 클래스 (최초 train 데이터 생성 용)
@@ -45,8 +45,8 @@ class MCTS(object):
         # hyperparameter
         self.c_puct = 1
         self.epsilon = 0.25
-        self.alpha = 0.5
-        self.expand_count = 40
+        self.alpha = 1
+        self.expand_count = 100
 
         # member 초기화
         self._reset_step()
@@ -216,9 +216,8 @@ class MCTS(object):
 
 
 if __name__ == "__main__":
-    # 환경 생성 및 시드 설정
+    # 환경 생성
     env = TicTacToeEnv()
-    np.random.seed(1)
     # 셀프 플레이 인스턴스 생성
     zero_play = MCTS()
     # 통계용
@@ -261,5 +260,5 @@ PlayMarkO: %d   WinMarkO: %d' %
            play_mark_O, win_mark_O))
     # 데이터 저장
     print("data saved")
-    np.save('data/state_memory_new_5.npy', zero_play.state_memory)
-    np.save('data/edge_memory_new_5.npy', zero_play.edge_memory)
+    np.save('data/state_memory_new.npy', zero_play.state_memory)
+    np.save('data/edge_memory_new.npy', zero_play.edge_memory)
