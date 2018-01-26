@@ -73,9 +73,13 @@ pip 설치
 Anaconda 설치 (https://www.anaconda.com/download)
 
 
+
+
 ## git 설치 (https://git-scm.com/downloads)
     
         웹 페이지 참조
+
+
 
 
 
@@ -87,9 +91,13 @@ Anaconda 설치 (https://www.anaconda.com/download)
 
 
 
+
+
 ## gym-tictactoe 설치 (제가 만든 거)
     
         git clone https://github.com/kekmodel/gym-tictactoe.git
+
+
 
 
 ## 파일 구성
@@ -101,8 +109,7 @@ text editor or IDE 로 build
 \* jupyter notebook 사용가능
 
 \* 오류 시: pip install pyglet==1.2.4  
-
-        
+     
         tictactoe_env.py        강화학습 환경 제공
         mcts_zero.py            신경망이 학습할 최초 데이터 생성(PUCT-MCTS 알고리즘)
         neural_network_cpu.py   정책, 가치망 cpu버전 (ResNet-pytorch)
@@ -113,12 +120,10 @@ text editor or IDE 로 build
 
 
 
-### AI와 한판 붙고 싶다면? (아직 허접함)
+### AI와 한판 붙고 싶다면? (순수 강화학습만 진행한 버전: 신경망 미적용)
 
         cd gym-tictactoe
         python human_interface.py
-
-        또는 jupyter notebook에서 human_interface.ipynb 실행
 
 
 default: 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에;;)
@@ -126,6 +131,8 @@ default: 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에;;)
         [1][2][3]
         [4][5][6]
         [7][8][9] 
+
+
 
 
 # 프로젝트 진행 상황
@@ -243,7 +250,7 @@ default: 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에;;)
 1월 15일: 에이전트끼리 플레이하는 평가 프로토 타입 구현 (evaluate.py)
 
               - 평가를 통해 hyperparameter 최적화 
-                  - decay 삭제, c_puct: 1, alpha: 0.5, expand_count: 100 
+                  - decay 삭제, c_puct: 1, alpha: 1, expand_count: 100 
               - 평가 방법 
                   - 각 hyperparameter 조합으로 3000 에피소드를 돌려서 sample 생성
                   - sample로 만든 에이전트끼리 3000 에피소드씩 대결
@@ -252,8 +259,13 @@ default: 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에;;)
 
 1월 16일: **Human interface 정식 버전 완성** (human_interface.py)
 
-              - AI의 첫번째, 두번째 수는 확률이 최댓값인 곳만 선택, 그 이후엔 확률에 따라 선택(실험 중)
+              - AI의 첫번째 수는 확률이 최댓값인 곳만 선택, 그 이후엔 확률에 따라 선택
                   - softmax -> 일반 확률법으로 확정
+
+1월 26일: state 변경 -> 각 플레이어의 최근 4-history 저장
+
+              - 플레이어 3x3 array 4장, 상대 3x3 array 4장, 선공 구별 1장
+              - 9x3x3 numpy array -> flatten() 하여 저장
 
 ing...
 
