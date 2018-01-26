@@ -2,4 +2,5 @@
 /.idea
 /.DS_Store
 /.ipynb_checkpoints
+/mcts_zero_new_slack.py
 data/.DS_Store

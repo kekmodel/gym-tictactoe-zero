@@ -178,7 +178,7 @@ class MCTS(object):
 
 
 if __name__ == "__main__":
-    # 환경 생성 및 시드 설정
+    # 환경 생성
     env = TicTacToeEnv()
     # 셀프 플레이 인스턴스 생성
     zero_play = MCTS()
