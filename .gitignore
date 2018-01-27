@@ -1,6 +1,8 @@
 /__pycache__
 /.idea
 /.DS_Store
-/.ipynb_checkpoints
-/mcts_zero_slack.py
 data/.DS_Store
+/.ipynb_checkpoints
+
+/mcts_zero_slack.py
+
