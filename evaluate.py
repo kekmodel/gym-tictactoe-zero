@@ -8,7 +8,8 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-EPISODE = 1600
+EPISODE = 800
+SAVE_CYCLE = 1000
 
 
 # MCTS에서 생성한 데이터로 Tree 구성 {state: sum(edge)}인 dict.
@@ -23,13 +24,13 @@ class ZeroTree(object):
 
         # hyperparameter
         self.epsilon = 0.25
-        self.alpha = 0.5
+        self.alpha = 1
 
         self.state_data = deque(maxlen=len(self.tree_memory))
         self.pi_data = deque(maxlen=len(self.tree_memory))
         self._cal_pi()
 
-    # 로드할 데이터
+    # 로드 데이터
     def _load_data(self):
         self.state_memory = np.load(self.state_path)
         self.edge_memory = np.load(self.edge_path)
@@ -55,10 +56,15 @@ class ZeroTree(object):
             self.pi_data.append(np.asarray(tmp, 'float').reshape((3, 3)))
 
     def get_pi(self, state):
-        self.state = state.copy()
+        new_state = state.copy()
+        temp_state = state.reshape(9, 3, 3)
+        origin_state = np.r_[temp_state[0].flatten(),
+                             temp_state[4].flatten(),
+                             temp_state[8].flatten()]
+        self.state = origin_state.reshape(3, 3, 3)
         board = self.state[PLAYER] + self.state[OPPONENT]
-        if tuple(state.flatten()) in self.state_data:
-            i = tuple(self.state.flatten())
+        if tuple(new_state.flatten()) in self.state_data:
+            i = tuple(new_state.flatten())
             j = self.state_data.index(i)
             pi = self.pi_data[j]
             print('"zero policy"')
@@ -80,8 +86,8 @@ class ZeroTree(object):
 class AgentPlayer(object):
     def __init__(self):
         # 모델 불러오기
-        self.model = ZeroTree(state_path='data/state_memory_25000_ti.npy',
-                              edge_path='data/edge_memory_25000_ti.npy')
+        self.model = ZeroTree(state_path='data/state_memory_25k_new.npy',
+                              edge_path='data/edge_memory_25k_new.npy')
 
         # action space 좌표 공간 구성
         self.action_space = self._action_space()
@@ -117,32 +123,32 @@ class AgentPlayer(object):
         self.state = None
         self.first_turn = None
 
-    def select_action(self, state, mode='self'):
-            self.first_turn = PLAYER
-            self.action_count += 1
-            user_type = self.first_turn
-            _pi = self.model.get_pi(state)
-            if self.action_count < 1:
-                pi_max = np.argwhere(_pi == _pi.max()).tolist()
-                target = pi_max[np.random.choice(len(pi_max))]
-                one_hot_pi = np.zeros((3, 3), 'int')
-                one_hot_pi[target[0]][target[1]] = 1
-                choice = np.random.choice(
-                    9, 1, p=one_hot_pi.flatten())
-            else:
-                choice = np.random.choice(9, 1, p=_pi.flatten())
-            move_target = self.action_space[choice[0]]
-            action = np.r_[user_type, move_target]
-            self._reset_step()
-            return action
+    def select_action(self, state):
+        self.first_turn = PLAYER
+        self.action_count += 1
+        user_type = self.first_turn
+        _pi = self.model.get_pi(state)
+        if self.action_count < 0:
+            pi_max = np.argwhere(_pi == _pi.max()).tolist()
+            target = pi_max[np.random.choice(len(pi_max))]
+            one_hot_pi = np.zeros((3, 3), 'int')
+            one_hot_pi[target[0]][target[1]] = 1
+            choice = np.random.choice(
+                9, 1, p=one_hot_pi.flatten())
+        else:
+            choice = np.random.choice(9, 1, p=_pi.flatten())
+        move_target = self.action_space[choice[0]]
+        action = np.r_[user_type, move_target]
+        self._reset_step()
+        return action
 
 
 # 상대 에이전트
 class AgentOppnent(object):
     def __init__(self):
         # 모델 불러오기
-        self.model = ZeroTree(state_path='data/state_memory_25000_f1.npy',
-                              edge_path='data/edge_memory_25000_f1.npy')
+        self.model = ZeroTree(state_path='data/state_memory_hel.npy',
+                              edge_path='data/edge_memory_hel.npy')
 
         # action space 좌표 공간 구성
         self.action_space = self._action_space()
@@ -179,23 +185,23 @@ class AgentOppnent(object):
         self.state = None
 
     def select_action(self, state):
-            self.first_turn = OPPONENT
-            self.action_count += 1
-            user_type = self.first_turn
-            _pi = self.model.get_pi(state)
-            if self.action_count < 0:
-                pi_max = np.argwhere(_pi == _pi.max()).tolist()
-                target = pi_max[np.random.choice(len(pi_max))]
-                one_hot_pi = np.zeros((3, 3), 'int')
-                one_hot_pi[target[0]][target[1]] = 1
-                choice = np.random.choice(
-                    9, 1, p=one_hot_pi.flatten())
-            else:
-                choice = np.random.choice(9, 1, p=_pi.flatten())
-            move_target = self.action_space[choice[0]]
-            action = np.r_[user_type, move_target]
-            self._reset_step()
-            return action
+        self.first_turn = OPPONENT
+        self.action_count += 1
+        user_type = self.first_turn
+        _pi = self.model.get_pi(state)
+        if self.action_count < 0:
+            pi_max = np.argwhere(_pi == _pi.max()).tolist()
+            target = pi_max[np.random.choice(len(pi_max))]
+            one_hot_pi = np.zeros((3, 3), 'int')
+            one_hot_pi[target[0]][target[1]] = 1
+            choice = np.random.choice(
+                9, 1, p=one_hot_pi.flatten())
+        else:
+            choice = np.random.choice(9, 1, p=_pi.flatten())
+        move_target = self.action_space[choice[0]]
+        action = np.r_[user_type, move_target]
+        self._reset_step()
+        return action
 
 
 # 싸움 붙이는 클래스
@@ -253,23 +259,35 @@ if __name__ == "__main__":
     # play game
     for e in range(EPISODE):
         state = env.reset()
+        plane = np.zeros((3, 3)).flatten()
+        my_history = deque([plane, plane, plane, plane], maxlen=4)
+        your_history = deque([plane, plane, plane, plane], maxlen=4)
         action_memory = deque(maxlen=9)
         print('-' * 15, '\nepisode: %d' % (e + 1))
         # 선공 정하고 교대로 하기
-        selfplay.first_turn = ((OPPONENT + e) % 2)
+        selfplay.first_turn = (OPPONENT + e) % 2
         if selfplay.first_turn == PLAYER:
             play_mark_O += 1
         # 환경에 알려주기
         env.mark_O = selfplay.first_turn
         done = False
+        action_count = 0
         while not done:
+            action_count += 1
+            user_type = (selfplay.first_turn + action_count) % 2
             print("---- BOARD ----")
             print(state[PLAYER] + state[OPPONENT] * 2)
-            node = state.copy()
-            state_memory.appendleft(node.flatten())
+            if user_type == PLAYER:
+                my_history.appendleft(state[PLAYER].flatten())
+            else:
+                your_history.appendleft(state[OPPONENT].flatten())
+            new_state = np.r_[np.array(my_history).flatten(),
+                              np.array(your_history).flatten(),
+                              state[MARK_O].flatten()]
+            state_memory.appendleft(new_state)
             edge = np.zeros((3, 3, 4), 'float')
             # action 선택하기
-            action = selfplay.select_action(state)
+            action = selfplay.select_action(new_state)
             action_memory.appendleft(action)
             edge[action[1]][action[2]][N] += 1
             edge_memory.appendleft(edge)
@@ -296,12 +314,11 @@ if __name__ == "__main__":
             selfplay.agent_player.reset_episode()
             selfplay.agent_oppnent.reset_episode()
         # data save
-        if (e + 1) % 4000 == 0:
-            print('data saved')
-            np.save('data/self_state_memory.npy', state_memory)
-            np.save('data/self_edge_memory.npy', edge_memory)
+        if (e + 1) % SAVE_CYCLE == 0:
+            print('%d episode data saved' % (e + 1))
+            np.save('data/self_state_memory_new.npy', state_memory)
+            np.save('data/self_edge_memory_new.npy', edge_memory)
         # 에피소드 통계
     print('-' * 22, '\nWin:%d \tLose:%d \tDraw:%d \tWinrate: %0.1f%% \n\
-PlayMarkO:%d \tWinMarkO:%d' %
-          (result[1], result[-1], result[0], result[1] / (e + 1) * 100,
-           play_mark_O, win_mark_O))
+WinMarkO:%d' % (result[1], result[-1], result[0],
+                result[1] / (result[1] + result[-1]) * 100, win_mark_O))

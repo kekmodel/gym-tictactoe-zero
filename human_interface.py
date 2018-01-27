@@ -20,7 +20,7 @@ class ZeroTree(object):
 
         # hyperparameter
         self.epsilon = 0.25
-        self.alpha = 0.5
+        self.alpha = 1
 
         self.state_data = deque(maxlen=len(self.tree_memory))
         self.pi_data = deque(maxlen=len(self.tree_memory))
@@ -28,8 +28,8 @@ class ZeroTree(object):
 
     # 로드할 데이터
     def _load_data(self):
-        self.state_memory = np.load('data/state_memory_25000_f1.npy')
-        self.edge_memory = np.load('data/edge_memory_25000_f1.npy')
+        self.state_memory = np.load('data/state_memory_25k_new.npy')
+        self.edge_memory = np.load('data/edge_memory_25k_new.npy')
 
     def _make_tree(self):
         for v in self.state_memory:
@@ -52,10 +52,15 @@ class ZeroTree(object):
             self.pi_data.append(np.asarray(tmp, 'float').reshape((3, 3)))
 
     def get_pi(self, state):
-        self.state = state.copy()
+        new_state = state.copy()
+        temp_state = state.reshape(9, 3, 3)
+        origin_state = np.r_[temp_state[0].flatten(),
+                             temp_state[4].flatten(),
+                             temp_state[8].flatten()]
+        self.state = origin_state.reshape(3, 3, 3)
         board = self.state[PLAYER] + self.state[OPPONENT]
-        if tuple(state.flatten()) in self.state_data:
-            i = tuple(self.state.flatten())
+        if tuple(new_state.flatten()) in self.state_data:
+            i = tuple(new_state.flatten())
             j = self.state_data.index(i)
             pi = self.pi_data[j]
             print('"zero policy"')
@@ -125,7 +130,7 @@ class ZeroAgent(object):
         elif mode == 'human':
             self.action_count += 1
             _pi = self.model.get_pi(state)
-            if self.action_count < 1:
+            if self.action_count < 0:
                 pi_max = np.argwhere(_pi == _pi.max()).tolist()
                 target = pi_max[np.random.choice(len(pi_max))]
                 one_hot_pi = np.zeros((3, 3), 'int')
@@ -194,20 +199,33 @@ if __name__ == "__main__":
     mode = input("Play mode >> 1.Text 2.Graphic: ")
     if mode == '1':
         for e in range(EPISODE):
+            plane = np.zeros((3, 3)).flatten()
+            my_history = deque([plane, plane, plane, plane], maxlen=4)
+            your_history = deque([plane, plane, plane, plane], maxlen=4)
             state = env.reset()
             print('-' * 15, '\nepisode: %d' % (e + 1))
             # 선공 정하고 교대로 하기
-            my_agent.first_turn = ((PLAYER + e) % 2)
+            my_agent.first_turn = (PLAYER + e) % 2
             # 환경에 알려주기
             env.mark_O = my_agent.first_turn
-            user_type = {PLAYER: 'You', OPPONENT: 'AI'}
-            print('First Turn: {}'.format(user_type[my_agent.first_turn]))
+            turn = {PLAYER: 'You', OPPONENT: 'AI'}
+            print('First Turn: {}'.format(turn[my_agent.first_turn]))
+            action_count = 0
             done = False
             while not done:
+                action_count += 1
+                user_type = (my_agent.first_turn + action_count) % 2
                 print("---- BOARD ----")
                 print(state[PLAYER] + state[OPPONENT] * 2)
+                if user_type == PLAYER:
+                    my_history.appendleft(state[PLAYER].flatten())
+                else:
+                    your_history.appendleft(state[OPPONENT].flatten())
+                new_state = np.r_[np.array(my_history).flatten(),
+                                  np.array(your_history).flatten(),
+                                  state[MARK_O].flatten()]
                 # action 선택하기
-                action = my_agent.select_action(state)
+                action = my_agent.select_action(new_state)
                 # action 진행
                 state, reward, done, info = env.step(action)
             if done:
@@ -222,21 +240,34 @@ if __name__ == "__main__":
                 my_agent.ai_agent.reset_episode()
     if mode == '2':
         for e in range(EPISODE):
+            plane = np.zeros((3, 3)).flatten()
+            my_history = deque([plane, plane, plane, plane], maxlen=4)
+            your_history = deque([plane, plane, plane, plane], maxlen=4)
             state = env.reset()
             print('-' * 15, '\nepisode: %d' % (e + 1))
             # 선공 정하고 교대로 하기
-            my_agent.first_turn = ((PLAYER + e) % 2)
+            my_agent.first_turn = (PLAYER + e) % 2
             # 환경에 알려주기
             env.mark_O = my_agent.first_turn
-            user_type = {PLAYER: 'You', OPPONENT: 'AI'}
-            print('First Turn: {}'.format(user_type[my_agent.first_turn]))
+            turn = {PLAYER: 'You', OPPONENT: 'AI'}
+            print('First Turn: {}'.format(turn[my_agent.first_turn]))
+            action_count = 0
             done = False
             while not done:
                 env.render()
+                action_count += 1
+                user_type = (my_agent.first_turn + action_count) % 2
                 print("---- BOARD ----")
                 print(state[PLAYER] + state[OPPONENT] * 2)
+                if user_type == PLAYER:
+                    my_history.appendleft(state[PLAYER].flatten())
+                else:
+                    your_history.appendleft(state[OPPONENT].flatten())
+                new_state = np.r_[np.array(my_history).flatten(),
+                                  np.array(your_history).flatten(),
+                                  state[MARK_O].flatten()]
                 # action 선택하기
-                action = my_agent.select_action(state)
+                action = my_agent.select_action(new_state)
                 # action 진행
                 state, reward, done, info = env.step(action)
             if done:

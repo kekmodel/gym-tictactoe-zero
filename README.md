@@ -110,13 +110,16 @@ text editor or IDE 로 build
 
 \* 오류 시: pip install pyglet==1.2.4  
      
-        tictactoe_env.py        강화학습 환경 제공
-        mcts_zero.py            신경망이 학습할 최초 데이터 생성(PUCT-MCTS 알고리즘)
-        neural_network_cpu.py   정책, 가치망 cpu버전 (ResNet-pytorch)
-        human_interface.py      사람과 대결하는 인터페이스
-        evaluate.py             에이전트 vs 에이전트 붙여서 데이터 저장
-        data/state_memory.npy   모든 step의 state가 저장됨
-        data/edge_memory.npy    모든 step의 edge(action 정보)가 저장됨
+        tictactoe_env.py                강화학습 환경 제공
+        mcts_zero.py                    신경망이 학습할 최초 데이터 생성(PUCT-MCTS 알고리즘)
+        neural_network_cpu.py           정책 + 가치망 cpu버전 (ResNet-pytorch)
+        human_interface.py              사람과 대결하는 인터페이스 제공
+        evaluate.py                     에이전트 vs 에이전트 붙여서 데이터 저장
+        data_viewer.ipynb               저장 데이터 분석용 jupyter notebook
+        data/state_memory.npy           모든 step의 state가 저장됨 (mcts_zero.py)
+        data/edge_memory.npy            모든 step의 edge(action 정보)가 저장됨 (mcts_zero.py)
+        data/state|edge_memory_25k.npy  25000 에피소드에 대한 state, edge 데이터 set
+    
 
 
 
@@ -126,7 +129,7 @@ text editor or IDE 로 build
         python human_interface.py
 
 
-default: 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에;;)
+default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에;;)
 
         [1][2][3]
         [4][5][6]

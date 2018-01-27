@@ -8,12 +8,14 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-EPISODE = 1600
+EPISODE = 25000
+SAVE_CYCLE = 1000
 
 
 # 몬테카를로 트리 탐색 클래스 (최초 train 데이터 생성 용)
+# state를 각 주체당 4수까지 저장해서 new_state로 만듦 -> (9, 3, 3) array.flatten()
 # edge는 현재 state에서 착수 가능한 모든 action
-# edge 구성: (3*3*4)array: 9개 좌표에 4개의 정보 매칭
+# edge 구성: (3, 3, 4) array: 9개 좌표에 4개의 정보 매칭
 # 4개의 정보: (N, W, Q, P) N: edge 방문횟수, W: 보상누적값, Q: 보상평균(W/N), P: edge 선택확률
 # edge[좌표행][좌표열][번호]로 접근
 class MCTS(object):
@@ -36,13 +38,15 @@ class MCTS(object):
         # reset_episode member
         self.action_memory = None
         self.action_count = None
+        self.my_history = None
+        self.your_history = None
         self.board = None
         self.state = None
 
         # hyperparameter
         self.c_puct = 1
         self.epsilon = 0.25
-        self.alpha = 0.5
+        self.alpha = 1
         self.expand_count = 100
 
         # member 초기화
@@ -56,46 +60,80 @@ class MCTS(object):
         self.legal_move_n = 0
         self.empty_loc = None
         self.state_hash = None
+        self.new_state = None
         self.pr = 0
         self.tree_memory = defaultdict(lambda: 0)
 
     def _reset_episode(self):
+        plane = np.zeros((3, 3)).flatten()
+        self.my_history = deque([plane, plane, plane, plane], maxlen=4)
+        self.your_history = deque([plane, plane, plane, plane], maxlen=4)
         self.action_memory = deque(maxlen=9)
         self.action_count = -1
         self.board = None
-        self.state = None
+        self.first_turn = None
+        self.user_type = None
 
     def select_action(self, state):
+        ''' raw state를 받아 처리하고 action을 선택하는 외부 메소드
+        '''
+        # ------------------------ 턴 계산 ------------------------ #
         self.action_count += 1
-        self.state = state
-        # save state (flatten 안하고 넣으면 값이 바뀜 버그인듯?)
-        self.state_memory.appendleft(state.flatten())
+        # 호출될 때마다 첫턴 기준 교대로 행동주체 바꿈, 최종 action에 붙여줌
+        self.user_type = (self.first_turn + self.action_count) % 2
+
+        # ------------------- state 변환 및 저장 ------------------- #
+        self.state = state.copy()
+        self.new_state = self._convert_state(state)
+        # 새로운 state 저장
+        self.state_memory.appendleft(self.new_state)
         # state를 문자열 -> hash로 변환 (dict의 key로 쓰려고)
-        self.state_hash = hash(self.state.tostring())
+        self.state_hash = hash(self.new_state.tostring())
         # 변환한 state를 node로 부르자. 저장!
         self.node_memory.appendleft(self.state_hash)
-        # 호출될 때마다 첫턴 기준 교대로 행동주체 바꿈, 최종 action에 붙여줌
-        user_type = (self.first_turn + self.action_count) % 2
+
+        # ------------ 들어온 state에 대응하는 edge 초기화 ------------ #
         self.init_edge()
+
+        # ------------- 저장 데이터를 사용하여 PUCT 값 계산 ------------ #
         self._cal_puct()
+        '''점수 확인
         print("* PUCT Score *")
-        print(self.puct.round(decimals=2))  # 점수 확인용
-        # 빈자리가 아닌 곳은 -9999로 최댓값 방지
+        print(self.puct.round(decimals=2))
+        '''
+        # 값이 음수가 나올 수 있어서 빈자리가 아닌 곳은 -9999를 넣어 최댓값 방지
         puct = self.puct.tolist()
         for i, v in enumerate(puct):
             for k, s in enumerate(v):
                 if [i, k] not in self.empty_loc.tolist():
                     puct[i][k] = -9999
-        # PUCT가 최댓값인 곳 찾기
+
+        # ----------------- PUCT가 최댓값인 곳 찾기 ----------------- #
         self.puct = np.asarray(puct)
         puct_max = np.argwhere(self.puct == self.puct.max()).tolist()
         # 동점 처리
         move_target = puct_max[np.random.choice(len(puct_max))]
-        # 두 배열을 붙여서 최종 action 구성
-        action = np.r_[user_type, move_target]
+
+        # -------------------- 최종 action 구성 -------------------- #
+        # 배열 접붙히기
+        action = np.r_[self.user_type, move_target]
+
+        # ------------------ action 저장 및 초기화 ------------------ #
         self.action_memory.appendleft(action)
         self._reset_step()
         return action
+
+    def _convert_state(self, state):
+        '''state변환: action 주체별 최대 4수까지 history를 저장하여 새로운 state로 구성
+        '''
+        if abs(self.user_type - 1) == PLAYER:
+            self.my_history.appendleft(state[PLAYER].flatten())
+        else:
+            self.your_history.appendleft(state[OPPONENT].flatten())
+        new_state = np.r_[np.array(self.my_history).flatten(),
+                          np.array(self.your_history).flatten(),
+                          self.state[2].flatten()]
+        return new_state
 
     def init_edge(self, pr=0):
         '''들어온 상태에서 가능한 action 자리의 엣지를 초기화 (P값 배치)
@@ -109,8 +147,10 @@ class MCTS(object):
             self.empty_loc = np.argwhere(self.board == 0)
             self.legal_move_n = self.empty_loc.shape[0]
             prob = 1 / self.legal_move_n
-            count = self.node_memory.count(hash(self.state.tostring()))
-            # root node or expand node 이면
+            count = self.node_memory.count(self.state_hash)
+            # state 방문횟수 출력
+            print('visit count: {}'.format(count))
+            # root node or expand node(방문횟수 일정 수 이상)이면
             if self.action_count == 0 or count >= self.expand_count:
                 self.pr = (1 - self.epsilon) * prob + self.epsilon * \
                     np.random.dirichlet(
@@ -122,7 +162,7 @@ class MCTS(object):
             for i in range(self.legal_move_n):
                 self.edge[self.empty_loc[i][0]
                           ][self.empty_loc[i][1]][P] = self.pr[i]
-        else:  # 사전확률 값이 들어오면 그걸로 넣기
+        else:  # 사전확률 값이 들어오면 그걸로 넣기(신경망이 사용할 예정)
             self.pr = pr
             for i in range(3):
                 for k in range(3):
@@ -131,7 +171,8 @@ class MCTS(object):
         self.edge_memory.appendleft(self.edge)
 
     def _cal_puct(self):
-        '''9개의 좌표에 PUCT값을 계산하여 매칭'''
+        '''9개의 좌표에 PUCT값을 계산하여 매칭
+        '''
         # 지금까지의 액션을 반영한 트리 구성 하기. dict{node: edge}
         memory = list(zip(self.node_memory, self.edge_memory))
         # 지금까지의 동일한 state에 대한 edge의 N,W 누적
@@ -161,7 +202,8 @@ class MCTS(object):
             self.tree_memory[self.node_memory[0]] = edge
 
     def backup(self, reward):
-        '''에피소드가 끝나면 지나 온 edge의 N과 W를 업데이트 함'''
+        '''에피소드가 끝나면 지나온 edge의 N과 W를 업데이트 함
+        '''
         steps = self.action_count + 1
         for i in range(steps):
             if self.action_memory[i][0] == PLAYER:
@@ -186,41 +228,47 @@ if __name__ == "__main__":
     result = {1: 0, 0: 0, -1: 0}
     play_mark_O = 0
     win_mark_O = 0
-    # train data 생성
+    # 초기 train data 생성 루프
     for e in range(EPISODE):
+        # state 생성
         state = env.reset()
         print('-' * 22, '\nepisode: %d' % (e + 1))
         # 선공 정하고 교대로 하기
-        zero_play.first_turn = (OPPONENT + e) % 2
-        # 첫턴인 경우 기록
-        if zero_play.first_turn == PLAYER:
-            play_mark_O += 1
+        zero_play.first_turn = ((OPPONENT + e) % 2)
         done = False
+        step = 0
         while not done:
-            # 보드 상황 출력: 내 착수:1, 상대 착수:2
+            step += 1
+            print('step: %d' % step)
+            '''보드 상황 출력: 내 착수:1, 상대 착수:2
             print("---- BOARD ----")
             print(state[PLAYER] + state[OPPONENT] * 2)
+            '''
             # action 선택하기
             action = zero_play.select_action(state)
             # action 진행
             state, reward, done, info = env.step(action)
         if done:
-            # 승부난 보드 보기
+            '''승부난 보드 보기
             print("- FINAL BOARD -")
             print(state[PLAYER] + state[OPPONENT] * 2)
+            '''
             # 보상을 edge에 백업
             zero_play.backup(reward)
-            # 결과 dict에 기록
+            # 결과 체크
             result[reward] += 1
+            # 선공으로 이긴 경우 체크
             if reward == 1:
                 if env.mark_O == PLAYER:
                     win_mark_O += 1
-    # 에피소드 통계
-    print('-' * 22, '\nWin: %d   Lose: %d   Draw: %d   Winrate: %0.1f%%   \
-PlayMarkO: %d   WinMarkO: %d' %
-          (result[1], result[-1], result[0], result[1] / EPISODE * 100,
-           play_mark_O, win_mark_O))
-    # data save
-    print("data saved")
-    np.save('data/state_memory.npy', zero_play.state_memory)
-    np.save('data/edge_memory.npy', zero_play.edge_memory)
+        # 데이터 저장
+        if (e + 1) % SAVE_CYCLE == 0:
+            print('%d episode data saved' % (e + 1))
+            np.save('data/state_memory_new.npy', zero_play.state_memory)
+            np.save('data/edge_memory_new.npy', zero_play.edge_memory)
+
+            # 에피소드 통계
+            statics = ('\nWin: %d  Lose: %d  Draw: %d  Winrate: %0.1f%%  \
+WinMarkO: %d' % (result[1], result[-1], result[0], result[1] / (e + 1) * 100,
+                 win_mark_O))
+            print('-' * 22, statics)
