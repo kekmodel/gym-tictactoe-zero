@@ -226,7 +226,6 @@ if __name__ == "__main__":
     zero_play = MCTS()
     # 통계용
     result = {1: 0, 0: 0, -1: 0}
-    play_mark_O = 0
     win_mark_O = 0
     # 초기 train data 생성 루프
     for e in range(EPISODE):
