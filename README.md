@@ -4,30 +4,64 @@
 -틱택토 예시-
 
 ## <비개발자가 도전해보는 강화학습: 알파고 따라하기>
-gym을 설치한 후 실행하면 돌아갑니다. 파이썬 3.5로 만들었습니다.
 
-약간의 허접한 렌더링도 지원합니다.ㅋ
+AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문을 수십번 읽고 (너무 어려워요ㅠ)
+
+(논문: https://github.com/kekmodel/RL_Study/tree/master/AlphaGo)
+
+가장 최근 알고리즘이면서 가장 심플하고 강력한 Alpha Zero의 방법을 중심으로 따라가면서 
+
+몬테카를로-트리서치(MCTS) 부분은 Fan 버전, 인간 기보없이 스스로 학습하는 방법에 대해선 Zero 버전을 참고했습니다. 
+
+아직 <**미완성**>이고 직장인이라 여가시간에 틈틈히 공부하면서 개발중입니다. (아래 진행 상황 참고)
+
+#### 주의! 혼자 이해한 걸로 진행한 거라 오개념이 있을 수 있습니다.ㅎㅎ (피드백 주세요!) 
+
+(RL관련 편하게 대화나누실 분은 언제든지 페이스북 메시지 주세요 ~ :P https://www.facebook.com/kekmodel) 
+
+    
+돌려보시려면 gym과 파이썬3를 설치하시면 됩니다. (아래 요구사항 참조)
+
+허접하지만 대국할 때 약간의 렌더링도 지원합니다. ㅋㅋㅋ
 
 gym폴더와 gym-tictactoe폴더가 같은 곳에 있으면 안전합니다.
 
+
+    
 ### 저는..?!
 
 알파고를 사랑하는 호기심 많은 보통사람 
 
-    코딩 수준: 코딩의 코자도 모르는 코린이 (파이썬을 공부한지 2주 정도에서 시작함)
-    전공: 학부 기억을 상실한 산업공학 학사 02학번(?)
-    직업: 평범한 학원 수학 강사
+    코딩 수준: 코딩의 코자도 모르는 코린이 (파이썬을 공부한지 2주 정도에서 시작함. 코드 눈갱 죄송ㅠ)
+    전공: 학부 기억을 상실한 산업공학 02학번 (뭐?)
+    직업: 동네 학원 수학 강사 
     강화 학습 수준: 파이썬과 케라스로 배우는 강화학습 1독, 모두의 RL 강의 1독
-    영어 수준: 구글 번역 성애자
+    영어 수준: 구글 번역 성애자 (노벨상 줘야함)
 
-당.연.히 --> 삽질의 삽질의 삽질의 연속... (파도 파도 끝이 없는..)
+당.연.히 --> 삽질의 삽질의 삽질의 연속... (파도 파도 끝이 없는..ㅠㅠ)
 
---> 그렇지만 재밌어서 계속 삽질... (여가와 주말 자진 반납)
+--> 그렇지만 재밌어서 계속 삽질... (여가시간 타임머신)
 
---> 오기로 하다보니 어느 정도 성과가 나기 시작!!(오? 재능 발견?)
+--> 오기로 하다보니 어느 정도 성과가 나오기 시작!!(오? 재능 발견?ㅋ)
 
---> 여러분도 함께 해요~~~ :P (RL관련 편하게 대화나누실 분은 페이스북 메시지 주세요~ https://www.facebook.com/kekmodel)
+--> 생각만 하던 것이 실제로 돌아가니까 너무 재밌어서 시간만 나면 덕질 중!! 함께해요 ㅎㅎ 
 
+  
+
+### 프로젝트 계획 요약
+
+      1. OpenAI Gym 기반, 틱택토 환경 만들기 (완료)
+      2. MCTS 구현 (완료)
+      3. 데이터 저장 및 불러오기 기능 구현 (완료)
+      4. 에이전트 vs 에이전트 테스트 환경 구현 (완료)
+      5. 사람과 vs 에이전트 테스트 환경 구현 (완료)
+      6. 정책 + 가치 신경망 구현 (완료)
+      7. 신경망 학습 (**진행 중**)
+      8. 사람과 vs 에이전트 실제 플레이 환경 구현
+      9. 자바스크립트 공부해서 웹에 올려보기
+
+
+  
 
 # 요구 사항
 
@@ -51,6 +85,7 @@ PATH 설정
 
         brew install python3
 
+   
 ### Windows
 
 download python 3 (https://www.python.org/ftp/python/3.6.4/python-3.6.4.exe)
@@ -63,18 +98,21 @@ pip 설치
 
         python -m pip install -U pip
 
+   
 ### Linux
 
         sudo apt-get update
         sudo apt-get install python3.6
 
+   
 ### 모든 OS (다 귀찮으면..)
 
 Anaconda 설치 (https://www.anaconda.com/download)
 
 
 
-
+    
+   
 ## git 설치 (https://git-scm.com/downloads)
     
         웹 페이지 참조
@@ -82,7 +120,7 @@ Anaconda 설치 (https://www.anaconda.com/download)
 
 
 
-
+    
 ## gym 설치 
 
         git clone https://github.com/openai/gym.git
@@ -91,13 +129,14 @@ Anaconda 설치 (https://www.anaconda.com/download)
 
 
 
-
+    
 
 ## gym-tictactoe 설치 (제가 만든 거)
     
         git clone https://github.com/kekmodel/gym-tictactoe.git
 
 
+    
 
 
 ## 파일 구성
@@ -123,7 +162,7 @@ text editor or IDE 로 build
 
 
 
-### AI와 한판 붙고 싶다면? (순수 강화학습만 진행한 버전: 신경망 미적용)
+### AI와 한판 붙고 싶다면? (현재 순수 강화학습만 진행한 버전: 신경망 미적용)
 
         cd gym-tictactoe
         python human_interface.py
@@ -138,7 +177,12 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
 
 
 
-# 프로젝트 진행 상황
+
+
+  
+
+
+# 프로젝트 진행 기록 (ing..!)
 
 ## 1. OpenAI Gym기반 틱택토 환경만들기 (완료)
 - git, text editor, jupyter 등 개발환경 설정
