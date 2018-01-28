@@ -5,24 +5,23 @@
 
 ## <비개발자가 도전해보는 강화학습: 알파고 따라하기>
 
-AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문을 수십번 읽고 (너무 어려워요ㅠ)
+AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Study/tree/master/AlphaGo) 을
 
-(논문: https://github.com/kekmodel/RL_Study/tree/master/AlphaGo)
+수십번 읽고 (너무 어려워요ㅠ) 가장 최근 알고리즘이면서 가장 심플하고 강력한 Alpha Zero의 방법을 중심으로 따라가면서 
 
-가장 최근 알고리즘이면서 가장 심플하고 강력한 Alpha Zero의 방법을 중심으로 따라가면서 
-
-몬테카를로-트리서치(MCTS) 부분은 Fan 버전, 인간 기보없이 스스로 학습하는 방법에 대해선 Zero 버전을 참고했습니다. 
+몬테카를로-트리서치(MCTS) 부분은 Fan 버전, 스스로 학습하는 방법에 대해선 Zero 버전을 주로 참고했습니다. 
 
 아직 <**미완성**>이고 직장인이라 여가시간에 틈틈히 공부하면서 개발중입니다. (아래 진행 상황 참고)
 
 #### 주의! 혼자 이해한 걸로 진행한 거라 오개념이 있을 수 있습니다.ㅎㅎ (피드백 주세요!) 
 
-(RL관련 편하게 대화나누실 분은 언제든지 페이스북 메시지 주세요 ~ :P https://www.facebook.com/kekmodel) 
 
-    
-돌려보시려면 gym과 파이썬3를 설치하시면 됩니다. (아래 요구사항 참조)
 
-허접하지만 대국할 때 약간의 렌더링도 지원합니다. ㅋㅋㅋ
+ 
+
+직접 돌려보시려면 파이썬3, numpy, gym을 설치하시면 됩니다. (아래 요구사항 참조)
+
+대국할 때 그래픽 모드를 선택하면 약간의 허접한 렌더링도 지원합니다. ㅋㅋㅋ
 
 gym폴더와 gym-tictactoe폴더가 같은 곳에 있으면 안전합니다.
 
@@ -32,32 +31,32 @@ gym폴더와 gym-tictactoe폴더가 같은 곳에 있으면 안전합니다.
 
 알파고를 사랑하는 호기심 많은 보통사람 
 
-    코딩 수준: 코딩의 코자도 모르는 코린이 (파이썬을 공부한지 2주 정도에서 시작함. 코드 눈갱 죄송ㅠ)
+    코딩 수준: 코딩의 코자도 모르는 코린이 (파이썬을 공부한지 2주 정도에서 시작함. 코드 눈갱 주의ㅠ)
     전공: 학부 기억을 상실한 산업공학 02학번 (뭐?)
-    직업: 동네 학원 수학 강사 
+    직업: 동네 학원 수학 강사
     강화 학습 수준: 파이썬과 케라스로 배우는 강화학습 1독, 모두의 RL 강의 1독
     영어 수준: 구글 번역 성애자 (노벨상 줘야함)
 
-당.연.히 --> 삽질의 삽질의 삽질의 연속... (파도 파도 끝이 없는..ㅠㅠ)
+당.연.히! --> 삽질의 삽질의 삽질의 연속...(파도 파도 끝이 없는..ㅠㅠ) --> 그렇지만 재밌어서 계속 삽질... (여가시간 타임머신)
 
---> 그렇지만 재밌어서 계속 삽질... (여가시간 타임머신)
+--> 오기로 계속 하다보니 어느 정도 성과가 나오기 시작!!(오? 재능 발견?ㅋ) 
 
---> 오기로 하다보니 어느 정도 성과가 나오기 시작!!(오? 재능 발견?ㅋ)
+--> 생각한 것이 실제로 돌아가니까 너무 재밌어서 시간만 나면 덕질 중!! 함께 해요 ㅎㅎ 
 
---> 생각만 하던 것이 실제로 돌아가니까 너무 재밌어서 시간만 나면 덕질 중!! 함께해요 ㅎㅎ 
+#### RL관련 편하게 대화나누실 분은 언제든지 페이스북 메시지 주세요 ~ :P (https://www.facebook.com/kekmodel) 
 
   
 
-### 프로젝트 계획 요약
+### 프로젝트 진행 요약
 
-      1. OpenAI Gym 기반, 틱택토 환경 만들기 (완료)
+      1. OpenAI Gym 기반 틱택토 환경 만들기 (완료)
       2. MCTS 구현 (완료)
       3. 데이터 저장 및 불러오기 기능 구현 (완료)
       4. 에이전트 vs 에이전트 테스트 환경 구현 (완료)
-      5. 사람과 vs 에이전트 테스트 환경 구현 (완료)
+      5. 사람 vs 에이전트 테스트 환경 구현 (완료)
       6. 정책 + 가치 신경망 구현 (완료)
       7. 신경망 학습 (**진행 중**)
-      8. 사람과 vs 에이전트 실제 플레이 환경 구현
+      8. 사람 vs 에이전트 실제 플레이 환경 구현
       9. 자바스크립트 공부해서 웹에 올려보기
 
 
@@ -81,9 +80,11 @@ PATH 설정
 
         export PATH=/usr/local/bin:/usr/local/sbin:$PATH
 
-파이썬 설치
+파이썬 및 Numpy 설치
 
         brew install python3
+        pip install numpy
+
 
    
 ### Windows
@@ -94,20 +95,22 @@ path 지정
 
         C:\Python36\;C:\Python36\Scripts\
 
-pip 설치
+pip 및 Numpy 설치
 
         python -m pip install -U pip
+        pip install numpy
 
    
 ### Linux
 
         sudo apt-get update
         sudo apt-get install python3.6
+        pip install numpy
 
    
 ### 모든 OS (다 귀찮으면..)
 
-Anaconda 설치 (https://www.anaconda.com/download)
+Anaconda5 설치 (https://www.anaconda.com/download)
 
 
 
@@ -143,11 +146,11 @@ Anaconda 설치 (https://www.anaconda.com/download)
 
 text editor or IDE 로 build 
 
-단, human_interface.py 는 interpreter 환경에서만 됨 (e.g. console, IPython)
+단, human_interface.py 는 interpreter기반 환경에서만 됨 (e.g. console, IPython)
 
 \* jupyter notebook 사용가능
 
-\* 오류 시: pip install pyglet==1.2.4  
+\* 렌더링 오류 시: pip install pyglet==1.2.4  
      
         tictactoe_env.py                강화학습 환경 제공
         mcts_zero.py                    신경망이 학습할 최초 데이터 생성(PUCT-MCTS 알고리즘)
@@ -168,7 +171,7 @@ text editor or IDE 로 build
         python human_interface.py
 
 
-default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에;;)
+default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에 치면 됨;;)
 
         [1][2][3]
         [4][5][6]
@@ -207,6 +210,8 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
 12월 18일: state 타입 수정 (알파고 제로 방식)
 
 12월 19일: **<U>틱택토 환경 정식버전 완성</U>** (tictactoe_env.py)
+
+
 
 ## 2. 에이전트 만들기 (진행중)
 - 파이썬 중급 공부
