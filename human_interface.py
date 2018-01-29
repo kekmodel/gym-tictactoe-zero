@@ -78,7 +78,7 @@ class ZeroTree(object):
             return pi
 
 
-# 에이전트 클래스 (실제 플레이 용)
+# 에이전트 클래스
 class ZeroAgent(object):
     def __init__(self):
         # 학습한 모델 불러오기

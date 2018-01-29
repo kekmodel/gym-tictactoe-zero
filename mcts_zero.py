@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from tictactoe_env import TicTacToeEnv
-import numpy as np
 from collections import deque, defaultdict
+import numpy as np
 
 
 PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-EPISODE = 25000
+EPISODE = 2000
 SAVE_CYCLE = 1000
 
 
@@ -135,13 +135,13 @@ class MCTS(object):
                           self.state[2].flatten()]
         return new_state
 
-    def init_edge(self, pr=0):
+    def init_edge(self, pr=None):
         '''들어온 상태에서 가능한 action 자리의 엣지를 초기화 (P값 배치)
            빈자리를 검색하여 규칙위반 방지 및 랜덤 확률 생성
            root node, expand node 확인 후 노이즈 줌 (e-greedy)
         '''
         # 들어 온 사전확률이 없으면
-        if pr == 0:
+        if pr is None:
             # 빈 자리의 좌표와 개수를 저장하고 이를 이용해 동일 확률을 계산
             self.board = self.state[PLAYER] + self.state[OPPONENT]
             self.empty_loc = np.argwhere(self.board == 0)
@@ -245,6 +245,7 @@ if __name__ == "__main__":
             '''
             # action 선택하기
             action = zero_play.select_action(state)
+            # action = zero_play.select_action(state)
             # action 진행
             state, reward, done, info = env.step(action)
         if done:
@@ -263,8 +264,8 @@ if __name__ == "__main__":
         # 데이터 저장
         if (e + 1) % SAVE_CYCLE == 0:
             print('%d episode data saved' % (e + 1))
-            np.save('data/state_memory_new.npy', zero_play.state_memory)
-            np.save('data/edge_memory_new.npy', zero_play.edge_memory)
+            np.save('data/state_memory_old.npy', zero_play.state_memory)
+            np.save('data/edge_memory_old.npy', zero_play.edge_memory)
 
             # 에피소드 통계
             statics = ('\nWin: %d  Lose: %d  Draw: %d  Winrate: %0.1f%%  \
