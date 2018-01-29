@@ -1,40 +1,43 @@
 # -*- coding: utf-8 -*-
 import math
+import torch
+from torch.autograd import Variable
 import torch.nn as nn
+import numpy as np
 
 
 # 신경망 클래스: forward 자동 호출
-class NeuralNetwork(nn.Module):
+class PolicyValueNet(nn.Module):
     def __init__(self):
-        super(NeuralNetwork, self).__init__()
+        super(PolicyValueNet, self).__init__()
         # convolutional layer
-        self.conv = nn.Conv2d(3, 4, kernel_size=3, padding=1)
-        self.conv_bn = nn.BatchNorm2d(4)
+        self.conv = nn.Conv2d(9, 32, kernel_size=3, padding=1)
+        self.conv_bn = nn.BatchNorm2d(32)
         self.conv_relu = nn.ReLU(inplace=True)
 
         # residual layer
-        self.conv1 = nn.Conv2d(4, 4, kernel_size=3, padding=1)
-        self.conv1_bn = nn.BatchNorm2d(4)
+        self.conv1 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
+        self.conv1_bn = nn.BatchNorm2d(32)
         self.conv1_relu = nn.ReLU(inplace=True)
-        self.conv2 = nn.Conv2d(4, 4, kernel_size=3, padding=1)
-        self.conv2_bn = nn.BatchNorm2d(4)
+        self.conv2 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
+        self.conv2_bn = nn.BatchNorm2d(32)
         # forward엔 여기에 skip connection 추가 필요
         self.conv2_relu = nn.ReLU(inplace=True)
 
         # 정책 헤드: 정책함수 인풋 받는 곳
-        self.policy_head = nn.Conv2d(4, 2, kernel_size=1)
+        self.policy_head = nn.Conv2d(32, 2, kernel_size=1)
         self.policy_bn = nn.BatchNorm2d(2)
         self.policy_relu = nn.ReLU(inplace=True)
-        self.policy_fc = nn.Linear(9, 9)
+        self.policy_fc = nn.Linear(18, 9)
         self.policy_softmax = nn.Softmax(dim=1)
 
         # 가치 헤드: 가치함수 인풋 받는 곳
-        self.value_head = nn.Conv2d(4, 1, kernel_size=1)
+        self.value_head = nn.Conv2d(32, 1, kernel_size=1)
         self.value_bn = nn.BatchNorm2d(1)
         self.value_relu1 = nn.ReLU(inplace=True)
-        self.value_fc = nn.Linear(9, 9)
+        self.value_fc = nn.Linear(9, 32)
         self.value_relu2 = nn.ReLU(inplace=True)
-        self.value_scalar = nn.Linear(9, 1)
+        self.value_scalar = nn.Linear(32, 1)
         self.value_out = nn.Tanh()
 
         # weight 초기화
@@ -64,12 +67,11 @@ class NeuralNetwork(nn.Module):
         x = self.conv2_bn(x)
         x += residual  # skip connection
         x = self.conv2_relu(x)
-        print(x)
 
         p = self.policy_head(x)
         p = self.policy_bn(p)
         p = self.policy_relu(p)
-        p = p.view(p.size(1), -1)  # 텐서 펼치기
+        p = p.view(p.size(0), -1)  # 텐서 펼치기
         p = self.policy_fc(p)
         p = self.policy_softmax(p)
 
@@ -82,4 +84,13 @@ class NeuralNetwork(nn.Module):
         v = self.value_scalar(v)
         v = self.value_out(v)
 
-        return p, v
+        return p.view(3, 3), v
+
+
+if __name__ == "__main__":
+    net = PolicyValueNet()
+    print(net)
+    x = Variable(torch.from_numpy(
+        np.zeros((9, 3, 3), 'float')).float().unsqueeze(0))
+    y = net(x)
+    print(y)
