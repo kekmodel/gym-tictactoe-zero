@@ -5,7 +5,7 @@
 
 ## <비개발자가 도전해보는 강화학습: 틱택토>
 
-### - 알파고 따라하기 
+### # 알파고 제로 따라하기 
 
 AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Study/tree/master/AlphaGo) 을
 
