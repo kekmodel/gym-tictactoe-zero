@@ -1,4 +1,4 @@
-from neural_network_cpu import PolicyValueNet
+import neural_network_cpu
 from mcts_zero import MCTS
 from evaluate import ZeroTree
 
@@ -27,7 +27,7 @@ mcts_train = MCTS()
 tree = ZeroTree(state_path='data/state_memory_25k.npy',
                 edge_path='data/edge_memory_25k.npy')
 
-pv_net = PolicyValueNet()
+pv_net = neural_network_cpu.PolicyValueNet()
 
 for i, s in enumerate(state):
     s_t = s.reshape(9, 3, 3)
