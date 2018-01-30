@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from tictactoe_env import TicTacToeEnv
+import tictactoe_env
 from collections import deque, defaultdict
 import numpy as np
 
@@ -25,6 +25,12 @@ class MCTS(object):
         self.node_memory = deque(maxlen=9 * EPISODE)
         self.edge_memory = deque(maxlen=9 * EPISODE)
 
+        # hyperparameter
+        self.c_puct = 1
+        self.epsilon = 0.25
+        self.alpha = 1
+        self.expand_count = 100
+
         # reset_step member
         self.tree_memory = None
         self.pr = None
@@ -34,6 +40,9 @@ class MCTS(object):
         self.empty_loc = None
         self.total_visit = None
         self.first_turn = None
+        self.user_type = None
+        self.new_state = None
+        self.state_hash = None
 
         # reset_episode member
         self.action_memory = None
@@ -43,26 +52,23 @@ class MCTS(object):
         self.board = None
         self.state = None
 
-        # hyperparameter
-        self.c_puct = 1
-        self.epsilon = 0.25
-        self.alpha = 1
-        self.expand_count = 100
-
         # member 초기화
         self._reset_step()
         self._reset_episode()
 
     def _reset_step(self):
+        self.tree_memory = defaultdict(lambda: 0)
         self.edge = np.zeros((3, 3, 4))
         self.puct = np.zeros((3, 3))
         self.total_visit = 0
         self.legal_move_n = 0
+        self.pr = 0
         self.empty_loc = None
         self.state_hash = None
         self.new_state = None
-        self.pr = 0
-        self.tree_memory = defaultdict(lambda: 0)
+        self.user_type = None
+        self.new_state = None
+        self.state_hash = None
 
     def _reset_episode(self):
         plane = np.zeros((3, 3)).flatten()
@@ -74,9 +80,8 @@ class MCTS(object):
         self.first_turn = None
         self.user_type = None
 
+    # raw state를 받아 변환 및 저장 action을 선택하는 외부 메소드
     def select_action(self, state):
-        ''' raw state를 받아 처리하고 action을 선택하는 외부 메소드
-        '''
         # ------------------------ 턴 계산 ------------------------ #
         self.action_count += 1
         # 호출될 때마다 첫턴 기준 교대로 행동주체 바꿈, 최종 action에 붙여줌
@@ -123,9 +128,8 @@ class MCTS(object):
         self._reset_step()
         return action
 
+    # state변환: action 주체별 최대 4수까지 history를 저장하여 새로운 state로 구성
     def _convert_state(self, state):
-        '''state변환: action 주체별 최대 4수까지 history를 저장하여 새로운 state로 구성
-        '''
         if abs(self.user_type - 1) == PLAYER:
             self.my_history.appendleft(state[PLAYER].flatten())
         else:
@@ -135,11 +139,10 @@ class MCTS(object):
                           self.state[2].flatten()]
         return new_state
 
+    # 들어온 상태에서 가능한 action 자리의 엣지를 초기화 (P값 배치)
+    # 빈자리를 검색하여 규칙위반 방지 및 랜덤 확률 생성
+    # root node, expand node 확인 후 노이즈 줌 (e-greedy)
     def init_edge(self, pr=None):
-        '''들어온 상태에서 가능한 action 자리의 엣지를 초기화 (P값 배치)
-           빈자리를 검색하여 규칙위반 방지 및 랜덤 확률 생성
-           root node, expand node 확인 후 노이즈 줌 (e-greedy)
-        '''
         # 들어 온 사전확률이 없으면
         if pr is None:
             # 빈 자리의 좌표와 개수를 저장하고 이를 이용해 동일 확률을 계산
@@ -170,9 +173,8 @@ class MCTS(object):
         # edge 메모리에 저장
         self.edge_memory.appendleft(self.edge)
 
+    # 9개의 좌표에 PUCT값을 계산하여 매칭
     def _cal_puct(self):
-        '''9개의 좌표에 PUCT값을 계산하여 매칭
-        '''
         # 지금까지의 액션을 반영한 트리 구성 하기. dict{node: edge}
         memory = list(zip(self.node_memory, self.edge_memory))
         # 지금까지의 동일한 state에 대한 edge의 N,W 누적
@@ -201,9 +203,8 @@ class MCTS(object):
             # 보정한 edge를 최종 트리에 업데이트
             self.tree_memory[self.node_memory[0]] = edge
 
+    # 에피소드가 끝나면 지나온 edge의 N과 W를 업데이트 함
     def backup(self, reward):
-        '''에피소드가 끝나면 지나온 edge의 N과 W를 업데이트 함
-        '''
         steps = self.action_count + 1
         for i in range(steps):
             if self.action_memory[i][0] == PLAYER:
@@ -221,7 +222,7 @@ class MCTS(object):
 
 if __name__ == "__main__":
     # 환경 생성
-    env = TicTacToeEnv()
+    env = tictactoe_env.TicTacToeEnv()
     # 셀프 플레이 인스턴스 생성
     zero_play = MCTS()
     # 통계용
@@ -245,7 +246,6 @@ if __name__ == "__main__":
             '''
             # action 선택하기
             action = zero_play.select_action(state)
-            # action = zero_play.select_action(state)
             # action 진행
             state, reward, done, info = env.step(action)
         if done:
