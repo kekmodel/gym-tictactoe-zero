@@ -23,6 +23,7 @@ class MCTS(object):
         N: edge 방문횟수, W: 보상누적값, Q: 보상평균(W/N), P: edge 선택 사전확률
         edge[좌표행][좌표열][번호]로 접근
     """
+
     def __init__(self):
         # memories
         self.state_memory = deque(maxlen=9 * EPISODE)

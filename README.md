@@ -21,7 +21,9 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Stud
 
  
 
-직접 돌려보시려면 파이썬3, numpy, gym을 설치하시면 됩니다. (아래 요구사항 참조)
+직접 돌려보시려면 python 3, numpy, gym을 설치하시면 됩니다. (아래 요구사항 참조)
+
+신경망 버전을 돌리시려면 PyTorch를 설치하시길 바랍니다.
 
 대국할 때 그래픽 모드를 선택하면 약간의 허접한 렌더링도 지원합니다. ㅋㅋㅋ
 
