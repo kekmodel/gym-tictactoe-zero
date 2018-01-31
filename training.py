@@ -14,6 +14,7 @@ N, W, Q, P = 0, 1, 2, 3
 epochs = 64
 batch_size = 32
 learning_rate = 0.01
+L2_value = 0.0001
 
 
 """data set 생성용
@@ -49,20 +50,22 @@ train_data = data.DataLoader(data_set, batch_size=batch_size,
 
 pv_net = neural_network.PolicyValueNet()
 optimizer = torch.optim.SGD(pv_net.parameters(), lr=learning_rate,
-                            momentum=0.9, weight_decay=0.0001)
+                            momentum=0.9, weight_decay=L2_value)
 
 for epoch in range(epochs):
     minibatch = len(data_set)
     for i, (state, pi, reward) in enumerate(train_data):
         state = Variable(state.view(batch_size, 9, 3, 3).float())
-        p, v = pv_net(state)
         pi = Variable(pi.view(1, batch_size * 9).float())
-        p = p.view(batch_size * 9, 1)
         z = Variable(reward.float())
+
+        # forward and backward
         optimizer.zero_grad()
+        p, v = pv_net(state)
+        p = p.view(batch_size * 9, 1)
         loss = ((z - v).pow(2).sum() -
                 torch.matmul(pi, torch.log(p))) / batch_size
-        # print(loss)
+        loss.backward()
         optimizer.step()
 
         if (i + 1) % 64 == 0:
