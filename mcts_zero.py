@@ -12,13 +12,17 @@ EPISODE = 2000
 SAVE_CYCLE = 1000
 
 
-# 몬테카를로 트리 탐색 클래스 (최초 train 데이터 생성 용)
-# state를 각 주체당 4수까지 저장해서 new_state로 만듦 -> (9, 3, 3) array.flatten()
-# edge는 현재 state에서 착수 가능한 모든 action
-# edge 구성: (3, 3, 4) array: 9개 좌표에 4개의 정보 매칭
-# 4개의 정보: (N, W, Q, P) N: edge 방문횟수, W: 보상누적값, Q: 보상평균(W/N), P: edge 선택확률
-# edge[좌표행][좌표열][번호]로 접근
 class MCTS(object):
+    """몬테카를로 트리 탐색 클래스
+
+        최초 train 데이터 생성 용 (state, edge 저장)
+        state를 각 주체당 4수까지 저장해서 new_state로 만듦 -> (9, 3, 3) array.flatten()
+        edge는 현재 state에서 착수 가능한 모든 action
+        edge 구성: (3, 3, 4) array: 9개 좌표에 4개의 정보 매칭
+        4개의 정보: (N, W, Q, P)
+        N: edge 방문횟수, W: 보상누적값, Q: 보상평균(W/N), P: edge 선택 사전확률
+        edge[좌표행][좌표열][번호]로 접근
+    """
     def __init__(self):
         # memories
         self.state_memory = deque(maxlen=9 * EPISODE)
@@ -102,10 +106,11 @@ class MCTS(object):
 
         # ------------- 저장 데이터를 사용하여 PUCT 값 계산 ------------ #
         self._cal_puct()
-        '''점수 확인
-        print("* PUCT Score *")
-        print(self.puct.round(decimals=2))
-        '''
+
+        # 점수 확인
+        # print("* PUCT Score *")
+        # print(self.puct.round(decimals=2))
+
         # 값이 음수가 나올 수 있어서 빈자리가 아닌 곳은 -9999를 넣어 최댓값 방지
         puct = self.puct.tolist()
         for i, v in enumerate(puct):
@@ -128,8 +133,8 @@ class MCTS(object):
         self._reset_step()
         return action
 
-    # state변환: action 주체별 최대 4수까지 history를 저장하여 새로운 state로 구성
     def _convert_state(self, state):
+        """ state변환 메소드: action 주체별 최대 4수까지 history를 저장하여 새로운 state로 구성"""
         if abs(self.user_type - 1) == PLAYER:
             self.my_history.appendleft(state[PLAYER].flatten())
         else:
@@ -139,10 +144,12 @@ class MCTS(object):
                           self.state[2].flatten()]
         return new_state
 
-    # 들어온 상태에서 가능한 action 자리의 엣지를 초기화 (P값 배치)
-    # 빈자리를 검색하여 규칙위반 방지 및 랜덤 확률 생성
-    # root node, expand node 확인 후 노이즈 줌 (e-greedy)
     def init_edge(self, pr=None):
+        """들어온 state에서 착수 가능한 edge 초기화 메소드 (P값 배치)
+
+        빈자리를 검색하여 규칙위반 방지 및 랜덤 확률 생성
+        root node, expand node 확인 후 노이즈 줌 (e-greedy)
+        """
         # 들어 온 사전확률이 없으면
         if pr is None:
             # 빈 자리의 좌표와 개수를 저장하고 이를 이용해 동일 확률을 계산
@@ -165,7 +172,7 @@ class MCTS(object):
             for i in range(self.legal_move_n):
                 self.edge[self.empty_loc[i][0]
                           ][self.empty_loc[i][1]][P] = self.pr[i]
-        else:  # 사전확률 값이 들어오면 그걸로 넣기(신경망이 사용할 예정)
+        else:  # 사전확률 값이 들어오면 그걸로 넣기 (신경망이 사용할 예정)
             self.pr = pr
             for i in range(3):
                 for k in range(3):
@@ -173,8 +180,8 @@ class MCTS(object):
         # edge 메모리에 저장
         self.edge_memory.appendleft(self.edge)
 
-    # 9개의 좌표에 PUCT값을 계산하여 매칭
     def _cal_puct(self):
+        """9개의 좌표에 PUCT값을 계산하여 매칭하는 메소드"""
         # 지금까지의 액션을 반영한 트리 구성 하기. dict{node: edge}
         memory = list(zip(self.node_memory, self.edge_memory))
         # 지금까지의 동일한 state에 대한 edge의 N,W 누적
@@ -203,8 +210,8 @@ class MCTS(object):
             # 보정한 edge를 최종 트리에 업데이트
             self.tree_memory[self.node_memory[0]] = edge
 
-    # 에피소드가 끝나면 지나온 edge의 N과 W를 업데이트 함
     def backup(self, reward):
+        """에피소드가 끝나면 지나온 edge의 N과 W를 업데이트"""
         steps = self.action_count + 1
         for i in range(steps):
             if self.action_memory[i][0] == PLAYER:
@@ -240,19 +247,21 @@ if __name__ == "__main__":
         while not done:
             step += 1
             print('step: %d' % step)
-            '''보드 상황 출력: 내 착수:1, 상대 착수:2
-            print("---- BOARD ----")
-            print(state[PLAYER] + state[OPPONENT] * 2)
-            '''
+
+            # 보드 상황 출력: 내 착수:1, 상대 착수:2
+            # print("---- BOARD ----")
+            # print(state[PLAYER] + state[OPPONENT] * 2)
+
             # action 선택하기
             action = zero_play.select_action(state)
-            # action 진행
+            # step 진행
             state, reward, done, info = env.step(action)
         if done:
-            '''승부난 보드 보기
-            print("- FINAL BOARD -")
-            print(state[PLAYER] + state[OPPONENT] * 2)
-            '''
+
+            # 승부난 보드 보기
+            # print("- FINAL BOARD -")
+            # print(state[PLAYER] + state[OPPONENT] * 2)
+
             # 보상을 edge에 백업
             zero_play.backup(reward)
             # 결과 체크
