@@ -53,7 +53,6 @@ optimizer = torch.optim.SGD(pv_net.parameters(), lr=learning_rate,
                             momentum=0.9, weight_decay=L2_value)
 
 for epoch in range(epochs):
-    minibatch = len(data_set)
     for i, (state, pi, reward) in enumerate(train_data):
         state = Variable(state.view(batch_size, 9, 3, 3).float())
         pi = Variable(pi.view(1, batch_size * 9).float())
