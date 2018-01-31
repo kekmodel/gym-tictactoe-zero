@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from tictactoe_env import TicTacToeEnv
+import tictactoe_env
 import numpy as np
 from collections import deque, defaultdict
 
@@ -252,7 +252,7 @@ if __name__ == "__main__":
     play_mark_O = 0
     win_mark_O = 0
     # 환경 생성 및 시드 설정
-    env = TicTacToeEnv()
+    env = tictactoe_env.TicTacToeEnv()
     selfplay = AgentVsAgent()
     # 통계용
     result = {1: 0, 0: 0, -1: 0}

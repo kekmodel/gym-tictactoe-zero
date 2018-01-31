@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from tictactoe_env import TicTacToeEnv
+import tictactoe_env
 import numpy as np
 from collections import deque, defaultdict
 
@@ -191,7 +191,7 @@ class HumanAgent(object):
 
 if __name__ == "__main__":
     # 환경 생성 및 시드 설정
-    env = TicTacToeEnv()
+    env = tictactoe_env.TicTacToeEnv()
     my_agent = HumanAgent()
     # 통계용
     result = {1: 0, 0: 0, -1: 0}
