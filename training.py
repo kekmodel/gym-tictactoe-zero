@@ -2,11 +2,14 @@ import neural_network
 # import evaluate
 
 # from collections import deque
-
+import slackweb
+import time
 import torch
 from torch.autograd import Variable
 from torch.utils import data
 
+
+start = time.time()
 
 N, W, Q, P = 0, 1, 2, 3
 
@@ -55,8 +58,8 @@ optimizer = torch.optim.SGD(pv_net.parameters(), lr=learning_rate,
 for epoch in range(epochs):
     for i, (state, pi, reward) in enumerate(train_data):
         state = Variable(state.view(batch_size, 9, 3, 3).float())
-        pi = Variable(pi.view(1, batch_size * 9).float())
-        z = Variable(reward.float())
+        pi = Variable(pi.view(1, batch_size * 9).float(), requires_grad=True)
+        z = Variable(reward.float(), requires_grad=True)
 
         # forward and backward
         optimizer.zero_grad()
@@ -68,9 +71,14 @@ for epoch in range(epochs):
         optimizer.step()
 
         if (i + 1) % 64 == 0:
-            print('Epoch [%d/%d], Step [%d/%d], Loss: %.4f'
-                  % (epoch + 1, epochs, i + 1,
-                     len(data_set) // batch_size, loss.data[0]))
-
-# Save the Model
-torch.save(pv_net.state_dict(), 'data/model.pkl')
+            statics = ('Epoch [%d/%d], Step [%d/%d], Loss: %.4f'
+                       % (epoch + 1, epochs, i + 1,
+                          len(data_set) // batch_size, loss.data[0]))
+            print(statics)
+    # Save the Model
+    torch.save(pv_net.state_dict(), 'data/model_mm_res5.pkl')
+    finish = round(float(time.time() - start), 1)
+    slack = slackweb.Slack(
+        url="https://hooks.slack.com/services/T8P0E384U/B8PR44F1C/\
+4gVy7zhZ9teBUoAFSse8iynn")
+    slack.notify(text=statics + ' in {}s'.format(finish))

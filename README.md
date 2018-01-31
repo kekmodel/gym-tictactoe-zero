@@ -323,6 +323,12 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
               - 플레이어 3x3 array 4장, 상대 3x3 array 4장, 선공 구별 1장
               - 9x3x3 numpy array -> flatten() 하여 저장
 
+2월 1일: 신경망 학습 시작
+
+              - batch size:32, epoch:64, learnig rate: 0.01, momentum:0.9, c: 0.0001
+              - loss = MSE(z, v) + CrossEntropy(pi, p) + c * L2 Regularization
+              - 최적화: SGD-Momentum 사용
+
 ing...
 
 
