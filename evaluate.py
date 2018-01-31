@@ -19,6 +19,7 @@ class ZeroTree(object):
         self.edge_path = edge_path
         self._load_data()
         self.node_memory = deque(maxlen=len(self.state_memory))
+        self.tree_zip = []
         self.tree_memory = defaultdict(lambda: 0)
         self._make_tree()
 
@@ -39,9 +40,9 @@ class ZeroTree(object):
         for v in self.state_memory:
             v_tuple = tuple(v)
             self.node_memory.append(v_tuple)
-        tree_tmp = list(zip(self.node_memory, self.edge_memory))
-        for v in tree_tmp:
-            self.tree_memory[v[0]] += v[1]
+        self.tree_zip = list(zip(self.node_memory, self.edge_memory))
+        for (node, edge) in self.tree_zip:
+            self.tree_memory[node] += edge
 
     def _cal_pi(self):
         for k, v in self.tree_memory.items():
@@ -67,7 +68,7 @@ class ZeroTree(object):
             i = tuple(new_state.flatten())
             j = self.state_data.index(i)
             pi = self.pi_data[j]
-            print('"zero policy"')
+            # print('"zero policy"')
             return pi
         else:
             empty_loc = np.argwhere(board == 0)
@@ -78,7 +79,7 @@ class ZeroTree(object):
                 np.random.dirichlet(self.alpha * np.ones(legal_move_n))
             for i in range(legal_move_n):
                 pi[empty_loc[i][0]][empty_loc[i][1]] = pr[i]
-            print('"random policy"')
+            # print('"random policy"')
             return pi
 
 

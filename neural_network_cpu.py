@@ -40,7 +40,7 @@ class PolicyValueNet(nn.Module):
         self.value_scalar = nn.Linear(32, 1)
         self.value_out = nn.Tanh()
 
-        # weight 초기화
+        # weight 초기화 (xavier)
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
@@ -84,7 +84,7 @@ class PolicyValueNet(nn.Module):
         v = self.value_scalar(v)
         v = self.value_out(v)
 
-        return p.view(3, 3), v
+        return p, v
 
 
 if __name__ == "__main__":

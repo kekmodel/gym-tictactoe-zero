@@ -15,6 +15,7 @@ class ZeroTree(object):
     def __init__(self):
         self._load_data()
         self.node_memory = deque(maxlen=len(self.state_memory))
+        self.tree_zip = []
         self.tree_memory = defaultdict(lambda: 0)
         self._make_tree()
 
@@ -35,9 +36,9 @@ class ZeroTree(object):
         for v in self.state_memory:
             v_tuple = tuple(v)
             self.node_memory.append(v_tuple)
-        tree_tmp = list(zip(self.node_memory, self.edge_memory))
-        for v in tree_tmp:
-            self.tree_memory[v[0]] += v[1]
+        self.tree_zip = list(zip(self.node_memory, self.edge_memory))
+        for (state, edge) in self.tree_zip:
+            self.tree_memory[state] += edge
 
     def _cal_pi(self):
         for k, v in self.tree_memory.items():
