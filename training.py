@@ -1,12 +1,9 @@
-import neural_network_cpu
-# import mcts_zero
-import evaluate
+import neural_network
+# import evaluate
 
-import numpy as np
-from collections import deque
+# from collections import deque
 
 import torch
-# import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils import data
 
@@ -50,7 +47,7 @@ train_data = data.DataLoader(data_set, batch_size=batch_size,
                              shuffle=True, drop_last=True)
 
 
-pv_net = neural_network_cpu.PolicyValueNet()
+pv_net = neural_network.PolicyValueNet()
 optimizer = torch.optim.SGD(pv_net.parameters(), lr=learning_rate,
                             momentum=0.9, weight_decay=0.0001)
 
