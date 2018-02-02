@@ -252,8 +252,8 @@ if __name__ == "__main__":
             print('step: %d' % step)
 
             # 보드 상황 출력: 내 착수:1, 상대 착수:2
-            # print("---- BOARD ----")
-            # print(state[PLAYER] + state[OPPONENT] * 2)
+            print("---- BOARD ----")
+            print(state[PLAYER] + state[OPPONENT] * 2)
 
             # action 선택하기
             action = zero_play.select_action(state)
@@ -262,8 +262,8 @@ if __name__ == "__main__":
         if done:
 
             # 승부난 보드 보기
-            # print("- FINAL BOARD -")
-            # print(state[PLAYER] + state[OPPONENT] * 2)
+            print("- FINAL BOARD -")
+            print(state[PLAYER] + state[OPPONENT] * 2)
 
             # 보상을 edge에 백업
             zero_play.backup(reward)
@@ -276,8 +276,10 @@ if __name__ == "__main__":
         # 데이터 저장
         if (e + 1) % SAVE_CYCLE == 0:
             print('%d episode data saved' % (e + 1))
-            np.save('data/state_memory.npy', zero_play.state_memory)
-            np.save('data/edge_memory.npy', zero_play.edge_memory)
+            np.save('data/state_memory_{}k.npy'.format(e + 1),
+                    zero_play.state_memory)
+            np.save('data/edge_memory_{}K.npy'.format(e + 1),
+                    zero_play.edge_memory)
 
             # 에피소드 통계
             statics = ('\nWin: %d  Lose: %d  Draw: %d  Winrate: %0.1f%%  \
@@ -286,7 +288,7 @@ WinMarkO: %d' % (result[1], result[-1], result[0], result[1] / (e + 1) * 100,
             print('-' * 22, statics)
 
             # 메시지 보내기
-            finish = round(float(time.time() - start), 1)
+            finish = round(float(time.time() - start))
             slack = slackweb.Slack(
                 url="https://hooks.slack.com/services/T8P0E384U/B8PR44F1C/\
 4gVy7zhZ9teBUoAFSse8iynn")
