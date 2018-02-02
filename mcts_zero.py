@@ -276,9 +276,9 @@ if __name__ == "__main__":
         # 데이터 저장
         if (e + 1) % SAVE_CYCLE == 0:
             print('%d episode data saved' % (e + 1))
-            np.save('data/state_memory_{}k.npy'.format(e + 1),
+            np.save('data/state_memory_{}k.npy'.format((e + 1) / 1000),
                     zero_play.state_memory)
-            np.save('data/edge_memory_{}K.npy'.format(e + 1),
+            np.save('data/edge_memory_{}k.npy'.format((e + 1) / 1000),
                     zero_play.edge_memory)
 
             # 에피소드 통계
@@ -294,4 +294,4 @@ WinMarkO: %d' % (result[1], result[-1], result[0], result[1] / (e + 1) * 100,
 4gVy7zhZ9teBUoAFSse8iynn")
             slack.notify(
                 text="Finished: {} episode in {}s".format(e + 1, finish))
-            slack.notify(text="v.3.0: {}".format(statics))
+            slack.notify(text=statics)
