@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 import tictactoe_env
-from collections import deque, defaultdict
 import numpy as np
-
+import slackweb
+import time
+from collections import deque, defaultdict
 
 PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-EPISODE = 2000
+EPISODE = 30000
 SAVE_CYCLE = 1000
 
 
@@ -229,6 +230,7 @@ class MCTS(object):
 
 
 if __name__ == "__main__":
+    start = time.time()
     # 환경 생성
     env = tictactoe_env.TicTacToeEnv()
     # 셀프 플레이 인스턴스 생성
@@ -274,11 +276,20 @@ if __name__ == "__main__":
         # 데이터 저장
         if (e + 1) % SAVE_CYCLE == 0:
             print('%d episode data saved' % (e + 1))
-            np.save('data/state_memory_old.npy', zero_play.state_memory)
-            np.save('data/edge_memory_old.npy', zero_play.edge_memory)
+            np.save('data/state_memory.npy', zero_play.state_memory)
+            np.save('data/edge_memory.npy', zero_play.edge_memory)
 
             # 에피소드 통계
             statics = ('\nWin: %d  Lose: %d  Draw: %d  Winrate: %0.1f%%  \
 WinMarkO: %d' % (result[1], result[-1], result[0], result[1] / (e + 1) * 100,
                  win_mark_O))
             print('-' * 22, statics)
+
+            # 메시지 보내기
+            finish = round(float(time.time() - start), 1)
+            slack = slackweb.Slack(
+                url="https://hooks.slack.com/services/T8P0E384U/B8PR44F1C/\
+4gVy7zhZ9teBUoAFSse8iynn")
+            slack.notify(
+                text="Finished: {} episode in {}s".format(e + 1, finish))
+            slack.notify(text="v.3.0: {}".format(statics))

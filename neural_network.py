@@ -8,72 +8,137 @@ import numpy as np
 
 # 신경망 클래스: forward 자동 호출
 class PolicyValueNet(nn.Module):
-    def __init__(self):
+    def __init__(self, num_channel):
         super(PolicyValueNet, self).__init__()
         # convolutional layer
-        self.conv = nn.Conv2d(9, 32, kernel_size=3, padding=1)
-        self.conv_bn = nn.BatchNorm2d(32)
+        self.conv = nn.Conv2d(9, num_channel, kernel_size=3, padding=1)
+        self.conv_bn = nn.BatchNorm2d(num_channel)
         self.conv_relu = nn.ReLU(inplace=True)
 
         # residual layer 1
-        self.conv1 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
-        self.conv1_bn = nn.BatchNorm2d(32)
+        self.conv1 = nn.Conv2d(num_channel, num_channel,
+                               kernel_size=3, padding=1)
+        self.conv1_bn = nn.BatchNorm2d(num_channel)
         self.conv1_relu = nn.ReLU(inplace=True)
-        self.conv2 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
-        self.conv2_bn = nn.BatchNorm2d(32)
+        self.conv2 = nn.Conv2d(num_channel, num_channel,
+                               kernel_size=3, padding=1)
+        self.conv2_bn = nn.BatchNorm2d(num_channel)
         # forward엔 여기에 skip connection 추가 필요
         self.conv2_relu = nn.ReLU(inplace=True)
 
         # residual layer 2
-        self.conv3 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
-        self.conv3_bn = nn.BatchNorm2d(32)
+        self.conv3 = nn.Conv2d(num_channel, num_channel,
+                               kernel_size=3, padding=1)
+        self.conv3_bn = nn.BatchNorm2d(num_channel)
         self.conv3_relu = nn.ReLU(inplace=True)
-        self.conv4 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
-        self.conv4_bn = nn.BatchNorm2d(32)
+        self.conv4 = nn.Conv2d(num_channel, num_channel,
+                               kernel_size=3, padding=1)
+        self.conv4_bn = nn.BatchNorm2d(num_channel)
         # forward엔 여기에 skip connection 추가 필요
         self.conv4_relu = nn.ReLU(inplace=True)
 
         # residual layer 3
-        self.conv5 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
-        self.conv5_bn = nn.BatchNorm2d(32)
+        self.conv5 = nn.Conv2d(num_channel, num_channel,
+                               kernel_size=3, padding=1)
+        self.conv5_bn = nn.BatchNorm2d(num_channel)
         self.conv5_relu = nn.ReLU(inplace=True)
-        self.conv6 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
-        self.conv6_bn = nn.BatchNorm2d(32)
+        self.conv6 = nn.Conv2d(num_channel, num_channel,
+                               kernel_size=3, padding=1)
+        self.conv6_bn = nn.BatchNorm2d(num_channel)
         # forward엔 여기에 skip connection 추가 필요
         self.conv6_relu = nn.ReLU(inplace=True)
 
         # residual layer 4
-        self.conv7 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
-        self.conv7_bn = nn.BatchNorm2d(32)
+        self.conv7 = nn.Conv2d(num_channel, num_channel,
+                               kernel_size=3, padding=1)
+        self.conv7_bn = nn.BatchNorm2d(num_channel)
         self.conv7_relu = nn.ReLU(inplace=True)
-        self.conv8 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
-        self.conv8_bn = nn.BatchNorm2d(32)
+        self.conv8 = nn.Conv2d(num_channel, num_channel,
+                               kernel_size=3, padding=1)
+        self.conv8_bn = nn.BatchNorm2d(num_channel)
         # forward엔 여기에 skip connection 추가 필요
         self.conv8_relu = nn.ReLU(inplace=True)
 
         # residual layer 5
-        self.conv9 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
-        self.conv9_bn = nn.BatchNorm2d(32)
+        self.conv9 = nn.Conv2d(num_channel, num_channel,
+                               kernel_size=3, padding=1)
+        self.conv9_bn = nn.BatchNorm2d(num_channel)
         self.conv9_relu = nn.ReLU(inplace=True)
-        self.conv10 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
-        self.conv10_bn = nn.BatchNorm2d(32)
+        self.conv10 = nn.Conv2d(num_channel, num_channel,
+                                kernel_size=3, padding=1)
+        self.conv10_bn = nn.BatchNorm2d(num_channel)
         # forward엔 여기에 skip connection 추가 필요
         self.conv10_relu = nn.ReLU(inplace=True)
 
+        # residual layer 6
+        self.conv11 = nn.Conv2d(num_channel, num_channel,
+                                kernel_size=3, padding=1)
+        self.conv11_bn = nn.BatchNorm2d(num_channel)
+        self.conv11_relu = nn.ReLU(inplace=True)
+        self.conv12 = nn.Conv2d(num_channel, num_channel,
+                                kernel_size=3, padding=1)
+        self.conv12_bn = nn.BatchNorm2d(num_channel)
+        # forward엔 여기에 skip connection 추가 필요
+        self.conv12_relu = nn.ReLU(inplace=True)
+
+        # residual layer 7
+        self.conv13 = nn.Conv2d(num_channel, num_channel,
+                                kernel_size=3, padding=1)
+        self.conv13_bn = nn.BatchNorm2d(num_channel)
+        self.conv13_relu = nn.ReLU(inplace=True)
+        self.conv14 = nn.Conv2d(num_channel, num_channel,
+                                kernel_size=3, padding=1)
+        self.conv14_bn = nn.BatchNorm2d(num_channel)
+        # forward엔 여기에 skip connection 추가 필요
+        self.conv14_relu = nn.ReLU(inplace=True)
+
+        # residual layer 8
+        self.conv15 = nn.Conv2d(num_channel, num_channel,
+                                kernel_size=3, padding=1)
+        self.conv15_bn = nn.BatchNorm2d(num_channel)
+        self.conv15_relu = nn.ReLU(inplace=True)
+        self.conv16 = nn.Conv2d(num_channel, num_channel,
+                                kernel_size=3, padding=1)
+        self.conv16_bn = nn.BatchNorm2d(num_channel)
+        # forward엔 여기에 skip connection 추가 필요
+        self.conv16_relu = nn.ReLU(inplace=True)
+
+        # residual layer 9
+        self.conv17 = nn.Conv2d(num_channel, num_channel,
+                                kernel_size=3, padding=1)
+        self.conv17_bn = nn.BatchNorm2d(num_channel)
+        self.conv17_relu = nn.ReLU(inplace=True)
+        self.conv18 = nn.Conv2d(num_channel, num_channel,
+                                kernel_size=3, padding=1)
+        self.conv18_bn = nn.BatchNorm2d(num_channel)
+        # forward엔 여기에 skip connection 추가 필요
+        self.conv18_relu = nn.ReLU(inplace=True)
+
+        # residual layer 10
+        self.conv19 = nn.Conv2d(num_channel, num_channel,
+                                kernel_size=3, padding=1)
+        self.conv19_bn = nn.BatchNorm2d(num_channel)
+        self.conv19_relu = nn.ReLU(inplace=True)
+        self.conv20 = nn.Conv2d(num_channel, num_channel,
+                                kernel_size=3, padding=1)
+        self.conv20_bn = nn.BatchNorm2d(num_channel)
+        # forward엔 여기에 skip connection 추가 필요
+        self.conv20_relu = nn.ReLU(inplace=True)
+
         # 정책 헤드: 정책함수 인풋 받는 곳
-        self.policy_head = nn.Conv2d(32, 2, kernel_size=1)
+        self.policy_head = nn.Conv2d(num_channel, 2, kernel_size=1)
         self.policy_bn = nn.BatchNorm2d(2)
         self.policy_relu = nn.ReLU(inplace=True)
         self.policy_fc = nn.Linear(18, 9)
         self.policy_softmax = nn.Softmax(dim=1)
 
         # 가치 헤드: 가치함수 인풋 받는 곳
-        self.value_head = nn.Conv2d(32, 1, kernel_size=1)
+        self.value_head = nn.Conv2d(num_channel, 1, kernel_size=1)
         self.value_bn = nn.BatchNorm2d(1)
         self.value_relu1 = nn.ReLU(inplace=True)
-        self.value_fc = nn.Linear(9, 32)
+        self.value_fc = nn.Linear(9, num_channel)
         self.value_relu2 = nn.ReLU(inplace=True)
-        self.value_scalar = nn.Linear(32, 1)
+        self.value_scalar = nn.Linear(num_channel, 1)
         self.value_out = nn.Tanh()
 
         # weight 초기화 (xavier)
@@ -146,6 +211,57 @@ class PolicyValueNet(nn.Module):
         x += residual  # skip connection
         x = self.conv10_relu(x)
 
+        """# residual layer 6
+        residual = x
+        x = self.conv11(x)
+        x = self.conv11_bn(x)
+        x = self.conv11_relu(x)
+        x = self.conv12(x)
+        x = self.conv12_bn(x)
+        x += residual  # skip connection
+        x = self.conv12_relu(x)
+
+        # residual layer 7
+        residual = x
+        x = self.conv13(x)
+        x = self.conv13_bn(x)
+        x = self.conv13_relu(x)
+        x = self.conv14(x)
+        x = self.conv14_bn(x)
+        x += residual  # skip connection
+        x = self.conv14_relu(x)
+
+        # residual layer 8
+        residual = x
+        x = self.conv15(x)
+        x = self.conv15_bn(x)
+        x = self.conv15_relu(x)
+        x = self.conv16(x)
+        x = self.conv16_bn(x)
+        x += residual  # skip connection
+        x = self.conv16_relu(x)
+
+        # residual layer 9
+        residual = x
+        x = self.conv17(x)
+        x = self.conv17_bn(x)
+        x = self.conv17_relu(x)
+        x = self.conv18(x)
+        x = self.conv18_bn(x)
+        x += residual  # skip connection
+        x = self.conv18_relu(x)
+
+        # residual layer 10
+        residual = x
+        x = self.conv19(x)
+        x = self.conv19_bn(x)
+        x = self.conv19_relu(x)
+        x = self.conv20(x)
+        x = self.conv20_bn(x)
+        x += residual  # skip connection
+        x = self.conv20_relu(x)
+        """
+
         # policy head
         p = self.policy_head(x)
         p = self.policy_bn(p)
@@ -167,6 +283,7 @@ class PolicyValueNet(nn.Module):
         return p, v
 
 
+# test
 if __name__ == "__main__":
     net = PolicyValueNet()
     print(net)

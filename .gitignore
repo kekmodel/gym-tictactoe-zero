@@ -2,9 +2,4 @@
 /.idea
 /.DS_Store
 /.ipynb_checkpoints
-/mcts_zero_slack.py
-data/edge_memory_25k.npy
-data/state_memory_25k.npy
-data/model_mm_res5.pkl
-data/model_mm-lre3_l2e2_res5_e100.pkl
 data/.DS_Store
