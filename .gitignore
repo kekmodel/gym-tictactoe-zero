@@ -4,5 +4,5 @@
 /.ipynb_checkpoints
 data/.DS_Store
 data/edge_memory_25k.npy
-data/state_memort_25k.npy
+data/state_memory_25k.npy
 data/zero_data.pkl
