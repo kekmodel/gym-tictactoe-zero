@@ -24,7 +24,7 @@ num_layer = 5
 
 
 def make_data_set(state_path, edge_path):
-    """data set 생성용 함수"""
+    """data set 생성 함수"""
     state_memory = deque(np.load(state_path))
     edge_memory = deque(np.load(edge_path))
 
