@@ -21,7 +21,7 @@ class ZeroTree(object):
 
         # hyperparameter
         self.epsilon = 0.25
-        self.alpha = 1
+        self.alpha = 0.6
 
         self.state_data = deque(maxlen=len(self.tree_memory))
         self.pi_data = deque(maxlen=len(self.tree_memory))

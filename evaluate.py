@@ -8,8 +8,8 @@ PLAYER = 0
 OPPONENT = 1
 MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-EPISODE = 800
-SAVE_CYCLE = 1000
+EPISODE = 3000
+SAVE_CYCLE = 10000
 
 
 # MCTS에서 생성한 데이터로 Tree 구성 {state: sum(edge)}인 dict.
@@ -25,7 +25,7 @@ class ZeroTree(object):
 
         # hyperparameter
         self.epsilon = 0.25
-        self.alpha = 1
+        self.alpha = 0.6
 
         self.state_data = deque(maxlen=len(self.tree_memory))
         self.pi_data = deque(maxlen=len(self.tree_memory))
@@ -317,8 +317,8 @@ if __name__ == "__main__":
         # data save
         if (e + 1) % SAVE_CYCLE == 0:
             print('%d episode data saved' % (e + 1))
-            np.save('data/self_state_memory_new.npy', state_memory)
-            np.save('data/self_edge_memory_new.npy', edge_memory)
+            np.save('data/self_state_memory.npy', state_memory)
+            np.save('data/self_edge_memory.npy', edge_memory)
         # 에피소드 통계
     print('-' * 22, '\nWin:%d \tLose:%d \tDraw:%d \tWinrate: %0.1f%% \n\
 WinMarkO:%d' % (result[1], result[-1], result[0],

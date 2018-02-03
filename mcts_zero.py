@@ -34,7 +34,7 @@ class MCTS(object):
         # hyperparameter
         self.c_puct = 1
         self.epsilon = 0.25
-        self.alpha = 1
+        self.alpha = 0.6
         self.expand_count = 100
 
         # reset_step member
