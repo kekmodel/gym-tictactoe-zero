@@ -8,7 +8,7 @@
 
 AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Study/tree/master/AlphaGo) 을
 
-수십번 읽고 (너무 어려워요ㅠ) 가장 최근 알고리즘이면서 가장 심플하고 강력한 Alpha Zero의 방법을 중심으로 따라가고 있습니다.
+수십번 읽고 (너무 어려워요ㅠ) 셋 중 가장 심플하고 강력한 Alpha Zero의 방법을 중심으로 따라가고 있습니다.
 
 몬테카를로-트리서치(MCTS) 부분은 Fan 버전, 스스로 학습하는 방법에 대해선 Zero 버전을 주로 참고했습니다.
 
