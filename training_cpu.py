@@ -15,9 +15,9 @@ start = time.time()
 N, W, Q, P = 0, 1, 2, 3
 
 # Hyper Parameters
-epochs = 100
+epochs = 20
 batch_size = 32
-learning_rate = 0.001
+learning_rate = 0.002
 l2_value = 0.0001
 num_channel = 128
 num_layer = 5
@@ -46,11 +46,11 @@ def make_data_set(state_path, edge_path):
         reward_memory.append(z)
 
     data_set = deque(zip(state_memory, pi_memory, reward_memory))
-    torch.save(data_set, 'data/zero_data.pkl')
+    torch.save(data_set, 'data/zero_data_30k.pkl')
 
 
 # data load
-data_set = torch.load('data/zero_data.pkl')
+data_set = torch.load('data/zero_data_30k.pkl')
 train_data = data.DataLoader(data_set, batch_size=batch_size,
                              shuffle=False, drop_last=True, num_workers=4)
 

@@ -15,7 +15,7 @@ start = time.time()
 N, W, Q, P = 0, 1, 2, 3
 
 # Hyper Parameters
-epochs = 100
+epochs = 20
 batch_size = 32
 learning_rate = 0.001
 l2_value = 0.0001
