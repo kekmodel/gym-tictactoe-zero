@@ -3,8 +3,7 @@
 ----------------------------
 -틱택토 예시-
 
-### 비개발자의 강화학습 도전기
-
+#### 비개발자의 강화학습 도전기
 ## <알파고 제로 따라하기: 틱택토> 
 
 AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Study/tree/master/AlphaGo) 을
