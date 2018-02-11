@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 import tictactoe_env
-import numpy as np
-import slackweb
+
 import time
 from collections import deque, defaultdict
+
+import numpy as np
+import slackweb
+
 
 PLAYER = 0
 OPPONENT = 1
@@ -17,7 +20,7 @@ class MCTS(object):
     """몬테카를로 트리 탐색 클래스
 
         최초 train 데이터 생성 용 (state, edge 저장)
-        state를 각 주체당 4수까지 저장해서 new_state로 만듦 -> (9, 3, 3) array.flatten()
+        state를 각 주체당 4수까지 저장해서 state_new로 만듦 -> (9, 3, 3) array.flatten()
         edge는 현재 state에서 착수 가능한 모든 action
         edge 구성: (3, 3, 4) array: 9개 좌표에 4개의 정보 매칭
         4개의 정보: (N, W, Q, P)
@@ -34,7 +37,7 @@ class MCTS(object):
         # hyperparameter
         self.c_puct = 5
         self.epsilon = 0.25
-        self.alpha = 0.85
+        self.alpha = 0.7
 
         # reset_step member
         self.tree_memory = None
@@ -46,7 +49,7 @@ class MCTS(object):
         self.total_visit = None
         self.first_turn = None
         self.user_type = None
-        self.new_state = None
+        self.state_new = None
         self.state_hash = None
 
         # reset_episode member
@@ -70,10 +73,8 @@ class MCTS(object):
         self.pr = 0
         self.empty_loc = None
         self.state_hash = None
-        self.new_state = None
+        self.state_new = None
         self.user_type = None
-        self.new_state = None
-        self.state_hash = None
 
     def _reset_episode(self):
         plane = np.zeros((3, 3)).flatten()
@@ -94,11 +95,11 @@ class MCTS(object):
 
         # ------------------- state 변환 및 저장 ------------------- #
         self.state = state.copy()
-        self.new_state = self._convert_state(state)
+        self.state_new = self._convert_state(state)
         # 새로운 state 저장
-        self.state_memory.appendleft(self.new_state)
+        self.state_memory.appendleft(self.state_new)
         # state를 문자열 -> hash로 변환 (dict의 key로 쓰려고)
-        self.state_hash = hash(self.new_state.tostring())
+        self.state_hash = hash(self.state_new.tostring())
         # 변환한 state를 node로 부르자. 저장!
         self.node_memory.appendleft(self.state_hash)
 
@@ -109,8 +110,8 @@ class MCTS(object):
         self._cal_puct()
 
         # 점수 확인
-        # print("* PUCT Score *")
-        # print(self.puct.round(decimals=2))
+        print("* PUCT Score *")
+        print(self.puct.round(decimals=2))
 
         # 값이 음수가 나올 수 있어서 빈자리가 아닌 곳은 -9999를 넣어 최댓값 방지
         puct = self.puct.tolist()
@@ -140,10 +141,10 @@ class MCTS(object):
             self.my_history.appendleft(state[PLAYER].flatten())
         else:
             self.your_history.appendleft(state[OPPONENT].flatten())
-        new_state = np.r_[np.array(self.my_history).flatten(),
+        state_new = np.r_[np.array(self.my_history).flatten(),
                           np.array(self.your_history).flatten(),
                           self.state[2].flatten()]
-        return new_state
+        return state_new
 
     def init_edge(self, pr=None):
         """들어온 state에서 착수 가능한 edge 초기화 메소드 (P값 배치)
@@ -291,7 +292,9 @@ if __name__ == "__main__":
 
             # 에피소드 통계
             statics = ('\nWin: %d  Lose: %d  Draw: %d  Winrate: %0.1f%%  \
-WinMarkO: %d' % (result[1], result[-1], result[0], result[1] / (e + 1) * 100,
+WinMarkO: %d' % (result[1], result[-1], result[0],
+                 1 / (1 + np.exp(result[-1] / EPISODE) /
+                      np.exp(result[1] / EPISODE)) * 100,
                  win_mark_O))
             print('-' * 22, statics)
 

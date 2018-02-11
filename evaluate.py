@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import tictactoe_env
-import numpy as np
+
 from collections import deque, defaultdict
 
+import numpy as np
 
 PLAYER = 0
 OPPONENT = 1
@@ -321,6 +322,5 @@ if __name__ == "__main__":
         # 에피소드 통계
     print('-' * 22, '\nWin:%d \tLose:%d \tDraw:%d \tWinrate: %0.1f%% \n\
 WinMarkO:%d' % (result[1], result[-1], result[0],
-                np.exp(result[1] / EPISODE) / (np.exp(result[1] / EPISODE) +
-                                               np.exp(result[-1] / EPISODE)) *
-                100, win_mark_O))
+                1 / (1 + np.exp(result[-1]/EPISODE) /
+                     np.exp(result[1]/EPISODE)) * 100, win_mark_O))
