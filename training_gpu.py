@@ -8,16 +8,18 @@ import numpy as np
 import slackweb
 
 import torch
+from torch.optim import lr_scheduler
 from torch.autograd import Variable
 from torch.utils import data
 
 start = time.time()
+np.set_printoptions(suppress=True)
 N, W, Q, P = 0, 1, 2, 3
 
 # Hyper Parameters
-epochs = 20
+epochs = 128
 batch_size = 32
-learning_rate = 0.001
+learning_rate = 0.2
 l2_value = 0.0001
 num_channel = 128
 num_layer = 5
@@ -46,11 +48,11 @@ def make_data_set(state_path, edge_path):
         reward_memory.append(z)
 
     data_set = deque(zip(state_memory, pi_memory, reward_memory))
-    torch.save(data_set, 'data/zero_data.pkl')
+    torch.save(data_set, 'data/zero_data_30k.pkl')
 
 
 # data load
-data_set = torch.load('data/zero_data.pkl')
+data_set = torch.load('data/zero_data_30k.pkl')
 train_data = data.DataLoader(data_set, batch_size=batch_size,
                              shuffle=False, drop_last=True, num_workers=4)
 
@@ -58,6 +60,8 @@ train_data = data.DataLoader(data_set, batch_size=batch_size,
 pv_net = neural_network.PolicyValueNet(num_channel).cuda()
 optimizer = torch.optim.SGD(
     pv_net.parameters(), lr=learning_rate, momentum=0.9, weight_decay=l2_value)
+scheduler = lr_scheduler.ReduceLROnPlateau(
+    optimizer, 'min', patience=1, min_lr=2e-4, verbose=1)
 
 # spec
 spec = {'epochs': epochs, 'batch size': batch_size,
@@ -66,6 +70,7 @@ print(spec)
 
 # train
 for epoch in range(epochs):
+    val_loss = 0
     for i, (state, pi, reward) in enumerate(train_data):
         state = Variable(state.view(batch_size, 9, 3, 3).float(),
                          requires_grad=True).cuda()
@@ -81,18 +86,21 @@ for epoch in range(epochs):
                 torch.matmul(pi, torch.log(p))) / batch_size
         loss.backward()
         optimizer.step()
-        if (i + 1) % 100 == 0:
+        val_loss += loss.data[0]
+        if (i + 1) % 771 == 0:
             statics = ('Epoch [%d/%d]  Loss: [%.4f]' %
-                       (epoch + 1, epochs, loss.data[0]))
+                       (epoch + 1, epochs, val_loss / (i + 1)))
             print(statics, " Step: [%d/%d]" %
                   ((i + 1) * batch_size, len(train_data) * batch_size))
 
     # Save the Model
     finish = round(float(time.time() - start))
     torch.save(pv_net.state_dict(
-    ), 'data/model_{}_res{}_ch{}.pkl'.format(
+    ), 'data/model_{}_res{}_ch{}_test.pkl'.format(
         spec['optim'], num_layer, num_channel))
     print(statics, ' in {}s [MacBook]'.format(finish))
+
+    scheduler.step(val_loss[0], epoch)
 
     # 메시지 보내기
     slack = slackweb.Slack(

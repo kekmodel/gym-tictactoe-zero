@@ -6,7 +6,6 @@ from collections import deque, defaultdict
 
 PLAYER = 0
 OPPONENT = 1
-MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
 EPISODE = 5
 
@@ -21,7 +20,7 @@ class ZeroTree(object):
 
         # hyperparameter
         self.epsilon = 0.25
-        self.alpha = 0.6
+        self.alpha = 0.7
 
         self.state_data = deque(maxlen=len(self.tree_memory))
         self.pi_data = deque(maxlen=len(self.tree_memory))
@@ -29,8 +28,8 @@ class ZeroTree(object):
 
     # 로드할 데이터
     def _load_data(self):
-        self.state_memory = np.load('data/state_memory_25k.npy')
-        self.edge_memory = np.load('data/edge_memory_25k.npy')
+        self.state_memory = np.load('data/state_memory_30k.npy')
+        self.edge_memory = np.load('data/edge_memory_30k.npy')
 
     def _make_tree(self):
         for v in self.state_memory:
@@ -127,11 +126,11 @@ class ZeroAgent(object):
             move_target = self.action_space[choice[0]]
             action = np.r_[user_type, move_target]
             self._reset_step()
-            return action
+            return tuple(action)
         elif mode == 'human':
             self.action_count += 1
             _pi = self.model.get_pi(state)
-            if self.action_count < 0:
+            if self.action_count > 1:
                 pi_max = np.argwhere(_pi == _pi.max()).tolist()
                 target = pi_max[np.random.choice(len(pi_max))]
                 one_hot_pi = np.zeros((3, 3), 'int')
@@ -150,12 +149,12 @@ class HumanAgent(object):
     def __init__(self):
         self.first_turn = None
         self.action_space = self._action_space()
-        self.action_count = -1
+        self.action_count = 0
         self.ai_agent = ZeroAgent()
 
     def reset_episode(self):
         self.first_turn = None
-        self.action_count = -1
+        self.action_count = 0
 
     def _action_space(self):
         action_space = []
@@ -167,27 +166,27 @@ class HumanAgent(object):
     def select_action(self, state):
         self.action_count += 1
         if self.first_turn == PLAYER:
-            if self.action_count % 2 == 0:
+            if self.action_count % 2 == 1:
                 print("It's your turn!")
                 move_target = input("1 ~ 9: ")
                 i = int(move_target) - 1
                 action = np.r_[PLAYER, self.action_space[i]]
-                return action
+                return tuple(action)
             else:
                 print("AI's turn!")
                 action = self.ai_agent.select_action(state, mode='human')
-                return action
+                return tuple(action)
         else:
-            if self.action_count % 2 == 0:
+            if self.action_count % 2 == 1:
                 print("AI's turn!")
                 action = self.ai_agent.select_action(state, mode='human')
-                return action
+                return tuple(action)
             else:
                 print("It's your turn!")
                 move_target = input("1 ~ 9: ")
                 i = int(move_target) - 1
                 action = np.r_[PLAYER, self.action_space[i]]
-                return action
+                return tuple(action)
 
 
 if __name__ == "__main__":
@@ -206,9 +205,9 @@ if __name__ == "__main__":
             state = env.reset()
             print('-' * 15, '\nepisode: %d' % (e + 1))
             # 선공 정하고 교대로 하기
-            my_agent.first_turn = (PLAYER + e) % 2
+            my_agent.first_turn = (OPPONENT + e) % 2
             # 환경에 알려주기
-            env.mark_O = my_agent.first_turn
+            env.player_color = my_agent.first_turn
             turn = {PLAYER: 'You', OPPONENT: 'AI'}
             print('First Turn: {}'.format(turn[my_agent.first_turn]))
             action_count = 0
@@ -224,7 +223,7 @@ if __name__ == "__main__":
                     your_history.appendleft(state[OPPONENT].flatten())
                 new_state = np.r_[np.array(my_history).flatten(),
                                   np.array(your_history).flatten(),
-                                  state[MARK_O].flatten()]
+                                  state[2].flatten()]
                 # action 선택하기
                 action = my_agent.select_action(new_state)
                 # action 진행
@@ -249,7 +248,7 @@ if __name__ == "__main__":
             # 선공 정하고 교대로 하기
             my_agent.first_turn = (PLAYER + e) % 2
             # 환경에 알려주기
-            env.mark_O = my_agent.first_turn
+            env.player_color = my_agent.first_turn
             turn = {PLAYER: 'You', OPPONENT: 'AI'}
             print('First Turn: {}'.format(turn[my_agent.first_turn]))
             action_count = 0
@@ -266,7 +265,7 @@ if __name__ == "__main__":
                     your_history.appendleft(state[OPPONENT].flatten())
                 new_state = np.r_[np.array(my_history).flatten(),
                                   np.array(your_history).flatten(),
-                                  state[MARK_O].flatten()]
+                                  state[2].flatten()]
                 # action 선택하기
                 action = my_agent.select_action(new_state)
                 # action 진행

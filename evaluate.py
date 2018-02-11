@@ -6,9 +6,8 @@ from collections import deque, defaultdict
 
 PLAYER = 0
 OPPONENT = 1
-MARK_O = 2
 N, W, Q, P = 0, 1, 2, 3
-EPISODE = 3000
+EPISODE = 400
 SAVE_CYCLE = 10000
 
 
@@ -25,7 +24,7 @@ class ZeroTree(object):
 
         # hyperparameter
         self.epsilon = 0.25
-        self.alpha = 0.6
+        self.alpha = 0.7
 
         self.state_data = deque(maxlen=len(self.tree_memory))
         self.pi_data = deque(maxlen=len(self.tree_memory))
@@ -87,8 +86,8 @@ class ZeroTree(object):
 class AgentPlayer(object):
     def __init__(self):
         # 모델 불러오기
-        self.model = ZeroTree(state_path='data/state_memory_25k.npy',
-                              edge_path='data/edge_memory_25k.npy')
+        self.model = ZeroTree(state_path='data/state_memory_e800_c5a0.7.npy',
+                              edge_path='data/edge_memory_e800_c5a0.7.npy')
 
         # action space 좌표 공간 구성
         self.action_space = self._action_space()
@@ -119,7 +118,7 @@ class AgentPlayer(object):
         self.empty_loc = None
 
     def reset_episode(self):
-        self.action_count = -1
+        self.action_count = 0
         self.board = None
         self.state = None
         self.first_turn = None
@@ -129,7 +128,7 @@ class AgentPlayer(object):
         self.action_count += 1
         user_type = self.first_turn
         _pi = self.model.get_pi(state)
-        if self.action_count < 0:
+        if self.action_count <= 1:
             pi_max = np.argwhere(_pi == _pi.max()).tolist()
             target = pi_max[np.random.choice(len(pi_max))]
             one_hot_pi = np.zeros((3, 3), 'int')
@@ -141,15 +140,15 @@ class AgentPlayer(object):
         move_target = self.action_space[choice[0]]
         action = np.r_[user_type, move_target]
         self._reset_step()
-        return action
+        return tuple(action)
 
 
 # 상대 에이전트
 class AgentOppnent(object):
     def __init__(self):
         # 모델 불러오기
-        self.model = ZeroTree(state_path='data/state_memory_25k.npy',
-                              edge_path='data/edge_memory_25k.npy')
+        self.model = ZeroTree(state_path='data/state_memory_e800_c5a0.85.npy',
+                              edge_path='data/edge_memory_e800_c5a0.85.npy')
 
         # action space 좌표 공간 구성
         self.action_space = self._action_space()
@@ -181,7 +180,7 @@ class AgentOppnent(object):
 
     def reset_episode(self):
         self.first_turn = None
-        self.action_count = -1
+        self.action_count = 0
         self.board = None
         self.state = None
 
@@ -190,7 +189,7 @@ class AgentOppnent(object):
         self.action_count += 1
         user_type = self.first_turn
         _pi = self.model.get_pi(state)
-        if self.action_count < 0:
+        if self.action_count <= 1:
             pi_max = np.argwhere(_pi == _pi.max()).tolist()
             target = pi_max[np.random.choice(len(pi_max))]
             one_hot_pi = np.zeros((3, 3), 'int')
@@ -202,7 +201,7 @@ class AgentOppnent(object):
         move_target = self.action_space[choice[0]]
         action = np.r_[user_type, move_target]
         self._reset_step()
-        return action
+        return tuple(action)
 
 
 # 싸움 붙이는 클래스
@@ -210,13 +209,13 @@ class AgentVsAgent(object):
     def __init__(self):
         self.first_turn = None
         self.action_space = self._action_space()
-        self.action_count = -1
+        self.action_count = 0
         self.agent_player = AgentPlayer()
         self.agent_oppnent = AgentOppnent()
 
     def reset_episode(self):
         self.first_turn = None
-        self.action_count = -1
+        self.action_count = 0
 
     def _action_space(self):
         action_space = []
@@ -228,7 +227,7 @@ class AgentVsAgent(object):
     def select_action(self, state):
         self.action_count += 1
         if self.first_turn == PLAYER:
-            if self.action_count % 2 == 0:
+            if self.action_count % 2 == 1:
                 print("Agent Player's turn!")
                 action = self.agent_player.select_action(state)
                 return action
@@ -237,7 +236,7 @@ class AgentVsAgent(object):
                 action = self.agent_oppnent.select_action(state)
                 return action
         else:
-            if self.action_count % 2 == 0:
+            if self.action_count % 2 == 1:
                 print("Agent Opponent's turn!")
                 action = self.agent_oppnent.select_action(state)
                 return action
@@ -270,7 +269,7 @@ if __name__ == "__main__":
         if selfplay.first_turn == PLAYER:
             play_mark_O += 1
         # 환경에 알려주기
-        env.mark_O = selfplay.first_turn
+        env.player_color = selfplay.first_turn
         done = False
         action_count = 0
         while not done:
@@ -284,7 +283,7 @@ if __name__ == "__main__":
                 your_history.appendleft(state[OPPONENT].flatten())
             new_state = np.r_[np.array(my_history).flatten(),
                               np.array(your_history).flatten(),
-                              state[MARK_O].flatten()]
+                              state[2].flatten()]
             state_memory.appendleft(new_state)
             edge = np.zeros((3, 3, 4), 'float')
             # action 선택하기
@@ -296,7 +295,7 @@ if __name__ == "__main__":
             state, reward, done, info = env.step(action)
         if done:
             if reward == 1:
-                if env.mark_O == PLAYER:
+                if env.player_color == PLAYER:
                     win_mark_O += 1
             # 승부난 보드 보기: 내 착수:1, 상대 착수:2
             print("- FINAL BOARD -")
@@ -322,4 +321,6 @@ if __name__ == "__main__":
         # 에피소드 통계
     print('-' * 22, '\nWin:%d \tLose:%d \tDraw:%d \tWinrate: %0.1f%% \n\
 WinMarkO:%d' % (result[1], result[-1], result[0],
-                result[1] / (result[1] + result[-1]) * 100, win_mark_O))
+                np.exp(result[1] / 400) / (np.exp(result[1] / 400) +
+                                           np.exp(result[-1] / 400)) * 100,
+                win_mark_O))

@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 import tictactoe_env
+import neural_network
 import numpy as np
 import slackweb
 import time
 from collections import deque, defaultdict
+import torch
+from torch.autograd import Variable
+
 
 PLAYER = 0
 OPPONENT = 1
@@ -26,15 +30,20 @@ class MCTS(object):
     """
 
     def __init__(self):
+        # model
+        self.model = neural_network.PolicyValueNet(128)
+        self.model.load_state_dict(torch.load(
+            'data/model_SGD_res5_ch128_ti.pkl'))
+
         # memories
         self.state_memory = deque(maxlen=9 * EPISODE)
         self.node_memory = deque(maxlen=9 * EPISODE)
         self.edge_memory = deque(maxlen=9 * EPISODE)
 
         # hyperparameter
-        self.c_puct = 5
+        self.c_puct = 1
         self.epsilon = 0.25
-        self.alpha = 0.85
+        self.alpha = 0.99
 
         # reset_step member
         self.tree_memory = None
@@ -63,10 +72,9 @@ class MCTS(object):
 
     def _reset_step(self):
         self.tree_memory = defaultdict(lambda: 0)
-        self.edge = np.zeros((3, 3, 4), 'float')
-        self.puct = np.zeros((3, 3), 'float')
+        self.edge = np.zeros((3, 3, 4))
+        self.puct = np.zeros((3, 3))
         self.total_visit = 0
-        self.legal_move_n = 0
         self.pr = 0
         self.empty_loc = None
         self.state_hash = None
@@ -80,7 +88,7 @@ class MCTS(object):
         self.my_history = deque([plane, plane, plane, plane], maxlen=4)
         self.your_history = deque([plane, plane, plane, plane], maxlen=4)
         self.action_memory = deque(maxlen=9)
-        self.action_count = 0
+        self.action_count = -1
         self.board = None
         self.first_turn = None
         self.user_type = None
@@ -90,20 +98,24 @@ class MCTS(object):
         # ------------------------ 턴 계산 ------------------------ #
         self.action_count += 1
         # 호출될 때마다 첫턴 기준 교대로 행동주체 바꿈, 최종 action에 붙여줌
-        self.user_type = (self.first_turn + self.action_count - 1) % 2
+        self.user_type = (self.first_turn + self.action_count) % 2
 
         # ------------------- state 변환 및 저장 ------------------- #
         self.state = state.copy()
         self.new_state = self._convert_state(state)
         # 새로운 state 저장
         self.state_memory.appendleft(self.new_state)
+        tens_state = torch.from_numpy(self.new_state)
+        val_state = Variable(
+            tens_state.view(1, 9, 3, 3).float(), requires_grad=True)
+        pr, val = self.model(val_state)
         # state를 문자열 -> hash로 변환 (dict의 key로 쓰려고)
         self.state_hash = hash(self.new_state.tostring())
         # 변환한 state를 node로 부르자. 저장!
         self.node_memory.appendleft(self.state_hash)
 
         # ------------ 들어온 state에 대응하는 edge 초기화 ------------ #
-        self.init_edge()
+        self._init_edge(pr, val)
 
         # ------------- 저장 데이터를 사용하여 PUCT 값 계산 ------------ #
         self._cal_puct()
@@ -113,6 +125,8 @@ class MCTS(object):
         # print(self.puct.round(decimals=2))
 
         # 값이 음수가 나올 수 있어서 빈자리가 아닌 곳은 -9999를 넣어 최댓값 방지
+        self.board = self.state[PLAYER] + self.state[OPPONENT]
+        self.empty_loc = np.argwhere(self.board == 0)
         puct = self.puct.tolist()
         for i, v in enumerate(puct):
             for k, s in enumerate(v):
@@ -132,7 +146,7 @@ class MCTS(object):
         # ------------------ action 저장 및 초기화 ------------------ #
         self.action_memory.appendleft(action)
         self._reset_step()
-        return tuple(action)
+        return action
 
     def _convert_state(self, state):
         """ state변환 메소드: action 주체별 최대 4수까지 history를 저장하여 새로운 state로 구성"""
@@ -145,39 +159,29 @@ class MCTS(object):
                           self.state[2].flatten()]
         return new_state
 
-    def init_edge(self, pr=None):
+    def _init_edge(self, pr, val):
         """들어온 state에서 착수 가능한 edge 초기화 메소드 (P값 배치)
 
         빈자리를 검색하여 규칙위반 방지 및 랜덤 확률 생성
         root node 확인 후 노이즈 줌 (e-greedy)
         """
-        # 들어 온 사전확률이 없으면
-        if pr is None:
-            # 빈 자리의 좌표와 개수를 저장하고 이를 이용해 동일 확률을 계산
-            self.board = self.state[PLAYER] + self.state[OPPONENT]
-            self.empty_loc = np.argwhere(self.board == 0)
-            self.legal_move_n = self.empty_loc.shape[0]
-            prob = 1 / self.legal_move_n
-            count = self.node_memory.count(self.state_hash)
-            # state 방문횟수 출력
-            print('visit count: {}'.format(count))
-            # root node면
-            if self.action_count == 1:
-                self.pr = (1 - self.epsilon) * prob + self.epsilon * \
-                    np.random.dirichlet(
-                        self.alpha * np.ones(self.legal_move_n))
-            else:  # 아니면 랜덤 확률로 n분의 1
-                self.pr = prob * np.ones(self.legal_move_n)
+        prob = pr.data.numpy().reshape(3, 3)
+        value = val.data.numpy()[0]
+        count = self.node_memory.count(self.state_hash)
+        # state 방문횟수 출력
+        print('visit count: {}'.format(count))
+        # root node엔 노이즈
+        if self.action_count == 0:
+            self.pr = (1 - self.epsilon) * prob + self.epsilon * \
+                np.random.dirichlet(
+                    self.alpha * np.ones(9)).reshape(3, 3)
+        else:
+            self.pr = prob
 
-            # 빈자리의 엣지에 넣기
-            for i in range(self.legal_move_n):
-                self.edge[self.empty_loc[i][0]
-                          ][self.empty_loc[i][1]][P] = self.pr[i]
-        else:  # 사전확률 값이 들어오면 그걸로 넣기 (신경망이 사용할 예정)
-            self.pr = pr
-            for i in range(3):
-                for k in range(3):
-                    self.edge[i][k][P] = self.pr[i][k]
+        for i in range(3):
+            for k in range(3):
+                self.edge[i][k][P] = self.pr[i][k]
+                self.edge[i][k][W] = value
         # edge 메모리에 저장
         self.edge_memory.appendleft(self.edge)
 
@@ -205,24 +209,24 @@ class MCTS(object):
                     edge[c][r][P] = self.edge[c][r][P]
                     # PUCT 계산!
                     self.puct[c][r] = edge[c][r][Q] + \
-                        self.c_puct * \
-                        edge[c][r][P] * \
-                        np.sqrt(self.total_visit) / (1 + edge[c][r][N])
+                        self.c_puct * edge[c][r][P] * \
+                        np.sqrt(self.total_visit) / \
+                        (1 + edge[c][r][N])
             # 보정한 edge를 최종 트리에 업데이트
             self.tree_memory[self.node_memory[0]] = edge
 
     def backup(self, reward):
         """에피소드가 끝나면 지나온 edge의 N과 W를 업데이트"""
-        steps = self.action_count
+        steps = self.action_count + 1
         for i in range(steps):
             if self.action_memory[i][0] == PLAYER:
                 self.edge_memory[i][self.action_memory[i][1]
                                     ][self.action_memory[i][2]
-                                      ][W] += reward
+                                      ][W] - reward
             else:
                 self.edge_memory[i][self.action_memory[i][1]
                                     ][self.action_memory[i][2]
-                                      ][W] -= reward
+                                      ][W] + reward
             self.edge_memory[i][self.action_memory[i][1]
                                 ][self.action_memory[i][2]][N] += 1
         self._reset_episode()
@@ -231,6 +235,7 @@ class MCTS(object):
 if __name__ == "__main__":
     start = time.time()
     # 환경 생성
+    env_mcts = tictactoe_env.TicTacToeEnv()
     env = tictactoe_env.TicTacToeEnv()
     # 셀프 플레이 인스턴스 생성
     zero_play = MCTS()
@@ -243,8 +248,7 @@ if __name__ == "__main__":
         state = env.reset()
         print('-' * 22, '\nepisode: %d' % (e + 1))
         # 선공 정하고 교대로 하기
-        zero_play.first_turn = (PLAYER + e) % 2
-        env.player_color = zero_play.first_turn
+        zero_play.first_turn = ((OPPONENT + e) % 2)
         done = False
         step = 0
         while not done:
@@ -258,7 +262,7 @@ if __name__ == "__main__":
             # action 선택하기
             action = zero_play.select_action(state)
             # step 진행
-            state, reward, done, info = env.step(action)
+            state, reward, done, info = env_mcts.step(action)
         if done:
 
             # 승부난 보드 보기
@@ -271,20 +275,20 @@ if __name__ == "__main__":
             result[reward] += 1
             # 선공으로 이긴 경우 체크
             if reward == 1:
-                if env.player_color == 0:
+                if env.mark_O == PLAYER:
                     win_mark_O += 1
         # 데이터 저장
         if (e + 1) % SAVE_CYCLE == 0:
             # 메시지 보내기
             finish = round(float(time.time() - start))
             print('%d episode data saved' % (e + 1))
-            np.save('data/state_memory_e{}_c{}a{}.npy'.format(
-                (e + 1),
+            np.save('data/state_memory_{}k_c{}a{}e2.npy'.format(
+                round((e + 1) / 1000),
                 zero_play.c_puct,
                 zero_play.alpha),
                 zero_play.state_memory)
-            np.save('data/edge_memory_e{}_c{}a{}.npy'.format(
-                (e + 1),
+            np.save('data/edge_memory_{}k_c{}a{}e2.npy'.format(
+                round((e + 1) / 1000),
                 zero_play.c_puct,
                 zero_play.alpha),
                 zero_play.edge_memory)

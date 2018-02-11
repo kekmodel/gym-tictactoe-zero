@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import math
 import torch
 from torch.autograd import Variable
 import torch.nn as nn
@@ -70,61 +69,6 @@ class PolicyValueNet(nn.Module):
         # forward엔 여기에 skip connection 추가 필요
         self.conv10_relu = nn.ReLU(inplace=True)
 
-        # residual layer 6
-        self.conv11 = nn.Conv2d(num_channel, num_channel,
-                                kernel_size=3, padding=1)
-        self.conv11_bn = nn.BatchNorm2d(num_channel)
-        self.conv11_relu = nn.ReLU(inplace=True)
-        self.conv12 = nn.Conv2d(num_channel, num_channel,
-                                kernel_size=3, padding=1)
-        self.conv12_bn = nn.BatchNorm2d(num_channel)
-        # forward엔 여기에 skip connection 추가 필요
-        self.conv12_relu = nn.ReLU(inplace=True)
-
-        # residual layer 7
-        self.conv13 = nn.Conv2d(num_channel, num_channel,
-                                kernel_size=3, padding=1)
-        self.conv13_bn = nn.BatchNorm2d(num_channel)
-        self.conv13_relu = nn.ReLU(inplace=True)
-        self.conv14 = nn.Conv2d(num_channel, num_channel,
-                                kernel_size=3, padding=1)
-        self.conv14_bn = nn.BatchNorm2d(num_channel)
-        # forward엔 여기에 skip connection 추가 필요
-        self.conv14_relu = nn.ReLU(inplace=True)
-
-        # residual layer 8
-        self.conv15 = nn.Conv2d(num_channel, num_channel,
-                                kernel_size=3, padding=1)
-        self.conv15_bn = nn.BatchNorm2d(num_channel)
-        self.conv15_relu = nn.ReLU(inplace=True)
-        self.conv16 = nn.Conv2d(num_channel, num_channel,
-                                kernel_size=3, padding=1)
-        self.conv16_bn = nn.BatchNorm2d(num_channel)
-        # forward엔 여기에 skip connection 추가 필요
-        self.conv16_relu = nn.ReLU(inplace=True)
-
-        # residual layer 9
-        self.conv17 = nn.Conv2d(num_channel, num_channel,
-                                kernel_size=3, padding=1)
-        self.conv17_bn = nn.BatchNorm2d(num_channel)
-        self.conv17_relu = nn.ReLU(inplace=True)
-        self.conv18 = nn.Conv2d(num_channel, num_channel,
-                                kernel_size=3, padding=1)
-        self.conv18_bn = nn.BatchNorm2d(num_channel)
-        # forward엔 여기에 skip connection 추가 필요
-        self.conv18_relu = nn.ReLU(inplace=True)
-
-        # residual layer 10
-        self.conv19 = nn.Conv2d(num_channel, num_channel,
-                                kernel_size=3, padding=1)
-        self.conv19_bn = nn.BatchNorm2d(num_channel)
-        self.conv19_relu = nn.ReLU(inplace=True)
-        self.conv20 = nn.Conv2d(num_channel, num_channel,
-                                kernel_size=3, padding=1)
-        self.conv20_bn = nn.BatchNorm2d(num_channel)
-        # forward엔 여기에 skip connection 추가 필요
-        self.conv20_relu = nn.ReLU(inplace=True)
-
         # 정책 헤드: 정책함수 인풋 받는 곳
         self.policy_head = nn.Conv2d(num_channel, 2, kernel_size=1)
         self.policy_bn = nn.BatchNorm2d(2)
@@ -141,7 +85,7 @@ class PolicyValueNet(nn.Module):
         self.value_scalar = nn.Linear(num_channel, 1)
         self.value_out = nn.Tanh()
 
-        # weight 초기화 (xavier)
+        """# weight 초기화 (xavier)
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
@@ -154,6 +98,7 @@ class PolicyValueNet(nn.Module):
             elif isinstance(m, nn.Linear):
                 m.weight.data.normal_(0, 0.01)
                 m.bias.data.zero_()
+        """
 
     def forward(self, state):
         # convolutional layer
@@ -211,62 +156,11 @@ class PolicyValueNet(nn.Module):
         x += residual  # skip connection
         x = self.conv10_relu(x)
 
-        """# residual layer 6
-        residual = x
-        x = self.conv11(x)
-        x = self.conv11_bn(x)
-        x = self.conv11_relu(x)
-        x = self.conv12(x)
-        x = self.conv12_bn(x)
-        x += residual  # skip connection
-        x = self.conv12_relu(x)
-
-        # residual layer 7
-        residual = x
-        x = self.conv13(x)
-        x = self.conv13_bn(x)
-        x = self.conv13_relu(x)
-        x = self.conv14(x)
-        x = self.conv14_bn(x)
-        x += residual  # skip connection
-        x = self.conv14_relu(x)
-
-        # residual layer 8
-        residual = x
-        x = self.conv15(x)
-        x = self.conv15_bn(x)
-        x = self.conv15_relu(x)
-        x = self.conv16(x)
-        x = self.conv16_bn(x)
-        x += residual  # skip connection
-        x = self.conv16_relu(x)
-
-        # residual layer 9
-        residual = x
-        x = self.conv17(x)
-        x = self.conv17_bn(x)
-        x = self.conv17_relu(x)
-        x = self.conv18(x)
-        x = self.conv18_bn(x)
-        x += residual  # skip connection
-        x = self.conv18_relu(x)
-
-        # residual layer 10
-        residual = x
-        x = self.conv19(x)
-        x = self.conv19_bn(x)
-        x = self.conv19_relu(x)
-        x = self.conv20(x)
-        x = self.conv20_bn(x)
-        x += residual  # skip connection
-        x = self.conv20_relu(x)
-        """
-
         # policy head
         p = self.policy_head(x)
         p = self.policy_bn(p)
         p = self.policy_relu(p)
-        p = p.view(p.size(0), -1)  # 텐서 펼치기
+        p = p.view(p.size(0), -1)  # 펼치기
         p = self.policy_fc(p)
         p = self.policy_softmax(p)
 
@@ -285,9 +179,9 @@ class PolicyValueNet(nn.Module):
 
 # test
 if __name__ == "__main__":
-    net = PolicyValueNet()
+    net = PolicyValueNet(128)
     print(net)
     x = Variable(torch.from_numpy(
         np.zeros((9, 3, 3), 'float')).float().unsqueeze(0))
-    y = net(x)
-    print(y)
+    p, v = net(x)
+    print(v.data.numpy()[0])
