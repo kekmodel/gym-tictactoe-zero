@@ -19,13 +19,24 @@ SAVE_CYCLE = 800
 class MCTS(object):
     """몬테카를로 트리 탐색 클래스
 
-        최초 train 데이터 생성 용 (state, edge 저장)
-        state를 각 주체당 4수까지 저장해서 state_new로 만듦 -> (9, 3, 3) array.flatten()
-        edge는 현재 state에서 착수 가능한 모든 action
-        edge 구성: (3, 3, 4) array: 9개 좌표에 4개의 정보 매칭
-        4개의 정보: (N, W, Q, P)
+    시뮬레이션을 통해 train 데이터 생성 (state, edge 저장)
+
+    state
+    ------
+    각 주체당 4수까지 저장해서 state_new로 만듦
+
+        9x3x3 numpy array -> 1x81 tuple (저장용)
+
+    edge
+    -----
+    현재 state에서 착수 가능한 모든 action자리에 4개의 정보 저장
+
+    type: 3x3x4 numpy array
+
+        9개 좌표에 4개의 정보 N, W, Q, P 매칭
         N: edge 방문횟수, W: 보상누적값, Q: 보상평균(W/N), P: edge 선택 사전확률
         edge[좌표행][좌표열][번호]로 접근
+
     """
 
     def __init__(self):
@@ -86,8 +97,28 @@ class MCTS(object):
         self.first_turn = None
         self.user_type = None
 
-    # raw state를 받아 변환 및 저장 후 action을 선택하는 외부 메소드
     def select_action(self, state):
+        """raw state를 받아 변환 및 저장 후 action을 리턴하는 외부 메소드.
+
+        state 변환
+        ----------
+        state -> state_new -> state_hash
+
+            state_new: 9x3x3 numpy array.
+                유저별 최근 4-histroy 저장하여 재구성. (저장용)
+
+            state_hash: str. (hash)
+                state_new를 string으로 바꾼 후 hash 생성. (탐색용)
+                node로 부름.
+
+        action 선택
+        -----------
+        puct 값이 가장 높은 곳을 선택함, 동점이면 랜덤 선택.
+
+            action: 1x3 tuple.
+                action = (주체 인덱스, 보드의 x좌표, 보드의 y좌표)
+
+        """
         # ------------------------ 턴 계산 ------------------------ #
         self.action_count += 1
         # 호출될 때마다 첫턴 기준 교대로 행동주체 바꿈, 최종 action에 붙여줌
@@ -130,7 +161,7 @@ class MCTS(object):
         # 배열 접붙히기
         action = np.r_[self.user_type, move_target]
 
-        # ------------------ action 저장 및 초기화 ------------------ #
+        # ---------------- action 저장 및 step 초기화 ---------------- #
         self.action_memory.appendleft(action)
         self._reset_step()
         return tuple(action)
