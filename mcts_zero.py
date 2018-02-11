@@ -10,10 +10,11 @@ import slackweb
 
 PLAYER = 0
 OPPONENT = 1
-MARK_O = 2
+MARK_O = 0
+MARK_X = 1
 N, W, Q, P = 0, 1, 2, 3
 EPISODE = 800
-SAVE_CYCLE = 800
+SAVE_CYCLE = 9999
 
 
 class MCTS(object):
