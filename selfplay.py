@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 import tictactoe_env
 import neural_network
-import numpy as np
-import slackweb
+
 import time
 from collections import deque, defaultdict
+
+import numpy as np
+import slackweb
+
 import torch
 from torch.autograd import Variable
 
