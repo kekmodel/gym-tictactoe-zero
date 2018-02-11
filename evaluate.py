@@ -7,7 +7,7 @@ from collections import deque, defaultdict
 PLAYER = 0
 OPPONENT = 1
 N, W, Q, P = 0, 1, 2, 3
-EPISODE = 400
+EPISODE = 800
 SAVE_CYCLE = 10000
 
 
@@ -86,8 +86,8 @@ class ZeroTree(object):
 class AgentPlayer(object):
     def __init__(self):
         # 모델 불러오기
-        self.model = ZeroTree(state_path='data/state_memory_e800_c5a0.7.npy',
-                              edge_path='data/edge_memory_e800_c5a0.7.npy')
+        self.model = ZeroTree(state_path='data/state_memory_30k.npy',
+                              edge_path='data/edge_memory_30k.npy')
 
         # action space 좌표 공간 구성
         self.action_space = self._action_space()
@@ -128,7 +128,7 @@ class AgentPlayer(object):
         self.action_count += 1
         user_type = self.first_turn
         _pi = self.model.get_pi(state)
-        if self.action_count <= 1:
+        if self.action_count > 1:
             pi_max = np.argwhere(_pi == _pi.max()).tolist()
             target = pi_max[np.random.choice(len(pi_max))]
             one_hot_pi = np.zeros((3, 3), 'int')
@@ -147,8 +147,8 @@ class AgentPlayer(object):
 class AgentOppnent(object):
     def __init__(self):
         # 모델 불러오기
-        self.model = ZeroTree(state_path='data/state_memory_e800_c5a0.85.npy',
-                              edge_path='data/edge_memory_e800_c5a0.85.npy')
+        self.model = ZeroTree(state_path='data/state_memory_30k.npy',
+                              edge_path='data/edge_memory_30k.npy')
 
         # action space 좌표 공간 구성
         self.action_space = self._action_space()
@@ -321,6 +321,6 @@ if __name__ == "__main__":
         # 에피소드 통계
     print('-' * 22, '\nWin:%d \tLose:%d \tDraw:%d \tWinrate: %0.1f%% \n\
 WinMarkO:%d' % (result[1], result[-1], result[0],
-                np.exp(result[1] / 400) / (np.exp(result[1] / 400) +
-                                           np.exp(result[-1] / 400)) * 100,
-                win_mark_O))
+                np.exp(result[1] / EPISODE) / (np.exp(result[1] / EPISODE) +
+                                               np.exp(result[-1] / EPISODE)) *
+                100, win_mark_O))
