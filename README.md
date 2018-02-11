@@ -40,11 +40,11 @@ gym폴더와 gym-tictactoe폴더가 같은 곳에 있으면 안전합니다.
     강화 학습 수준: 파이썬과 케라스로 배우는 강화학습 1독, 모두의 RL 강의 1독
     영어 수준: 구글 번역 성애자 (노벨상 줘야함)
 
-당.연.히! --> 삽질의 삽질의 삽질의 연속...(파도 파도 끝이 없는..ㅠㅠ) --> 그렇지만 재밌어서 계속 삽질... (여가시간 타임머신)
+사정이 이렇다보니 --> 삽질의 삽질의 삽질의 연속...(파도 파도 끝이 없는..ㅠㅠ) --> 그렇지만 재밌어서 계속 삽질... (여가시간 타임머신) 
 
 --> 오기로 계속 하다보니 어느 정도 성과가 나오기 시작!!(오? 재능 발견?ㅋ) 
 
---> 생각한 것이 실제로 돌아가니까 너무 재밌어서 시간만 나면 덕질 중!! 함께 해요 ㅎㅎ 
+--> 생각한 것이 실제로 돌아가니까 너무 재밌음! 시간만 나면 알파고 덕질 중!! 함께 해요 ㅎㅎ 
 
 #### RL관련 편하게 대화나누실 분은 언제든지 페이스북 메시지 주세요 ~ :P (https://www.facebook.com/kekmodel) 
 
@@ -151,19 +151,22 @@ text editor or IDE 로 build
 
 단, human_interface.py 는 interpreter기반 환경에서만 됨 (e.g. console, IPython)
 
-\* jupyter notebook 사용가능
+\* jupyter notebook으로 사용가능
 
 \* 렌더링 오류 시: pip install pyglet==1.2.4  
      
-        tictactoe_env.py                강화학습 환경 제공
+        tictactoe_env.py                강화학습 환경 제공 (gym 기반)
         mcts_zero.py                    신경망이 학습할 최초 데이터 생성(PUCT-MCTS 알고리즘)
-        neural_network_cpu.py           정책 + 가치망 cpu버전 (ResNet-pytorch)
+        neural_network_cpu.py           정책 + 가치망 cpu버전 (ResNet 5 block)
+        neural_network_gpu.py           정책 + 가치망 gpu버전 (ResNet 5 block)
         human_interface.py              사람과 대결하는 인터페이스 제공
-        evaluate.py                     에이전트 vs 에이전트 붙여서 데이터 저장
+        evaluate.py                     에이전트 vs 에이전트 테스트 환경
         data_viewer.ipynb               저장 데이터 분석용 jupyter notebook
         data/state_memory.npy           모든 step의 state가 저장됨 (mcts_zero.py)
         data/edge_memory.npy            모든 step의 edge(action 정보)가 저장됨 (mcts_zero.py)
-        data/state|edge_memory_25k.npy  25000 에피소드에 대한 state, edge 데이터 set
+        data/state|edge_memory_30k.npy  30000 에피소드에 대한 state, edge 데이터
+        data/zero_data_30k.pkl          위 데이터를 (state, pi, z)로 묶은 train용 데이터
+        data/model_SGD_res5_ch128.pkl   training 완료한 신경망의 파라미터 
     
 
 
