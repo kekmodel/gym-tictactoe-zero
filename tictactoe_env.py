@@ -102,13 +102,13 @@ class TicTacToeEnv(gym.Env):
             if action[USER_TYPE] == PLAYER:  # 근데 그게 플레이어가 한 짓이면 반칙패
                 reward = -1
                 done = True  # 게임 종료
-                info = {'steps': self.step_count}  # action 1회로 인정
+                info = {}
                 print('Illegal Lose!')  # 출력
                 return self.state, reward, done, info  # 필수 요소 리턴
             elif action[USER_TYPE] == OPPONENT:  # 상대가 한 짓이면 반대
                 reward = 1
                 done = True
-                info = {'steps': self.step_count}
+                info = {}
                 print('Illegal Win!')
                 return self.state, reward, done, info
 
@@ -155,21 +155,21 @@ class TicTacToeEnv(gym.Env):
                     if i == PLAYER:  # i가 플레이어면 승리
                         reward = 1  # 보상 1
                         done = True  # 게임 끝
-                        info = {'steps': self.step_count}  # step 수 기록
-                        print('You Win!', info)  # 승리 메세지 출력
+                        info = {}
+                        print('You Win!')  # 승리 메세지 출력
                         return self.state, reward, done, info  # 필수 요소 리턴!
                     else:  # i가 상대면 패배
                         reward = -1  # 보상 -1
                         done = True  # 게임 끝
-                        info = {'steps': self.step_count}  # step 수 기록
-                        print('You Lose!', info)  # 너 짐
+                        info = {}
+                        print('You Lose!')  # 너 짐
                         return self.state, reward, done, info  # 필수 요소 리턴!
         # 다 돌려봤는데 승부난게 없더라 근데 "O"식별용 2번보드에 들어있는게 5개면? 비김
         if np.count_nonzero(self.state[2]) == 5:
             reward = 0  # 보상 0
             done = True  # 게임 끝
-            info = {'steps': self.step_count}
-            print('Draw!', info)  # 비김
+            info = {}
+            print('Draw!')  # 비김
             return self.state, reward, done, info
         # 이거 다~~~ 아니면 다음 수 둬야지
         else:
