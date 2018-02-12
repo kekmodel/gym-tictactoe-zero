@@ -118,7 +118,7 @@ class TicTacToeEnv(gym.Env):
         # 연속 두번 하기, player_color 비설정 시 오류 발생시키기
         redupl = np.sum(self.state[PLAYER]) - np.sum(self.state[OPPONENT])
         if abs(redupl) > 1:
-            raise NotImplementedError("Placed Once!")
+            raise NotImplementedError("Place Once!")
         if self.player_color is None:
             raise NotImplementedError("Set Player Color!")
         # "O"가 아닌데 처음에 하면 오류 발생시키기

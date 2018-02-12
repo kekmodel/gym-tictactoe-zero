@@ -2,9 +2,11 @@
 import tictactoe_env
 
 import time
+import hashlib
 from collections import deque, defaultdict
 
 import slackweb
+import dill as pickle
 import numpy as np
 np.set_printoptions(suppress=True)
 
@@ -24,9 +26,9 @@ class MCTS(object):
 
     state
     ------
-    각 주체당 4수까지 저장해서 state_new로 만듦
+    각 주체당 4수까지 저장해서 state_new 로 만듦
 
-        9x3x3 numpy array -> 1x81 tuple (저장용)
+        9x3x3 numpy array -> 1x81 tuple
 
     edge
     -----
@@ -35,7 +37,7 @@ class MCTS(object):
     type: 3x3x4 numpy array
 
         9개 좌표에 4개의 정보 N, W, Q, P 매칭
-        N: edge 방문횟수, W: 보상누적값, Q: 보상평균(W/N), P: edge 선택 사전확률
+        N: edge 방문횟수, W: 보상누적값, Q: 보상평균값(W/N), P: 선택 확률 추정 백터
         edge[좌표행][좌표열][번호]로 접근
 
     """
@@ -53,15 +55,15 @@ class MCTS(object):
         # reset_step member
         self.pr = None
         self.puct = None
+        self.state = None
+        self.state_new = None
+        self.node = None
         self.edge = None
         self.empty_loc = None
         self.legal_move_n = None
         self.total_visit = None
         self.first_turn = None
         self.user_type = None
-        self.state = None
-        self.state_new = None
-        self.node = None
 
         # reset_episode member
         self.node_memory = None
@@ -102,16 +104,15 @@ class MCTS(object):
     def select_action(self, state):
         """raw state를 받아 변환 및 저장 후 action을 리턴하는 외부 메소드.
 
-        state 변환
-        ----------
-        state -> state_new -> node
+        node
+        ------
+        state_new -> node
 
             state_new: 9x3x3 numpy array.
                 유저별 최근 4-histroy 저장하여 재구성. (저장용)
 
             node: str. (hash)
                 state_new를 string으로 바꾼 후 hash 생성. (탐색용)
-                node로 부름.
 
         action 선택
         -----------
@@ -131,8 +132,8 @@ class MCTS(object):
         self.state_new = self._convert_state(state)
         # 새로운 state 저장
         self.state_memory.appendleft(self.state_new)
-        # state를 문자열 -> hash로 변환 (dict의 key로 쓰려고)
-        self.node = hash(self.state_new.tostring())
+        # state를 문자열 -> hash로 변환 (dict의 key로 사용)
+        self.node = hashlib.md5(self.state_new.tostring()).hexdigest()
         self.node_memory.appendleft(self.node)
 
         # Tree를 호출하여 PUCT 값 계산
@@ -180,7 +181,7 @@ class MCTS(object):
     def _cal_puct(self):
         """9개의 좌표에 PUCT값을 계산하여 매칭하는 메소드.
 
-        dict{node: edge}인 Tree 구성
+        dict{node: edge}인 MCTS Tree 구성
         """
         # Tree에서 현재 node를 검색하여 해당 edge의 누적정보 가져오기
         self.edge = self.tree_memory[self.node]
@@ -254,7 +255,7 @@ if __name__ == "__main__":
     win_mark_O = 0
     # 초기 train data 생성 루프
     for e in range(EPISODE):
-        # state 생성
+        # raw state 생성
         state = env.reset()
         print('=' * 65, '\nEpisode: %d' % (e + 1))
         # 선공 정하고 교대로 하기
@@ -287,12 +288,11 @@ if __name__ == "__main__":
         # 데이터 저장
         if (e + 1) % SAVE_CYCLE == 0:
             finish = round(float(time.time() - start))
-            print('%d episode data saved' % (e + 1))
-            np.save('data/state_memory_e{}_c{}a{:1.0f}.npy'.format(
-                (e + 1),
-                zero_play.c_puct,
-                zero_play.alpha * 10),
-                zero_play.state_memory)
+            print('%d episode data saved.' % (e + 1))
+            with open('data/state_memory_e1600.pkl', 'wb') as f:
+                pickle.dump(zero_play.state_memory, f, pickle.HIGHEST_PROTOCOL)
+            with open('data/tree_memory_e1600.pkl', 'wb') as f:
+                pickle.dump(zero_play.tree_memory, f, pickle.HIGHEST_PROTOCOL)
 
             # 에피소드 통계
             statics = ('\nWin: %d  Lose: %d  Draw: %d  Winrate: %0.1f%%  \
