@@ -13,8 +13,8 @@ OPPONENT = 1
 MARK_O = 0
 MARK_X = 1
 N, W, Q, P = 0, 1, 2, 3
-EPISODE = 800
-SAVE_CYCLE = 800
+EPISODE = 1600
+SAVE_CYCLE = 1600
 
 
 class MCTS(object):
@@ -139,7 +139,7 @@ class MCTS(object):
         self._cal_puct()
 
         # 점수 확인
-        print("* PUCT Score *")
+        print("***  PUCT Score  ***")
         print(self.puct.round(decimals=2))
         print("")
 
@@ -185,7 +185,7 @@ class MCTS(object):
         # Tree에서 현재 node를 검색하여 해당 edge의 누적정보 가져오기
         self.edge = self.tree_memory[self.node]
 
-        # 현재 보드의 착수가능 좌표와 개수를 알아낸 후 랜덤일 확률을 계산
+        # 현재 보드에서 착수가능한 수를 알아내서 랜덤 확률을 계산
         self.board = self.state[PLAYER] + self.state[OPPONENT]
         self.empty_loc = np.argwhere(self.board == 0)
         self.legal_move_n = self.empty_loc.shape[0]
@@ -203,7 +203,7 @@ class MCTS(object):
             for j in range(3):
                 self.total_visit += self.edge[i][j][N]
         # 방문횟수 출력
-        print('visit count: %d\n' % (self.total_visit + 1))
+        print('(visit count: %d)\n' % (self.total_visit + 1))
 
         for i in range(self.legal_move_n):
             self.edge[tuple(self.empty_loc[i])][P] = self.pr[i]
@@ -256,7 +256,7 @@ if __name__ == "__main__":
     for e in range(EPISODE):
         # state 생성
         state = env.reset()
-        print('-' * 30, '\nepisode: %d' % (e + 1))
+        print('=' * 65, '\nEpisode: %d' % (e + 1))
         # 선공 정하고 교대로 하기
         zero_play.first_turn = (PLAYER + e) % 2
         env.player_color = zero_play.first_turn
@@ -275,7 +275,7 @@ if __name__ == "__main__":
             # 승부난 보드 보기
             print("- FINAL BOARD -")
             print(state[PLAYER] + state[OPPONENT] * 2.0)
-
+            print("")
             # 보상을 edge에 백업
             zero_play.backup(reward)
             # 결과 체크
@@ -288,10 +288,10 @@ if __name__ == "__main__":
         if (e + 1) % SAVE_CYCLE == 0:
             finish = round(float(time.time() - start))
             print('%d episode data saved' % (e + 1))
-            np.save('data/state_memory_e{}_c{}a{}.npy'.format(
+            np.save('data/state_memory_e{}_c{}a{:1.0f}.npy'.format(
                 (e + 1),
                 zero_play.c_puct,
-                zero_play.alpha),
+                zero_play.alpha * 10),
                 zero_play.state_memory)
 
             # 에피소드 통계
@@ -300,7 +300,7 @@ WinMarkO: %d' % (result[1], result[-1], result[0],
                  1 / (1 + np.exp(result[-1] / EPISODE) /
                       np.exp(result[1] / EPISODE)) * 100,
                  win_mark_O))
-            print('-' * 22, statics)
+            print('=' * 65, statics)
 
             slack = slackweb.Slack(
                 url="https://hooks.slack.com/services/T8P0E384U/B8PR44F1C/\

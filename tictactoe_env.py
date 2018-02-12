@@ -6,7 +6,7 @@ import numpy as np   # 배열 제공 모듈
 
 PLAYER = 0  # 플레이어 식별 상수
 OPPONENT = 1  # 상대 식별 상수
-USER_TYPE = 0  # action index 0
+USER_TYPE = 0  # action index
 MARK_O = 0
 MARK_X = 1
 
@@ -103,13 +103,13 @@ class TicTacToeEnv(gym.Env):
                 reward = -1
                 done = True  # 게임 종료
                 info = {}
-                print('Illegal Lose!')  # 출력
+                print('@@ Illegal Lose! @@')  # 출력
                 return self.state, reward, done, info  # 필수 요소 리턴
             elif action[USER_TYPE] == OPPONENT:  # 상대가 한 짓이면 반대
                 reward = 1
                 done = True
                 info = {}
-                print('Illegal Win!')
+                print('@@ Illegal Win! @@')
                 return self.state, reward, done, info
 
         # action 적용
@@ -117,15 +117,17 @@ class TicTacToeEnv(gym.Env):
 
         # 연속 두번 하기, player_color 비설정 시 오류 발생시키기
         redupl = np.sum(self.state[PLAYER]) - np.sum(self.state[OPPONENT])
-        if abs(redupl) > 1 or self.player_color is None:
-            raise NotImplementedError
+        if abs(redupl) > 1:
+            raise NotImplementedError("Placed Once!")
+        if self.player_color is None:
+            raise NotImplementedError("Set Player Color!")
         # "O"가 아닌데 처음에 하면 오류 발생시키기
         if self.player_color != MARK_O:
             if np.sum(self.state) == 1 and action[USER_TYPE] == PLAYER:
-                raise NotImplementedError
+                raise NotImplementedError("Not Your Turn!")
         else:
             if np.sum(self.state) == 1 and action[USER_TYPE] == OPPONENT:
-                raise NotImplementedError
+                raise NotImplementedError("Not Your Turn!")
 
         # 2번 보드("O") 동기화
         if self.player_color == MARK_O:
@@ -156,20 +158,20 @@ class TicTacToeEnv(gym.Env):
                         reward = 1  # 보상 1
                         done = True  # 게임 끝
                         info = {}
-                        print('You Win!')  # 승리 메세지 출력
+                        print('## You Win! ##')  # 승리 메세지 출력
                         return self.state, reward, done, info  # 필수 요소 리턴!
                     else:  # i가 상대면 패배
                         reward = -1  # 보상 -1
                         done = True  # 게임 끝
                         info = {}
-                        print('You Lose!')  # 너 짐
+                        print('## You Lose! ##')  # 너 짐
                         return self.state, reward, done, info  # 필수 요소 리턴!
         # 다 돌려봤는데 승부난게 없더라 근데 "O"식별용 2번보드에 들어있는게 5개면? 비김
         if np.count_nonzero(self.state[2]) == 5:
             reward = 0  # 보상 0
             done = True  # 게임 끝
             info = {}
-            print('Draw!')  # 비김
+            print('##  Draw! ##')  # 비김
             return self.state, reward, done, info
         # 이거 다~~~ 아니면 다음 수 둬야지
         else:
