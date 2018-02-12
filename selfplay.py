@@ -38,26 +38,27 @@ class MCTS(object):
 
     edge
     -----
-    현재 state에서 착수 가능한 모든 action자리에 4개의 정보 저장
+    현재 state의 모든 action자리에 4개의 정보 저장
 
     type: 3x3x4 numpy array
 
         9개 좌표에 4개의 정보 N, W, Q, P 매칭
-        N: edge 방문횟수, W: 보상누적값, Q: 보상평균(W/N), P: edge 선택 사전확률
-        edge[좌표행][좌표열][번호]로 접근
+        N: edge 방문횟수, W: 보상누적값, Q: 보상평균(W/N), P: 신경망의 p
+        edge[좌표행][좌표열][알파벳]으로 접근
 
     """
 
     def __init__(self):
         # model
         self.model = neural_network.PolicyValueNet(NUM_CHANNEL)
-        # self.model.load_state_dict(torch.load(
-        #     'data/model_SGD_res5_ch128_alzero.pkl'))
-
+        """# 파라미터 로드
+        self.model.load_state_dict(torch.load(
+             'data/model_SGD_res5_ch128_alzero.pkl'))
+        """
         # memories
         self.state_memory = deque(maxlen=9 * EPISODE)
-        self.node_memory = deque(maxlen=9 * EPISODE)
         self.edge_memory = deque(maxlen=9 * EPISODE)
+        self.tree_memory = defaultdict(lambda: 0)
 
         # hyperparameter
         self.c_puct = 5
@@ -65,49 +66,47 @@ class MCTS(object):
         self.alpha = 0.7
 
         # reset_step member
-        self.tree_memory = None
-        self.pr = None
-        self.puct = None
-        self.edge = None
-        self.legal_move_n = None
-        self.empty_loc = None
-        self.total_visit = None
-        self.first_turn = None
         self.user_type = None
-        self.new_state = None
+        self.state_new = None
         self.state_hash = None
+        self.edge = None
+        self.pr = None
+        self.total_visit = None
+        self.puct = None
+        self.empty_loc = None
 
         # reset_episode member
+        self.first_turn = None
+        self.state = None
         self.action_memory = None
+        self.value_memory = None
         self.action_count = None
         self.my_history = None
         self.your_history = None
-        self.board = None
-        self.state = None
+        self.board_fill = None
 
         # member 초기화
         self._reset_step()
         self._reset_episode()
 
     def _reset_step(self):
-        self.tree_memory = defaultdict(lambda: 0)
-        self.edge = np.zeros((3, 3, 4), 'float')
-        self.puct = np.zeros((3, 3), 'float')
-        self.total_visit = 0
-        self.pr = 0.
-        self.empty_loc = None
-        self.legal_move_n = 0
-        self.state_hash = None
-        self.new_state = None
         self.user_type = None
+        self.state_new = None
+        self.state_hash = None
+        self.edge = np.zeros((3, 3, 4), 'float')
+        self.pr = 0.
+        self.total_visit = 0
+        self.puct = np.zeros((3, 3), 'float')
+        self.empty_loc = None
 
     def _reset_episode(self):
         plane = np.zeros((3, 3), 'int').flatten()
         self.my_history = deque([plane, plane, plane, plane], maxlen=4)
         self.your_history = deque([plane, plane, plane, plane], maxlen=4)
         self.action_memory = deque(maxlen=9)
+        self.value_memory = deque(maxlen=9)
         self.action_count = 0
-        self.board = None
+        self.board_fill = None
         self.first_turn = None
 
     def select_action(self, state):
@@ -138,32 +137,34 @@ class MCTS(object):
         self.user_type = (self.first_turn + self.action_count - 1) % 2
 
         # ------------------- state 변환 및 저장 ------------------- #
-        self.state = state.copy()
-        self.new_state = self._convert_state(state)
+        self.state = state
+        self.state_new = self._convert_state(state)
         # 새로운 state 저장
-        self.state_memory.appendleft(self.new_state)
+        self.state_memory.appendleft(self.state_new)
         # state를 문자열 -> hash로 변환 (dict의 key로 쓰려고)
-        self.state_hash = hash(self.new_state.tostring())
-        # 변환한 state를 node로 부르자. 저장!
-        self.node_memory.appendleft(self.state_hash)
-        tens_state = torch.from_numpy(self.new_state)
-        val_state = Variable(
-            tens_state.view(1, 9, 3, 3).float(), requires_grad=True)
-        pr, val = self.model(val_state)
+        self.state_hash = hash(self.state_new.tostring())
+        # numpy -> tensor -> Variable 변환해서 신경망에 인풋으로 넣기
+        state_tensor = torch.from_numpy(self.state_new)
+        state_variable = Variable(
+            state_tensor.view(1, 9, 3, 3).float(), requires_grad=True)
+        print("State Variable: {}".format(state_variable))
+        # 아웃풋: 확률백터 예측값, 가치함수 예측값
+        p_theta, value = self.model(state_variable)
 
         # ------------ 들어온 state에 대응하는 edge 초기화 ------------ #
-        self._init_edge(pr, val)
+        # P에 예측값 넣기
+        self._init_edge(p_theta)
 
         # ------------- 저장 데이터를 사용하여 PUCT 값 계산 ------------ #
         self._cal_puct()
 
-        # 점수 확인
+        # PUCT 점수 확인
         print("* PUCT Score *")
         print(self.puct.round(decimals=2))
 
-        # 값이 음수가 나올 수 있어서 빈자리가 아닌 곳은 -9999를 넣어 최댓값 방지
-        self.board = self.state[PLAYER] + self.state[OPPONENT]
-        self.empty_loc = np.argwhere(self.board == 0)
+        # puct값이 음수가 나올 수 있어서 빈자리가 아닌 곳은 -9999를 넣어 최댓값 방지
+        self.board_fill = self.state[PLAYER] + self.state[OPPONENT] * 2
+        self.empty_loc = np.argwhere(self.board_fill == 0)
         puct = self.puct.tolist()
         for i, v in enumerate(puct):
             for k, s in enumerate(v):
@@ -182,6 +183,7 @@ class MCTS(object):
 
         # ------------------ action 저장 및 초기화 ------------------ #
         self.action_memory.appendleft(action)
+        self.value_memory.appendleft(value.data.numpy()[0])
         self._reset_step()
         return tuple(action)
 
@@ -191,45 +193,49 @@ class MCTS(object):
             self.my_history.appendleft(state[PLAYER].flatten())
         else:
             self.your_history.appendleft(state[OPPONENT].flatten())
-        new_state = np.r_[np.array(self.my_history).flatten(),
+        state_new = np.r_[np.array(self.my_history).flatten(),
                           np.array(self.your_history).flatten(),
                           self.state[2].flatten()]
-        return new_state
+        return state_new
 
-    def _init_edge(self, pr, val):
-        """들어온 state에서 착수 가능한 edge 초기화 메소드 (P값 배치)
+    def _init_edge(self, pr):
+        """들어온 state에서 착수 가능한 edge 초기화 메소드 (P값 배치).
 
-        빈자리를 검색하여 규칙위반 방지 및 랜덤 확률 생성
-        root node 확인 후 노이즈 줌 (e-greedy)
+        빈자리를 검색하여 규칙위반 방지 및 랜덤 확률 생성.
+        root node 확인 후 노이즈 줌 (e-greedy).
         """
-        prob = pr.data.numpy().reshape(3, 3)
-        value = val.data.numpy()[0]
-        print(prob.round(decimals=2),
-              ((value[0] + 1) / 2 * 100).round(decimals=1), '%')
+        prob_s = pr.data.numpy().reshape(3, 3)
+        val_s = self.value_memory[0]
+        print("Value: {} = Winrate: {}%".format(val_s,
+                                                ((val_s + 1) / 2 * 100).round(
+                                                    decimals=1)))
         count = self.node_memory.count(self.state_hash)
         # state 방문횟수 출력
-        print('visit count: {}'.format(count))
+        print('Visit Count: {}'.format(count))
         # root node엔 노이즈
         if self.action_count == 1:
-            self.pr = (1 - self.epsilon) * prob + self.epsilon * \
+            self.pr = (1 - self.epsilon) * prob_s + self.epsilon * \
                 np.random.dirichlet(
                     self.alpha * np.ones(9)).reshape(3, 3)
         else:
-            self.pr = prob
+            self.pr = prob_s
 
         for c in range(3):
             for r in range(3):
                 self.edge[c][r][P] = self.pr[c][r]
-                self.edge[c][r][W] = value
         # edge 메모리에 저장
         self.edge_memory.appendleft(self.edge)
 
     def _cal_puct(self):
-        """9개의 좌표에 PUCT값을 계산하여 매칭하는 메소드"""
-        # 지금까지의 액션을 반영한 트리 구성 하기. dict{node: edge}
-        memory = list(zip(self.node_memory, self.edge_memory))
-        # 지금까지의 동일한 state에 대한 edge의 N,W 누적
-        # Q, P는 덧셈이라 손상되므로 보정함
+        """9개의 좌표에 PUCT값을 계산하여 매칭하는 메소드.
+
+        memory로 트리구성: dict{node: edge}.
+        동일한 node에 대한 edge의 N, W 누적 계산.
+        Q, P는 누적과정이 덧셈이라 손상되므로 보정함.
+        """
+        if len(self.node_memory) == 1:
+            memory = list(zip(self.node_memory, self.edge_memory))
+
         for v in memory:
             key = v[0]
             value = v[1]
