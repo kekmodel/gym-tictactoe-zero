@@ -64,77 +64,33 @@ gym폴더와 gym-tictactoe폴더가 같은 곳에 있으면 안전합니다.
 
   
 
-# 요구 사항
-
-## python 3 설치
-
-### Mac OS X
-
-xcode 컴파일러 설치
-
-        xcode-select --install
-
-brew 설치
-
-        ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-
-PATH 설정
-
-        export PATH=/usr/local/bin:/usr/local/sbin:$PATH
-
-파이썬 및 Numpy 설치
-
-        brew install python3
-        pip install numpy
-
-
-   
-### Windows
-
-download python 3 (https://www.python.org/ftp/python/3.6.4/python-3.6.4.exe)
-
-path 지정
-
-        C:\Python36\;C:\Python36\Scripts\
-
-pip 및 Numpy 설치
-
-        python -m pip install -U pip
-        pip install numpy
-
-   
-### Linux
-
-        sudo apt-get update
-        sudo apt-get install python3.6
-        pip install numpy
-
-   
-### 모든 OS (다 귀찮으면..)
-
-Anaconda5 설치 (https://www.anaconda.com/download)
-
-
-  
-   
-## git 설치 (https://git-scm.com/downloads)
-
-
+## 요구 사항
     
-## gym 설치 
+      python3
+      git
+      gym
+      pytorch
+      numpy
+      dill
 
-        git clone https://github.com/openai/gym.git
-        cd gym
-        pip install -e .
 
+### gym 설치
+
+      git clone https://github.com/openai/gym.git
+      cd gym
+      pip install -e .
+
+
+### numpy or Anaconda5 설치 (https://www.anaconda.com/download)
+
+
+### PyTorch 설치 (http://pytorch.org)
 
 
 ## gym-tictactoe 설치 (제가 만든 거)
     
         git clone https://github.com/kekmodel/gym-tictactoe.git
 
-
-## PyTorch 설치 (http://pytorch.org)
 
     
 ## 파일 구성
