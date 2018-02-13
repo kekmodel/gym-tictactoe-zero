@@ -53,34 +53,34 @@ class MCTS(object):
         self.alpha = 0.7
 
         # reset_step member
-        self.pr = None
-        self.puct = None
-        self.state = None
-        self.state_new = None
         self.node = None
         self.edge = None
+        self.puct = None
+        self.total_visit = None
         self.empty_loc = None
         self.legal_move_n = None
-        self.total_visit = None
-        self.first_turn = None
-        self.user_type = None
+        self.pr = None
+        self.state = None
+        self.state_new = None
 
         # reset_episode member
+        self.my_history = None
+        self.your_history = None
         self.node_memory = None
         self.edge_memory = None
         self.action_memory = None
         self.action_count = None
-        self.my_history = None
-        self.your_history = None
         self.board = None
+        self.first_turn = None
+        self.user_type = None
 
         # member 초기화
         self._reset_step()
         self._reset_episode()
 
     def _reset_step(self):
-        self.edge = np.zeros((3, 3, 4), 'float')
         self.node = None
+        self.edge = np.zeros((3, 3, 4), 'float')
         self.puct = np.zeros((3, 3), 'float')
         self.total_visit = 0
         self.empty_loc = None
@@ -288,20 +288,21 @@ if __name__ == "__main__":
         # 데이터 저장
         if (e + 1) % SAVE_CYCLE == 0:
             finish = round(float(time.time() - start))
-            print('%d episode data saved.' % (e + 1))
-            with open('data/state_memory_e1600.pkl', 'wb') as f:
+            print('[{} Episode Data Saved]'.format(e + 1))
+            with open('data/state_memory_e{}.pkl'.format(e + 1), 'wb') as f:
                 pickle.dump(zero_play.state_memory, f, pickle.HIGHEST_PROTOCOL)
-            with open('data/tree_memory_e1600.pkl', 'wb') as f:
+            with open('data/tree_memory_e{}.pkl'.format(e + 1), 'wb') as f:
                 pickle.dump(zero_play.tree_memory, f, pickle.HIGHEST_PROTOCOL)
 
             # 에피소드 통계
-            statics = ('\nWin: %d  Lose: %d  Draw: %d  Winrate: %0.1f%%  \
-WinMarkO: %d' % (result[1], result[-1], result[0],
-                 1 / (1 + np.exp(result[-1] / EPISODE) /
-                      np.exp(result[1] / EPISODE)) * 100,
-                 win_mark_O))
+            statics = ('\nWin: {}  Lose: {}  Draw: {}  Winrate: {:0.1f}%  \
+WinMarkO: {}'.format(result[1], result[-1], result[0],
+                     1 / (1 + np.exp(result[-1] / EPISODE) /
+                          np.exp(result[1] / EPISODE)) * 100,
+                     win_mark_O))
             print('=' * 65, statics)
 
+            # 슬랙에 메시지 보내기
             slack = slackweb.Slack(
                 url="https://hooks.slack.com/services/T8P0E384U/B8PR44F1C/\
 4gVy7zhZ9teBUoAFSse8iynn")
