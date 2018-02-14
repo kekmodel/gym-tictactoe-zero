@@ -1,106 +1,35 @@
-# -*- coding: utf-8 -*-
 import tictactoe_env
 
-from collections import deque, defaultdict
+import xxhash
+from collections import deque
 
 import numpy as np
+import dill as pickle
 
-PLAYER = 0
-OPPONENT = 1
+np.set_printoptions(suppress=True)
+
+HUMAN = 0
+AI = 1
 N, W, Q, P = 0, 1, 2, 3
+PLANE = np.zeros((3, 3), 'int').flatten()
+
 EPISODE = 5
 
 
-class ZeroTree(object):
-    def __init__(self):
-        self._load_data()
-        self.node_memory = deque(maxlen=len(self.state_memory))
-        self.tree_zip = []
-        self.tree_memory = defaultdict(lambda: 0)
-        self._make_tree()
-
-        # hyperparameter
-        self.epsilon = 0.25
-        self.alpha = 0.7
-
-        self.state_data = deque(maxlen=len(self.tree_memory))
-        self.pi_data = deque(maxlen=len(self.tree_memory))
-        self._cal_pi()
-
-    # 로드할 데이터
-    def _load_data(self):
-        self.state_memory = np.load('data/state_memory_30k.npy')
-        self.edge_memory = np.load('data/edge_memory_30k.npy')
-
-    def _make_tree(self):
-        for v in self.state_memory:
-            v_tuple = tuple(v)
-            self.node_memory.append(v_tuple)
-        self.tree_zip = list(zip(self.node_memory, self.edge_memory))
-        for (state, edge) in self.tree_zip:
-            self.tree_memory[state] += edge
-
-    def _cal_pi(self):
-        for k, v in self.tree_memory.items():
-            tmp = []
-            visit_count = []
-            self.state_data.append(k)
-            for r in range(3):
-                for c in range(3):
-                    visit_count.append(v[r][c][0])
-            for i in range(9):
-                tmp.append(visit_count[i] / sum(visit_count))
-            self.pi_data.append(np.asarray(tmp, 'float').reshape((3, 3)))
-
-    def get_pi(self, state):
-        new_state = state.copy()
-        temp_state = state.reshape(9, 3, 3)
-        origin_state = np.r_[temp_state[0].flatten(),
-                             temp_state[4].flatten(),
-                             temp_state[8].flatten()]
-        self.state = origin_state.reshape(3, 3, 3)
-        board = self.state[PLAYER] + self.state[OPPONENT]
-        if tuple(new_state.flatten()) in self.state_data:
-            i = tuple(new_state.flatten())
-            j = self.state_data.index(i)
-            pi = self.pi_data[j]
-            print('"zero policy"')
-            return pi
-        else:
-            empty_loc = np.argwhere(board == 0)
-            legal_move_n = empty_loc.shape[0]
-            pi = np.zeros((3, 3))
-            prob = 1 / legal_move_n
-            pr = (1 - self.epsilon) * prob + self.epsilon * \
-                np.random.dirichlet(self.alpha * np.ones(legal_move_n))
-            for i in range(legal_move_n):
-                pi[empty_loc[i][0]][empty_loc[i][1]] = pr[i]
-            print('"random policy"')
-            return pi
-
-
-# 에이전트 클래스
 class ZeroAgent(object):
-    def __init__(self):
-        # 학습한 모델 불러오기
-        self.model = ZeroTree()
-
-        # action space 좌표 공간 구성
+    def __init__(self, model_path):
+        self.tree_memory = self._load_tree(model_path)
         self.action_space = self._action_space()
-
-        # reset_step member
-        self.legal_move_n = None
-        self.empty_loc = None
-        self.first_turn = None
-
-        # reset_episode member
         self.action_count = None
-        self.board = None
-        self.state = None
+        self.reset()
 
-        # member 초기화
-        self._reset_step()
-        self.reset_episode()
+    def reset(self):
+        self.action_count = 0
+
+    def _load_tree(self, path):
+        with open(path, 'rb') as f:
+            tree_memory = pickle.load(f)
+            return tree_memory
 
     def _action_space(self):
         action_space = []
@@ -109,182 +38,145 @@ class ZeroAgent(object):
                 action_space.append([i, j])
         return np.asarray(action_space)
 
-    def _reset_step(self):
-        self.legal_move_n = 0
-        self.empty_loc = None
-
-    def reset_episode(self):
-        self.action_count = -1
-        self.board = None
-        self.state = None
-
-    def select_action(self, state, mode='self'):
-        if mode == 'self':
-            self.action_count += 1
-            user_type = (self.first_turn + self.action_count) % 2
-            _pi = self.model.get_pi(state)
-            choice = np.random.choice(9, 1, p=_pi.flatten())
-            move_target = self.action_space[choice[0]]
-            action = np.r_[user_type, move_target]
-            self._reset_step()
-            return tuple(action)
-        elif mode == 'human':
-            self.action_count += 1
-            _pi = self.model.get_pi(state)
-            if self.action_count > 1:
-                pi_max = np.argwhere(_pi == _pi.max()).tolist()
-                target = pi_max[np.random.choice(len(pi_max))]
-                one_hot_pi = np.zeros((3, 3), 'int')
-                one_hot_pi[target[0]][target[1]] = 1
-                choice = np.random.choice(
-                    9, 1, p=one_hot_pi.flatten())
+    def select_action(self, state_new):
+        print("AI's Turn!")
+        self.action_count += 1
+        state_reshape = state_new.reshape(9, 3, 3)
+        board = state_reshape[0] + state_reshape[4]
+        empty_loc = np.argwhere(board == 0)
+        node = xxhash.xxh64(state_new.tostring()).hexdigest()
+        if node in self.tree_memory:
+            edge = self.tree_memory[node]
+            pi_memory = self._get_pi(edge)
+            if self.action_count == 1:
+                print('"stochastic"')
+                choice = np.random.choice(9, p=pi_memory)
             else:
-                choice = np.random.choice(9, 1, p=_pi.flatten())
-            move_target = self.action_space[choice[0]]
-            action = np.r_[OPPONENT, move_target]
-            self._reset_step()
-            return action
+                print('"deterministic"')
+                pi_max_idx = [i for i, v in enumerate(
+                    pi_memory) if v == max(pi_memory)]
+                choice = np.random.choice(pi_max_idx)
+            move_target = self.action_space[choice]
+        else:
+            print('"random"')
+            move_target = empty_loc[np.random.choice(len(empty_loc))]
+        action = np.r_[AI, move_target]
+        return tuple(action)
+
+    def _get_pi(self, edge):
+        visit_count_memory = []
+        for i in range(3):
+            for j in range(3):
+                visit_count_memory.append(edge[i][j][N])
+        pi_memory = visit_count_memory / sum(visit_count_memory)
+        return pi_memory
 
 
 class HumanAgent(object):
     def __init__(self):
-        self.first_turn = None
         self.action_space = self._action_space()
-        self.action_count = 0
-        self.ai_agent = ZeroAgent()
-
-    def reset_episode(self):
-        self.first_turn = None
-        self.action_count = 0
 
     def _action_space(self):
         action_space = []
         for i in range(3):
             for j in range(3):
                 action_space.append([i, j])
-        return np.asarray(action_space)
+        return np.array(action_space)
 
     def select_action(self, state):
-        self.action_count += 1
-        if self.first_turn == PLAYER:
-            if self.action_count % 2 == 1:
-                print("It's your turn!")
-                move_target = input("1 ~ 9: ")
-                i = int(move_target) - 1
-                action = np.r_[PLAYER, self.action_space[i]]
-                return tuple(action)
-            else:
-                print("AI's turn!")
-                action = self.ai_agent.select_action(state, mode='human')
-                return tuple(action)
+        print("It's your turn!")
+        move_target = input('1 ~ 9: ')
+        i = int(move_target) - 1
+        action = np.r_[HUMAN, self.action_space[i]]
+        return tuple(action)
+
+
+class HumanVsAi(object):
+    def __init__(self):
+        self.human = HumanAgent()
+        self.ai = ZeroAgent('data/tree_memory_e100000.pkl')
+        self.current_turn = None
+        self.human_history = None
+        self.ai_history = None
+        self.state_new = None
+        self.reset()
+
+    def reset(self):
+        self.current_turn = None
+        self.human_history = deque([PLANE] * 4, maxlen=4)
+        self.ai_history = deque([PLANE] * 4, maxlen=4)
+        self.state_new = None
+
+    def _convert_state(self, state):
+        if self.current_turn == AI:
+            self.human_history.appendleft(state[HUMAN].flatten())
         else:
-            if self.action_count % 2 == 1:
-                print("AI's turn!")
-                action = self.ai_agent.select_action(state, mode='human')
-                return tuple(action)
-            else:
-                print("It's your turn!")
-                move_target = input("1 ~ 9: ")
-                i = int(move_target) - 1
-                action = np.r_[PLAYER, self.action_space[i]]
-                return tuple(action)
+            self.ai_history.appendleft(state[AI].flatten())
+        state_new = np.r_[np.array(self.human_history).flatten(),
+                          np.array(self.ai_history).flatten(),
+                          state[2].flatten()]
+        return state_new
+
+    def select_action(self, state):
+        self.state_new = self._convert_state(state)
+        if self.current_turn == HUMAN:
+            action = self.human.select_action(state)
+        else:
+            action = self.ai.select_action(self.state_new)
+        return action
 
 
-if __name__ == "__main__":
-    # 환경 생성 및 시드 설정
+if __name__ == '__main__':
     env = tictactoe_env.TicTacToeEnv()
-    my_agent = HumanAgent()
-    # 통계용
+    manager = HumanVsAi()
     result = {1: 0, 0: 0, -1: 0}
-    # play game
-    mode = input("Play mode >> 1.Text 2.Graphic: ")
+    mode = input('Play mode >> 1.Text 2.Graphic: ')
     if mode == '1':
         for e in range(EPISODE):
-            plane = np.zeros((3, 3)).flatten()
-            my_history = deque([plane, plane, plane, plane], maxlen=4)
-            your_history = deque([plane, plane, plane, plane], maxlen=4)
             state = env.reset()
-            print('-' * 15, '\nepisode: %d' % (e + 1))
-            # 선공 정하고 교대로 하기
-            my_agent.first_turn = (OPPONENT + e) % 2
-            # 환경에 알려주기
-            env.player_color = my_agent.first_turn
-            turn = {PLAYER: 'You', OPPONENT: 'AI'}
-            print('First Turn: {}'.format(turn[my_agent.first_turn]))
-            action_count = 0
+            print('=' * 15, '\nepisode: {}'.format(e + 1))
+            env.player_color = (0 + e) % 2  # 0 = 'O'
             done = False
+            action_count = -1
             while not done:
                 action_count += 1
-                user_type = (my_agent.first_turn + action_count) % 2
-                print("---- BOARD ----")
-                print(state[PLAYER] + state[OPPONENT] * 2)
-                if user_type == PLAYER:
-                    my_history.appendleft(state[PLAYER].flatten())
-                else:
-                    your_history.appendleft(state[OPPONENT].flatten())
-                new_state = np.r_[np.array(my_history).flatten(),
-                                  np.array(your_history).flatten(),
-                                  state[2].flatten()]
-                # action 선택하기
-                action = my_agent.select_action(new_state)
-                # action 진행
-                state, reward, done, info = env.step(action)
+                manager.current_turn = (env.player_color + action_count) % 2
+                print('---- BOARD ----')
+                print(state[HUMAN] + state[AI] * 2)
+                action = manager.select_action(state)
+                state, reward, done, _ = env.step(action)
             if done:
                 import time
-                # 승부난 보드 보기: 내 착수:1, 상대 착수:2
-                print("- FINAL BOARD -")
-                print(state[PLAYER] + state[OPPONENT] * 2)
-                time.sleep(1)
-                # 결과 dict에 기록
+                print('- FINAL BOARD -')
+                print(state[HUMAN] + state[AI] * 2)
+                time.sleep(2)
                 result[reward] += 1
-                my_agent.reset_episode()
-                my_agent.ai_agent.reset_episode()
+                manager.reset()
     if mode == '2':
         for e in range(EPISODE):
-            plane = np.zeros((3, 3)).flatten()
-            my_history = deque([plane, plane, plane, plane], maxlen=4)
-            your_history = deque([plane, plane, plane, plane], maxlen=4)
             state = env.reset()
-            print('-' * 15, '\nepisode: %d' % (e + 1))
-            # 선공 정하고 교대로 하기
-            my_agent.first_turn = (PLAYER + e) % 2
-            # 환경에 알려주기
-            env.player_color = my_agent.first_turn
-            turn = {PLAYER: 'You', OPPONENT: 'AI'}
-            print('First Turn: {}'.format(turn[my_agent.first_turn]))
-            action_count = 0
+            print('-' * 20, '\nepisode: {}'.format(e + 1))
+            env.player_color = (0 + e) % 2  # 0 = 'O'
             done = False
+            action_count = -1
             while not done:
                 env.render()
                 action_count += 1
-                user_type = (my_agent.first_turn + action_count) % 2
-                print("---- BOARD ----")
-                print(state[PLAYER] + state[OPPONENT] * 2)
-                if user_type == PLAYER:
-                    my_history.appendleft(state[PLAYER].flatten())
-                else:
-                    your_history.appendleft(state[OPPONENT].flatten())
-                new_state = np.r_[np.array(my_history).flatten(),
-                                  np.array(your_history).flatten(),
-                                  state[2].flatten()]
-                # action 선택하기
-                action = my_agent.select_action(new_state)
-                # action 진행
-                state, reward, done, info = env.step(action)
+                manager.current_turn = (env.player_color + action_count) % 2
+                print('---- BOARD ----')
+                print(state[HUMAN] + state[AI] * 2)
+                action = manager.select_action(state)
+                state, reward, done, _ = env.step(action)
             if done:
                 import time
                 env.render()
-                # 승부난 보드 보기: 내 착수:1, 상대 착수:2
-                print("- FINAL BOARD -")
-                print(state[PLAYER] + state[OPPONENT] * 2)
-                time.sleep(1)
-                # 결과 dict에 기록
+                print('- FINAL BOARD -')
+                print(state[HUMAN] + state[AI] * 2)
+                time.sleep(2)
                 result[reward] += 1
-                my_agent.reset_episode()
-                my_agent.ai_agent.reset_episode()
-            env.close()
-    # 에피소드 통계
-    print('-' * 15, '\nWin: %d Lose: %d Draw: %d Winrate: %0.1f%%' %
-          (result[1], result[-1], result[0],
-           1 / (1 + np.exp(result[-1]/EPISODE) / np.exp(result[1]/EPISODE)) *
-           100))
+                manager.reset()
+            env.render(close=True)
+    print('=' * 20, '\nWin: {}  Lose: {}  Draw: {}  Winrate: {:0.1f}%'.format(
+        result[1], result[-1], result[0],
+        1 / (1 + np.exp(result[-1] / EPISODE) / np.exp(result[1] / EPISODE)) *
+        100))

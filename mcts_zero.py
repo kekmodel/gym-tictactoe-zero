@@ -2,7 +2,7 @@
 import tictactoe_env
 
 import time
-import hashlib
+import xxhash
 from collections import deque, defaultdict
 
 import slackweb
@@ -15,8 +15,9 @@ OPPONENT = 1
 MARK_O = 0
 MARK_X = 1
 N, W, Q, P = 0, 1, 2, 3
-EPISODE = 1600
-SAVE_CYCLE = 1600
+BOARD = np.zeros((3, 3), 'int').flatten()
+EPISODE = 30000
+SAVE_CYCLE = 30000
 
 
 class MCTS(object):
@@ -51,6 +52,7 @@ class MCTS(object):
         self.c_puct = 5
         self.epsilon = 0.25
         self.alpha = 0.7
+        self.expand = 40
 
         # reset_step member
         self.node = None
@@ -64,8 +66,8 @@ class MCTS(object):
         self.state_new = None
 
         # reset_episode member
-        self.my_history = None
-        self.your_history = None
+        self.player_history = None
+        self.opponent_history = None
         self.node_memory = None
         self.edge_memory = None
         self.action_memory = None
@@ -90,9 +92,8 @@ class MCTS(object):
         self.state_new = None
 
     def _reset_episode(self):
-        plane = np.zeros((3, 3)).flatten()
-        self.my_history = deque([plane, plane, plane, plane], maxlen=4)
-        self.your_history = deque([plane, plane, plane, plane], maxlen=4)
+        self.player_history = deque([BOARD] * 4, maxlen=4)
+        self.opponent_history = deque([BOARD] * 4, maxlen=4)
         self.node_memory = deque(maxlen=9)
         self.edge_memory = deque(maxlen=9)
         self.action_memory = deque(maxlen=9)
@@ -130,13 +131,14 @@ class MCTS(object):
         # state 변환 및 저장
         self.state = state
         self.state_new = self._convert_state(state)
+
         # 새로운 state 저장
         self.state_memory.appendleft(self.state_new)
         # state를 문자열 -> hash로 변환 (dict의 key로 사용)
-        self.node = hashlib.md5(self.state_new.tostring()).hexdigest()
+        self.node = xxhash.xxh64(self.state_new.tostring()).hexdigest()
         self.node_memory.appendleft(self.node)
 
-        # Tree를 호출하여 PUCT 값 계산
+        # tree를 호출하여 PUCT 값 계산
         self._cal_puct()
 
         # 점수 확인
@@ -158,8 +160,7 @@ class MCTS(object):
         # 동점 처리
         move_target = puct_max[np.random.choice(len(puct_max))]
 
-        # 최종 action 구성
-        # 배열 접붙히기
+        # 최종 action 구성 (배열 접붙히기)
         action = np.r_[self.user_type, move_target]
 
         # action 저장 및 step 초기화
@@ -168,13 +169,13 @@ class MCTS(object):
         return tuple(action)
 
     def _convert_state(self, state):
-        """ state변환 메소드: action 주체별 최대 4수까지 history를 저장하여 새로운 state로 구성"""
+        """state변환 메소드: action 주체별 최대 4수까지 history를 저장하여 새로운 state로 구성."""
         if abs(self.user_type - 1) == PLAYER:
-            self.my_history.appendleft(state[PLAYER].flatten())
+            self.player_history.appendleft(state[PLAYER].flatten())
         else:
-            self.your_history.appendleft(state[OPPONENT].flatten())
-        state_new = np.r_[np.array(self.my_history).flatten(),
-                          np.array(self.your_history).flatten(),
+            self.opponent_history.appendleft(state[OPPONENT].flatten())
+        state_new = np.r_[np.array(self.player_history).flatten(),
+                          np.array(self.opponent_history).flatten(),
                           self.state[2].flatten()]
         return state_new
 
@@ -183,21 +184,8 @@ class MCTS(object):
 
         dict{node: edge}인 MCTS Tree 구성
         """
-        # Tree에서 현재 node를 검색하여 해당 edge의 누적정보 가져오기
+        # tree에서 현재 node를 검색하여 해당 edge의 누적정보 가져오기
         self.edge = self.tree_memory[self.node]
-
-        # 현재 보드에서 착수가능한 수를 알아내서 랜덤 확률을 계산
-        self.board = self.state[PLAYER] + self.state[OPPONENT]
-        self.empty_loc = np.argwhere(self.board == 0)
-        self.legal_move_n = self.empty_loc.shape[0]
-        prob = 1 / self.legal_move_n
-        # root node면 확률에 일정부분 노이즈
-        if self.action_count == 1:
-            self.pr = (1 - self.epsilon) * prob + self.epsilon * \
-                np.random.dirichlet(
-                    self.alpha * np.ones(self.legal_move_n))
-        else:  # 아니면 n분의 1
-            self.pr = prob * np.ones(self.legal_move_n)
 
         # edge의 총 방문횟수 계산
         for i in range(3):
@@ -205,6 +193,19 @@ class MCTS(object):
                 self.total_visit += self.edge[i][j][N]
         # 방문횟수 출력
         print('(visit count: %d)\n' % (self.total_visit + 1))
+
+        # 현재 보드에서 착수가능한 수를 알아내서 랜덤 확률을 계산
+        self.board = self.state[PLAYER] + self.state[OPPONENT]
+        self.empty_loc = np.argwhere(self.board == 0)
+        self.legal_move_n = self.empty_loc.shape[0]
+        prob = 1 / self.legal_move_n
+        # root node면 확률에 노이즈
+        if self.action_count == 1 or self.total_visit >= self.expand:
+            self.pr = (1 - self.epsilon) * prob + self.epsilon * \
+                np.random.dirichlet(
+                    self.alpha * np.ones(self.legal_move_n))
+        else:  # 아니면 n분의 1
+            self.pr = prob * np.ones(self.legal_move_n)
 
         for i in range(self.legal_move_n):
             self.edge[tuple(self.empty_loc[i])][P] = self.pr[i]
@@ -244,7 +245,7 @@ class MCTS(object):
         self._reset_episode()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     start = time.time()
     # 환경 생성
     env = tictactoe_env.TicTacToeEnv()
@@ -264,7 +265,7 @@ if __name__ == "__main__":
         done = False
         while not done:
             # 보드 상황 출력: 내 착수:1, 상대 착수:2
-            print("---- BOARD ----")
+            print('---- BOARD ----')
             print(state[PLAYER] + state[OPPONENT] * 2.0)
 
             # action 선택하기
@@ -274,9 +275,9 @@ if __name__ == "__main__":
 
         if done:
             # 승부난 보드 보기
-            print("- FINAL BOARD -")
+            print('- FINAL BOARD -')
             print(state[PLAYER] + state[OPPONENT] * 2.0)
-            print("")
+            print('')
             # 보상을 edge에 백업
             zero_play.backup(reward)
             # 결과 체크
@@ -289,9 +290,9 @@ if __name__ == "__main__":
         if (e + 1) % SAVE_CYCLE == 0:
             finish = round(float(time.time() - start))
             print('[{} Episode Data Saved]'.format(e + 1))
-            with open('data/state_memory_e{}.pkl'.format(e + 1), 'wb') as f:
-                pickle.dump(zero_play.state_memory, f, pickle.HIGHEST_PROTOCOL)
-            with open('data/tree_memory_e{}.pkl'.format(e + 1), 'wb') as f:
+            # with open('data/state_memory_e{}.pkl'.format(e + 1), 'wb') as f:
+            #   pickle.dump(zero_play.state_memory, f, pickle.HIGHEST_PROTOCOL)
+            with open('data/tree_memory_e{}x40.pkl'.format(e + 1), 'wb') as f:
                 pickle.dump(zero_play.tree_memory, f, pickle.HIGHEST_PROTOCOL)
 
             # 에피소드 통계
@@ -307,5 +308,5 @@ WinMarkO: {}'.format(result[1], result[-1], result[0],
                 url="https://hooks.slack.com/services/T8P0E384U/B8PR44F1C/\
 4gVy7zhZ9teBUoAFSse8iynn")
             slack.notify(
-                text="Finished: {} episode in {}s".format(e + 1, finish))
+                text="Finished: {} episode in {}s [Mac]".format(e + 1, finish))
             slack.notify(text=statics)
