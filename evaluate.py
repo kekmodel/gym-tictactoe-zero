@@ -76,8 +76,8 @@ class ZeroAgent(object):
 
 class AgentVsAgent(object):
     def __init__(self):
-        self.ai_player = ZeroAgent('data/tree_memory_e100000.pkl', PLAYER)
-        self.ai_opponent = ZeroAgent('data/tree_memory_e100k.pkl', OPPONENT)
+        self.ai_player = ZeroAgent('data/tree_memory_e500k.pkl', PLAYER)
+        self.ai_opponent = ZeroAgent('data/tree_memory_e500k.pkl', OPPONENT)
         self.current_turn = None
         self.plyer_history = None
         self.opponent_history = None
@@ -121,7 +121,9 @@ if __name__ == '__main__':
         env.player_color = (0 + e) % 2  # 0 = 'O'
         done = False
         action_count = -1
+        step = 0
         while not done:
+            step += 1
             action_count += 1
             manager.current_turn = (env.player_color + action_count) % 2
             print('---- BOARD ----')

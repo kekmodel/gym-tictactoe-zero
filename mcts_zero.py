@@ -16,8 +16,8 @@ MARK_O = 0
 MARK_X = 1
 N, W, Q, P = 0, 1, 2, 3
 BOARD = np.zeros((3, 3), 'int').flatten()
-EPISODE = 30000
-SAVE_CYCLE = 30000
+EPISODE = 1600
+SAVE_CYCLE = 1600
 
 
 class MCTS(object):
@@ -254,6 +254,7 @@ if __name__ == '__main__':
     # 통계용
     result = {1: 0, 0: 0, -1: 0}
     win_mark_O = 0
+    step = 0
     # 초기 train data 생성 루프
     for e in range(EPISODE):
         # raw state 생성
@@ -263,7 +264,9 @@ if __name__ == '__main__':
         zero_play.first_turn = (PLAYER + e) % 2
         env.player_color = zero_play.first_turn
         done = False
+
         while not done:
+            step += 1
             # 보드 상황 출력: 내 착수:1, 상대 착수:2
             print('---- BOARD ----')
             print(state[PLAYER] + state[OPPONENT] * 2.0)
@@ -292,7 +295,7 @@ if __name__ == '__main__':
             print('[{} Episode Data Saved]'.format(e + 1))
             # with open('data/state_memory_e{}.pkl'.format(e + 1), 'wb') as f:
             #   pickle.dump(zero_play.state_memory, f, pickle.HIGHEST_PROTOCOL)
-            with open('data/tree_memory_e{}x40.pkl'.format(e + 1), 'wb') as f:
+            with open('data/tree_memory_e{}.pkl'.format(e + 1), 'wb') as f:
                 pickle.dump(zero_play.tree_memory, f, pickle.HIGHEST_PROTOCOL)
 
             # 에피소드 통계
@@ -308,5 +311,6 @@ WinMarkO: {}'.format(result[1], result[-1], result[0],
                 url="https://hooks.slack.com/services/T8P0E384U/B8PR44F1C/\
 4gVy7zhZ9teBUoAFSse8iynn")
             slack.notify(
-                text="Finished: {} episode in {}s [Mac]".format(e + 1, finish))
+                text="Finished: [{} Episode/{} Step] in {}s [Mac]".format(
+                    e + 1, step, finish))
             slack.notify(text=statics)

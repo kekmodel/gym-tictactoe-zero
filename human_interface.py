@@ -94,7 +94,7 @@ class HumanAgent(object):
 class HumanVsAi(object):
     def __init__(self):
         self.human = HumanAgent()
-        self.ai = ZeroAgent('data/tree_memory_e100000.pkl')
+        self.ai = ZeroAgent('data/tree_memory_e500k.pkl')
         self.current_turn = None
         self.human_history = None
         self.ai_history = None
@@ -106,6 +106,7 @@ class HumanVsAi(object):
         self.human_history = deque([PLANE] * 4, maxlen=4)
         self.ai_history = deque([PLANE] * 4, maxlen=4)
         self.state_new = None
+        self.ai.reset()
 
     def _convert_state(self, state):
         if self.current_turn == AI:
