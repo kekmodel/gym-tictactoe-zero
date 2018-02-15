@@ -148,8 +148,7 @@ class MCTS(object):
             action = (피아식별, 보드의 x좌표, 보드의 y좌표)
 
         """
-
-        # 턴 관리
+        # action 수 세기
         self.action_count += 1
 
         # 호출될 때마다 첫턴 기준 교대로 행동주체 바꿈, 최종 action에 붙여줌
@@ -210,7 +209,6 @@ class MCTS(object):
 
     def _convert_state(self, state):
         """state변환 메소드: action 주체별 최대 4수까지 history를 저장하여 새로운 state로 변환."""
-
         if abs(self.user_type - 1) == PLAYER:
             self.my_history.appendleft(state[PLAYER].flatten())
         else:
@@ -228,7 +226,6 @@ class MCTS(object):
         9개의 좌표에 PUCT값을 계산하여 매칭하는 메소드.
 
         """
-
         # tree에서 현재 node를 검색하여 해당 edge의 누적정보 가져오기
         self.edge = self.tree_memory[self.node]
 
@@ -269,7 +266,6 @@ class MCTS(object):
 
     def backup(self, reward):
         """에피소드가 끝나면 지나온 edge의 N과 W를 업데이트."""
-
         steps = self.action_count
         for i in range(steps):
             # W 배치
