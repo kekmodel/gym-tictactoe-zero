@@ -209,7 +209,7 @@ class MCTS(object):
                 self.total_visit += self.edge[i][j][N]
 
         # 방문횟수 출력
-        print('(visit count: {})\n'.format(self.total_visit + 1))
+        print('(visit count: {:0.0f})\n'.format(self.total_visit + 1))
 
         # 현재 보드에서 착수가능한 수를 알아내어 랜덤 확률 P 계산
         self.board = self.state[PLAYER] + self.state[OPPONENT]
