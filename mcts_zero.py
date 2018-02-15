@@ -19,30 +19,30 @@ SAVE_CYCLE = 1600
 
 
 class MCTS(object):
-    """몬테카를로 트리 탐색 클래스 (PUCT-MCTS)
+    """몬테카를로 트리 탐색 클래스. (PUCT-MCTS)
 
-    시뮬레이션을 통해 train 데이터 생성 (state, edge 저장)
+    시뮬레이션을 통해 train 데이터 생성. (state, pi, z)
 
     state_new
     ----------
-    환경이 주는 state를 각 주체당 4수까지 저장해서 state_new 로 만듦
+    환경이 주는 state를 각 주체당 4수까지 저장해서 state_new 로 만듦.
 
-        type: 9x3x3 numpy array -> 1x81 numpy array (flatten)
-            0번 평면: 플레이어의 현재 착수 상황
-            1 ~ 3번: 플레이어의 3수 전까지의 착수 정보
-            4번 평면: 상대의 현재 착수 상황
-            5 ~ 7번: 상대의 3수 전까지의 착수 정보
-            8번 평면: 첫 턴(O표시)인 주체와 동기화
+    type: 9x3x3 numpy array -> 1x81 numpy array (flatten)
+        0번 평면: 플레이어의 현재 착수 상황.
+        1 ~ 3번: 플레이어의 3수 전까지의 착수 정보.
+        4번 평면: 상대의 현재 착수 상황.
+        5 ~ 7번: 상대의 3수 전까지의 착수 정보.
+        8번 평면: 첫 턴(O표시)인 주체와 동기화.
 
     edge
     -----
-    현재 state에서 착수 가능한 모든 action자리에 4개의 정보(N, W, Q, P) 저장
+    현재 state에서 착수 가능한 모든 action자리에 4개의 정보(N, W, Q, P) 저장.
 
-    type: 3x3x4 numpy array
+    type: 3x3x4 numpy array.
 
-        9개 좌표에 4개의 정보 N, W, Q, P 매칭
-        N: edge 방문횟수, W: 보상누적값, Q: 보상평균값(W/N), P: 선택 확률 추정 백터
-        edge[보드의 x좌표][보드의 y좌표][알파벳] 으로 접근
+        9개 좌표에 4개의 정보 N, W, Q, P 매칭.
+        N: edge 방문횟수, W: 보상누적값, Q: 보상평균값(W/N), P: 선택 확률 추정 백터.
+        edge[보드의 x좌표][보드의 y좌표][알파벳] 으로 접근.
 
     """
 
@@ -123,7 +123,7 @@ class MCTS(object):
 
             action: 1x3 tuple.
                 action = (주체 인덱스, 보드의 x좌표, 보드의 y좌표)
-                주체 인덱스: 플레이어는 0, 상대는 1
+                주체 인덱스: 플레이어는 0, 상대는 1.
                 좌표:
                         [0,0][0,1][0,2]
                         [1,0][1,1][1,2]
