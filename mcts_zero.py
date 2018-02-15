@@ -12,8 +12,6 @@ np.set_printoptions(suppress=True)
 
 PLAYER = 0
 OPPONENT = 1
-MARK_O = 0
-MARK_X = 1
 N, W, Q, P = 0, 1, 2, 3
 PLANE = np.zeros((3, 3), 'int').flatten()
 EPISODE = 1600
