@@ -25,7 +25,6 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Stud
 
 대국할 때 그래픽 모드를 선택하면 약간의 허접한 렌더링도 지원합니다. ㅋㅋㅋ
 
-gym폴더와 gym-tictactoe폴더가 같은 곳에 있으면 안전합니다.
 
 
     
@@ -49,7 +48,7 @@ gym폴더와 gym-tictactoe폴더가 같은 곳에 있으면 안전합니다.
 
   
 
-### 프로젝트 진행 요약
+### 프로젝트 진행 상황 요약
 
       1. OpenAI Gym 기반 틱택토 환경 만들기 (완료)
       2. MCTS 구현 (완료)
@@ -66,13 +65,13 @@ gym폴더와 gym-tictactoe폴더가 같은 곳에 있으면 안전합니다.
 
 ## 요구 사항
     
-      python3
-      git
-      numpy
-      pytorch
-      gym     : 강화학습 API
-      dill    : dict 저장용
-      xxhash  : dict key로 사용
+      python3 : 홈페이지 참조
+      git     : 홈페이지 참조 
+      numpy   : pip install numpy   (배열 지원) 
+      gym     : 아래 참조   (강화학습 API)
+      dill    : pip install dill  (pickle의 dict 저장 지원)
+      xxhash  : pip install xxhash   (현재 가장 빠른 비암호화 hash)
+      pytorch : 홈페이지 참조
 
 
 ### gym 설치
@@ -105,21 +104,20 @@ text editor or IDE 로 build
 \* 렌더링 오류 시: pip install pyglet==1.2.4  
      
         tictactoe_env.py                강화학습 환경 제공 (gym 기반)
-        mcts_zero.py                    신경망이 학습할 최초 데이터 생성(PUCT-MCTS 알고리즘)
+        mcts_zero.py                    신경망이 학습할 데이터 생성(PUCT-MCTS 알고리즘)
         neural_network_cpu.py           정책 + 가치망 cpu버전 (ResNet 5 block)
         neural_network_gpu.py           정책 + 가치망 gpu버전 (ResNet 5 block)
-        human_interface.py              사람과 대결하는 인터페이스 제공
+        human_interface.py              사람과 대결하는 테스트 환경
         evaluate.py                     에이전트 vs 에이전트 테스트 환경
-        data_viewer.ipynb               저장 데이터 분석용 jupyter notebook
+        data/data_viewer.ipynb          저장 데이터 분석용 jupyter notebook
         data/state_memory.npy           모든 step의 state가 저장됨 (mcts_zero.py)
         data/edge_memory.npy            모든 step의 edge(action 정보)가 저장됨 (mcts_zero.py)
-        data/state|edge_memory_30k.npy  30000 에피소드에 대한 state, edge 데이터
-        data/zero_data_30k.pkl          위 데이터를 (state, pi, z)로 묶은 train용 데이터
-        data/model_SGD_res5_ch128.pkl   training 완료한 신경망의 파라미터 
+        data/tree_memory_e1000k.pkl     100만 에피소드에 대한 {node: edge} dict 
+    
     
 
 
-### AI와 한판 붙고 싶다면? (현재 순수 강화학습만 진행한 버전: 신경망 미적용)
+### AI와 한판 붙고 싶다면? (현재 순수 강화학습만 100만에피소드 진행한 버전: 신경망 학습 미적용)
 
         cd gym-tictactoe
         python human_interface.py
@@ -274,6 +272,22 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
               - loss = MSE(z, v) + CrossEntropy(pi, p) + c * L2 Regularization
               - 최적화: SGD-Momentum 사용
               - lr decay (0.2 -> 0.02 -> 0.002 -> 0.0002)
+
+2월 14일: **MCTS 알고리즘 검색 속도 혁신적으로 개선**
+
+              - 코딩 실력이 늘면서 기존 코드의 개선점이 보였음 ㅋㅋ
+              - xxhash 적용 및 코드 최적화를 통해 검색 속도 6배 개선
+                  - 100만 에피소드가 80분정도 걸림! (i5 린필드;;)
+              - pickle로 dict가 저장안됐던 문제 해결
+
+2월 15일: **사람 실력을 뛰어 넘음**
+
+              - 코드 개선된 참에 100만 episode 돌려봄
+                  - 약 864만 step의 policy iteration
+                  - 약 13만 경우의 수 학습
+              - 첫번째 수만 stochastic (확률로 착수) 그 후엔 deterministic (최댓값만 착수)
+                  - 사람과 대결해서 현재 무패
+
 
 ing...
 
