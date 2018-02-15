@@ -110,8 +110,6 @@ text editor or IDE 로 build
         human_interface.py              사람과 대결하는 테스트 환경
         evaluate.py                     에이전트 vs 에이전트 테스트 환경
         data/data_viewer.ipynb          저장 데이터 분석용 jupyter notebook
-        data/state_memory.npy           모든 step의 state가 저장됨 (mcts_zero.py)
-        data/edge_memory.npy            모든 step의 edge(action 정보)가 저장됨 (mcts_zero.py)
         data/tree_memory_e1000k.pkl     100만 에피소드에 대한 {node: edge} dict 
     
     
