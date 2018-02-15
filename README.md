@@ -6,9 +6,7 @@
 ### 비개발자의 강화학습 도전기!
 ## <알파고 제로 따라하기: 틱택토> 
 
-AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Study/tree/master/AlphaGo) 을
-
-수십번 읽고 (너무 어려워요ㅠ) 셋 중 가장 심플하고 강력한 Alpha Zero의 방법을 중심으로 따라가고 있습니다.
+AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Study/tree/master/AlphaGo) 을 수십번 읽고 (너무 어려워요ㅠ) 셋 중 가장 심플하고 강력한 Alpha Zero의 방법을 중심으로 따라가고 있습니다.
 
 몬테카를로-트리서치(MCTS) 부분은 Fan 버전, 스스로 학습하는 방법에 대해선 Zero 버전을 주로 참고했습니다.
 
@@ -19,7 +17,7 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Stud
 
 
  
-직접 돌려보시려면 python 3, numpy, gym을 설치하시면 됩니다. (아래 요구사항 참조)
+직접 돌려보시려면 python 3, numpy, gym, dill, xxhash를 설치하시면 됩니다. (아래 요구사항 참조)
 
 신경망 버전을 돌리시려면 PyTorch를 설치하시길 바랍니다.
 
@@ -38,13 +36,9 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Stud
     강화 학습 수준: 파이썬과 케라스로 배우는 강화학습 1독, 모두의 RL 강의 1독
     영어 수준: 구글 번역 성애자 (노벨상 줘야함)
 
-사정이 이렇다보니 --> 삽질의 삽질의 삽질의 연속...(파도 파도 끝이 없는..ㅠㅠ) --> 그렇지만 재밌어서 계속 삽질... (여가시간 타임머신) 
+사정이 이렇다보니 --> 삽질의 삽질의 삽질의 연속...(파도 파도 끝이 없는..ㅠㅠ) --> 그렇지만 재밌어서 계속 삽질... (여가시간 타임머신) --> 오기로 계속 하다보니 어느 정도 성과가 나오기 시작!!(오? 재능 발견? ㅎㅎ) --> 생각한 것이 실제로 돌아가니 너무 재밌음! 시간만 나면 알파고 덕질 중!! 모두 함께 해요 ㅎㅎ 
 
---> 오기로 계속 하다보니 어느 정도 성과가 나오기 시작!!(오? 재능 발견?ㅋ) 
-
---> 생각한 것이 실제로 돌아가니까 너무 재밌음! 시간만 나면 알파고 덕질 중!! 함께 해요 ㅎㅎ 
-
-#### RL관련 편하게 대화나누실 분은 언제든지 페이스북 메시지 주세요 ~ :P (https://www.facebook.com/kekmodel) 
+#### 알파고 관련 편하게 대화나누실 분은 언제든지 페이스북 메시지 주세요 ~ :P (https://www.facebook.com/kekmodel) 
 
   
 
@@ -65,13 +59,14 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Stud
 
 ## 요구 사항
     
-      python3 : 홈페이지 참조
-      git     : 홈페이지 참조 
-      numpy   : pip install numpy   (배열 지원) 
-      gym     : 아래 참조   (강화학습 API)
-      dill    : pip install dill  (pickle의 dict 저장 지원)
-      xxhash  : pip install xxhash   (현재 가장 빠른 비암호화 hash)
-      pytorch : 홈페이지 참조
+      python3  : 홈페이지 참조
+      git      : 홈페이지 참조 
+      numpy    : pip install numpy (배열 지원) 
+      gym      : 아래 참조 (강화학습 API)
+      dill     : pip install dill (pickle의 dict 저장 지원)
+      xxhash   : pip install xxhash (현재 가장 빠른 비암호화 hash)
+      pytorch  : 홈페이지 참조
+      slackweb : pip install slackweb (결과를 메시지로 보내기: 개인용)   
 
 
 ### gym 설치
@@ -82,7 +77,6 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Stud
 
 
 ### numpy or Anaconda5 설치 (https://www.anaconda.com/download)
-
 
 ### PyTorch 설치 (http://pytorch.org)
 
@@ -115,7 +109,7 @@ text editor or IDE 로 build
     
 
 
-### AI와 한판 붙고 싶다면? (현재 순수 강화학습만 100만에피소드 진행한 버전: 신경망 학습 미적용)
+### AI와 한판 붙고 싶다면? (강화학습 100만 에피소드 진행한 버전: 신경망 학습은 미적용)
 
         cd gym-tictactoe
         python human_interface.py
@@ -188,28 +182,28 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
 
 12월 31일: state를 hash로 바꿔 다뤄봄
 
-             - dict의 key로 쓸려고
-             - 검색 속도 빨라짐
-             - 뭘 기준으로 바뀌는지는 공부 필요
+     - dict의 key로 쓸려고
+     - 검색 속도 빨라짐
+     - 뭘 기준으로 바뀌는지는 공부 필요
 
 <2018년>
 
 1월 1일: PUCT-MCTS 프로토타입 구현
            
-             - dict로 접근
-             - {state: edge} -> pi계산
+     - dict로 접근
+     - {state: edge} -> pi계산
 
 1월 3일: (state, edge) set을 hdf5로 저장 구현 (data/) (현재 pkl으로 바꿈)
 
 1월 6일: **PUCT-MCTS 정식버전 구현** (mcts_zero.py)
 
-             - 알고리즘 오류 수정
-             - 첫번째 state에 Dirichlet 노이즈 설정(e-greedy) 
-                - 알파 제로 방식
-             - 20,000 episode 데이터 저장
-                - 약 15만 step
-             - 완료시 Slack에 메시지 보내는 기능 추가
-                - 개인용
+     - 알고리즘 오류 수정
+     - 첫번째 state에 Dirichlet 노이즈 설정(e-greedy) 
+        - 알파 제로 방식
+     - 20,000 episode 데이터 저장
+        - 약 15만 step
+     - 완료시 Slack에 메시지 보내는 기능 추가
+        - 개인용
 
 1월 10일: **RL Agent 프로토타입 구현** (agent_rl.py -> human_interface.py에 통합)
 
