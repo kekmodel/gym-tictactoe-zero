@@ -83,7 +83,7 @@ class MCTS(object):
         self._reset_episode()
 
     def _reset_step(self):
-        """step마다 초기화하는 멤버."""
+        """step마다 멤버를 초기화 함."""
         self.node = None
         self.edge = np.zeros((3, 3, 4), 'float')
         self.puct = np.zeros((3, 3), 'float')
@@ -95,7 +95,7 @@ class MCTS(object):
         self.state_new = None
 
     def _reset_episode(self):
-        """episode마다 초기화하는 멤버."""
+        """episode마다 멤버를 초기화 함."""
         self.player_history = deque([PLANE] * 4, maxlen=4)
         self.opponent_history = deque([PLANE] * 4, maxlen=4)
         self.node_memory = deque(maxlen=9)
@@ -181,7 +181,8 @@ class MCTS(object):
     def _convert_state(self, state):
         """state변환 메소드: action 주체별 최대 4수까지 history를 저장하여 새로운 state로 구성.
 
-        최대길이 4의 deque 이용함. 빈평면 4개를 채워놓고 밀어내기.
+        최대 길이 4의 deque 이용함. 빈평면 4개를 채워놓고 밀어내기.
+
         """
         if abs(self.user_type) == PLAYER:
             self.opponent_history.appendleft(state[OPPONENT].flatten())
@@ -193,7 +194,7 @@ class MCTS(object):
         return state_new
 
     def _set_edge(self):
-        """확장할 edge의 초기화 하는 메소드.
+        """확장할 edge를 초기화 하는 메소드.
 
         dict{node: edge}인 MCTS Tree 구성
         edge의 Q, P를 계산하여 9개의 좌표에 PUCT값을 계산하여 매칭.
@@ -287,18 +288,20 @@ if __name__ == '__main__':
     for e in range(EPISODE):
         # raw state 생성
         state = env.reset()
+
+        # 에피소드 정보 출력
         print('=' * 65, '\nEpisode: %d' % (e + 1))
 
         # 선공 정하고 교대로 하기
         zero_play.first_turn = (PLAYER + e) % 2
 
-        # 환경에 알리기
+        # 플레이어 컬러 환경에 알리기
         env.player_color = zero_play.first_turn
 
         # 안끝남 설정
         done = False
 
-        # 끝날때까지 반복
+        # 끝날때까지 반복해
         while not done:
             # step 수 세기
             step += 1
@@ -320,13 +323,13 @@ if __name__ == '__main__':
             print(state[PLAYER] + state[OPPONENT] * 2.0)
             print('')
 
-            # 보상을 edge에 백업
+            # 보상과 방문카운트를 edge에 백업
             zero_play.backup(reward)
 
-            # 결과 체크
+            # 결과 체크 (통계용)
             result[reward] += 1
 
-            # 선공으로 이긴 경우 체크 (밸런스 정보)
+            # 선공으로 이긴 경우 체크 (밸런스 판단용)
             if reward == 1:
                 if env.player_color == 0:
                     win_mark_O += 1
@@ -351,7 +354,7 @@ WinMarkO: {}'.format(result[1], result[-1], result[0],
                           np.exp(result[1] / EPISODE)) * 100,
                      win_mark_O))
 
-            # 통계화면 출력
+            # 통계 화면 출력
             print('=' * 65, statics)
 
             # 슬랙에 메시지 보내기 (개인용이니 수정필요)
