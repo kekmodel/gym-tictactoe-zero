@@ -71,9 +71,9 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Stud
 
 ### gym 설치
 
-      git clone https://github.com/openai/gym.git
-      cd gym
-      pip install -e .
+    git clone https://github.com/openai/gym.git
+    cd gym
+    pip install -e .
 
 
 ### numpy or Anaconda5 설치 (https://www.anaconda.com/download)
@@ -83,7 +83,7 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Stud
 
 ## gym-tictactoe 설치 (제가 만든 거)
     
-        git clone https://github.com/kekmodel/gym-tictactoe.git
+    git clone https://github.com/kekmodel/gym-tictactoe.git
 
 
     
@@ -97,29 +97,29 @@ text editor or IDE 로 build
 
 \* 렌더링 오류 시: pip install pyglet==1.2.4  
      
-        tictactoe_env.py                강화학습 환경 제공 (gym 기반)
-        mcts_zero.py                    신경망이 학습할 데이터 생성(PUCT-MCTS 알고리즘)
-        neural_network_cpu.py           정책 + 가치망 cpu버전 (ResNet 5 block)
-        neural_network_gpu.py           정책 + 가치망 gpu버전 (ResNet 5 block)
-        human_interface.py              사람과 대결하는 테스트 환경
-        evaluate.py                     에이전트 vs 에이전트 테스트 환경
-        data/data_viewer.ipynb          저장 데이터 분석용 jupyter notebook
-        data/tree_memory_e1000k.pkl     100만 에피소드에 대한 {node: edge} dict 
+    tictactoe_env.py                강화학습 환경 제공 (gym 기반)
+    mcts_zero.py                    신경망이 학습할 데이터 생성(PUCT-MCTS 알고리즘)
+    neural_network_cpu.py           정책 + 가치망 cpu버전 (ResNet 5 block)
+    neural_network_gpu.py           정책 + 가치망 gpu버전 (ResNet 5 block)
+    human_interface.py              사람과 대결하는 테스트 환경
+    evaluate.py                     에이전트 vs 에이전트 테스트 환경
+    data/data_viewer.ipynb          저장 데이터 분석용 jupyter notebook
+    data/tree_memory_e1000k.pkl     100만 에피소드에 대한 {node: edge} dict 
     
     
 
 
 ### AI와 한판 붙고 싶다면? (강화학습 100만 에피소드 진행한 버전: 신경망 학습은 미적용)
 
-        cd gym-tictactoe
-        python human_interface.py
+    cd gym-tictactoe
+    python human_interface.py
 
 
 default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에 치면 됨;;)
 
-        [1][2][3]
-        [4][5][6]
-        [7][8][9] 
+              [1][2][3]
+              [4][5][6]
+              [7][8][9] 
 
 
 
@@ -207,79 +207,79 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
 
 1월 10일: **RL Agent 프로토타입 구현** (agent_rl.py -> human_interface.py에 통합)
 
-              - 딥러닝 없이 순수 강화학습만 활용한 버전
-              - 데이터로 트리 재구현 
-              - edge의 방문횟수를 softmax를 사용해 확률로 전환
-              - 정책함수 구현
-              - self Play 전적 1600전 1600무
+    - 딥러닝 없이 순수 강화학습만 활용한 버전
+    - 데이터로 트리 재구현 
+    - edge의 방문횟수를 softmax를 사용해 확률로 전환
+    - 정책함수 구현
+    - self Play 전적 1600전 1600무
 
 1월 11일: Human interface 프로토 타입 구현 
 
-              - 사람과 처음으로 게임을 함: 지인들에게 테스트 
-                  - 자신이 경험해본 상황에선 강하지만 경험이 부족한 상황에선 최적 판단 못함
-                      - 탐험부족으로 생기는 상황
-                          - expand 과정을 추가하여 탐험률을 높임 (현재 삭제) 
-                              - 100회이상 방문한 edge는 노이즈 주기
-                              - 알파고 Fan 방식 단순화
-                          - random seed 고정값 제거
-              - 방문횟수가 0인데 확률은 0이 아닌 경우가 있어서 반칙패 생김
-                  - 정책함수의 확률 계산 방법을 softmax에서 일반평균법으로 바꿈
-                  - softmax temperature 추가, 1 hot 인코딩 추가 (현재 삭제)
-                      - 경험이 부족한 state에선 여전히 이상행동
-                      - 신경망으로 학습할 필요성
-              - 저장 형식을 hdf5 -> pkl 교체. 로딩 속도 확실히 빨라짐 (강추)
+    - 사람과 처음으로 게임을 함: 지인들에게 테스트 
+        - 자신이 경험해본 상황에선 강하지만 경험이 부족한 상황에선 최적 판단 못함
+            - 탐험부족으로 생기는 상황
+                - expand 과정을 추가하여 탐험률을 높임 (현재 삭제) 
+                    - 100회이상 방문한 edge는 노이즈 주기
+                    - 알파고 Fan 방식 단순화
+                - random seed 고정값 제거
+    - 방문횟수가 0인데 확률은 0이 아닌 경우가 있어서 반칙패 생김
+        - 정책함수의 확률 계산 방법을 softmax에서 일반평균법으로 바꿈
+        - softmax temperature 추가, 1 hot 인코딩 추가 (현재 삭제)
+            - 경험이 부족한 state에선 여전히 이상행동
+            - 신경망으로 학습할 필요성
+      - 저장 형식을 hdf5 -> pkl 교체. 로딩 속도 확실히 빨라짐 (강추)
 
 1월 14일: hyperparameter 최적화 후 다시 sample 생성
               
-              - 탐험률이 가장 높은 hyperparameter 로 튜닝
-              - hyperparameter 추가
-                  - 보상에 감가율(decay) 적용해봄 (현재 삭제)
-                      - 더 빨리 승부를 내는 것에 가중치를 주기 위해
-              - human_interface.py 업데이트
-                  - 모드 선택 추가: text & graphic
+    - 탐험률이 가장 높은 hyperparameter 로 튜닝
+    - hyperparameter 추가
+        - 보상에 감가율(decay) 적용해봄 (현재 삭제)
+            - 더 빨리 승부를 내는 것에 가중치를 주기 위해
+    - human_interface.py 업데이트
+        - 모드 선택 추가: text & graphic
 
 1월 15일: 에이전트끼리 플레이하는 평가 프로토 타입 구현 (evaluate.py)
 
-              - 평가를 통해 hyperparameter 최적화 
-                  - decay 삭제, c_puct: 1, alpha: 1, expand_count: 100 (현재 수정) 
-              - 평가 방법 
-                  - 각 hyperparameter 조합으로 3000 에피소드를 돌려서 sample 생성
-                  - sample로 만든 에이전트끼리 3000 에피소드씩 대결
-                  - 5번 시행해서 승률 높은 쪽 선택
-              - 해당 에이전트가 생성한 데이터를 신경망 학습용으로 생성
+    - 평가를 통해 hyperparameter 최적화 
+        - decay 삭제, c_puct: 1, alpha: 1, expand_count: 100 (현재 수정) 
+    - 평가 방법 
+        - 각 hyperparameter 조합으로 3000 에피소드를 돌려서 sample 생성
+        - sample로 만든 에이전트끼리 3000 에피소드씩 대결
+        - 5번 시행해서 승률 높은 쪽 선택
+    - 해당 에이전트가 생성한 데이터를 신경망 학습용으로 생성
 
 1월 16일: **Human interface 정식 버전 완성** (human_interface.py)
 
-              - AI의 첫번째 수는 확률이 최댓값인 곳만 선택, 그 이후엔 확률에 따라 선택
-                  - softmax -> 일반 확률법으로 확정
+    - AI의 첫번째 수는 확률이 최댓값인 곳만 선택, 그 이후엔 확률에 따라 선택
+        - softmax -> 일반 확률법으로 확정
 
 1월 26일: state 변경 -> 각 플레이어의 최근 4-history 저장
 
-              - 플레이어 3x3 array 4장, 상대 3x3 array 4장, 선공 구별 1장
-              - 9x3x3 numpy array -> flatten() 하여 저장
+    - 플레이어 3x3 array 4장, 상대 3x3 array 4장, 선공 구별 1장
+    - 9x3x3 numpy array -> flatten() 하여 저장
 
 2월 1일: 신경망 학습 시작
 
-              - batch size: 32, epoch: 100, learnig rate: 0.2, momentum:0.9, c: 0.0001
-              - loss = MSE(z, v) + CrossEntropy(pi, p) + c * L2 Regularization
-              - 최적화: SGD-Momentum 사용
-              - lr decay (0.2 -> 0.02 -> 0.002 -> 0.0002)
+    - batch size: 32, epoch: 100, learnig rate: 0.2, momentum:0.9, c: 0.0001
+    - loss = MSE(z, v) + CrossEntropy(pi, p) + c * L2 Regularization
+    - 최적화: SGD-Momentum 사용
+    - lr decay (0.2 -> 0.02 -> 0.002 -> 0.0002)
 
 2월 14일: **MCTS 알고리즘 검색 속도 혁신적으로 개선**
 
-              - 코딩 실력이 늘면서 기존 코드의 개선점이 보였음 ㅋㅋ
-              - xxhash 적용 및 코드 최적화를 통해 검색 속도 6배 개선
-                  - 100만 에피소드가 80분정도 걸림! (i5 린필드;;)
-              - pickle로 dict가 저장안됐던 문제 해결
+    - 코딩 실력이 늘면서 기존 코드의 개선점이 보였음 ㅋㅋ
+    - xxhash 적용 및 코드 최적화를 통해 검색 속도 6배 개선
+        - 100만 에피소드가 80분정도 걸림! (i5 린필드;;)
+    - pickle로 dict가 저장안됐던 문제 해결
 
 2월 15일: **사람 실력을 뛰어 넘음**
 
-              - 코드 개선된 참에 100만 episode 돌려봄
-                  - 하이퍼파라미터: [c_puct: 5, epsilon: 0.25, alpha: 0.7]
-                  - 약 864만 step의 policy iteration
-                  - 약 13만 경우의 수 학습
-              - 첫번째 수만 stochastic (확률로 착수) 그 후엔 deterministic (최댓값만 착수)
-                  - 사람과 대결해서 현재 무패 (이기신 분 제보 부탁 ㅎㅎ)
+    - 코드 개선된 참에 100만 episode 돌려봄
+        - 하이퍼파라미터: [c_puct: 5, epsilon: 0.25, alpha: 0.7]
+        - 약 864만 step의 policy iteration
+        - 약 13만 경우의 수 학습
+    - 첫번째 수만 stochastic (확률로 착수) 그 후엔 deterministic (최댓값만 착수)
+        - 사람과 대결해서 현재 무패 (이기신 분 제보 부탁 ㅎㅎ)
 
 
 ing...
