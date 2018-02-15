@@ -150,16 +150,16 @@ class MCTS(object):
         self._set_edge()
 
         # PUCT 점수 출력
-        print("***  PUCT Score  ***")
+        print('***  PUCT Score  ***')
         print(self.puct.round(decimals=2))
-        print("")
+        print('')
 
         # 빈자리가 아닌 곳은 PUCT값으로 -9999를 넣어 빈자리가 최댓값 되는 것 방지
         puct = self.puct.tolist()
         for i, v in enumerate(puct):
-            for k, s in enumerate(v):
-                if [i, k] not in self.empty_loc.tolist():
-                    puct[i][k] = -9999
+            for j, _ in enumerate(v):
+                if [i, j] not in self.empty_loc.tolist():
+                    puct[i][j] = -9999
 
         # PUCT가 최댓값인 곳 찾기
         self.puct = np.asarray(puct)
@@ -209,7 +209,7 @@ class MCTS(object):
                 self.total_visit += self.edge[i][j][N]
 
         # 방문횟수 출력
-        print('(visit count: %d)\n' % (self.total_visit + 1))
+        print('(visit count: {})\n'.format(self.total_visit + 1))
 
         # 현재 보드에서 착수가능한 수를 알아내어 랜덤 확률 P 계산
         self.board = self.state[PLAYER] + self.state[OPPONENT]
@@ -230,17 +230,17 @@ class MCTS(object):
             self.edge[tuple(self.empty_loc[i])][P] = self.pr[i]
 
         # Q값 계산 후 배치
-        for c in range(3):
-            for r in range(3):
-                if self.edge[c][r][N] != 0:
-                    self.edge[c][r][Q] = self.edge[c][r][W] / \
-                        self.edge[c][r][N]
+        for i in range(3):
+            for j in range(3):
+                if self.edge[i][j][N] != 0:
+                    self.edge[i][j][Q] = self.edge[i][j][W] / \
+                        self.edge[i][j][N]
 
                 # 각자리의 PUCT 계산
-                self.puct[c][r] = self.edge[c][r][Q] + \
+                self.puct[i][j] = self.edge[i][j][Q] + \
                     self.c_puct * \
-                    self.edge[c][r][P] * \
-                    np.sqrt(self.total_visit) / (1 + self.edge[c][r][N])
+                    self.edge[i][j][P] * \
+                    np.sqrt(self.total_visit) / (1 + self.edge[i][j][N])
 
         # Q, P값을 배치한 edge 저장
         self.edge_memory.appendleft(self.edge)
@@ -290,7 +290,7 @@ if __name__ == '__main__':
         state = env.reset()
 
         # 에피소드 정보 출력
-        print('=' * 65, '\nEpisode: %d' % (e + 1))
+        print('=' * 65, '\nEpisode: {}'.format(e + 1))
 
         # 선공 정하고 교대로 하기
         zero_play.first_turn = (PLAYER + e) % 2
