@@ -22,6 +22,7 @@ class ZeroAgent(object):
         self.action_space = self._action_space()
         self.action_count = None
         self.reset()
+        self.tau = 1
 
     def reset(self):
         self.action_count = 0
@@ -48,7 +49,7 @@ class ZeroAgent(object):
         if node in self.tree_memory:
             edge = self.tree_memory[node]
             pi_memory = self._get_pi(edge)
-            if self.action_count == 1:
+            if self.action_count <= self.tau:
                 print('"stochastic"')
                 choice = np.random.choice(9, p=pi_memory)
             else:

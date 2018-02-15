@@ -13,7 +13,7 @@ OPPONENT = 1
 N, W, Q, P = 0, 1, 2, 3
 PLANE = np.zeros((3, 3), 'int').flatten()
 
-EPISODE = 15000
+EPISODE = 16000
 
 
 class ZeroAgent(object):
@@ -23,6 +23,7 @@ class ZeroAgent(object):
         self.action_count = None
         self.user_type = user_type
         self.reset()
+        self.tau = 1
 
     def reset(self):
         self.action_count = 0
@@ -50,7 +51,7 @@ class ZeroAgent(object):
         if node in self.tree_memory:
             edge = self.tree_memory[node]
             pi_memory = self._get_pi(edge)
-            if self.action_count == 1:
+            if self.action_count <= self.tau:
                 print('"stochastic"')
                 choice = np.random.choice(9, p=pi_memory)
             else:
