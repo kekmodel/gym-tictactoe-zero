@@ -77,7 +77,7 @@ class ZeroAgent(object):
 class AgentVsAgent(object):
     def __init__(self):
         self.ai_player = ZeroAgent('data/tree_memory_e500k.pkl', PLAYER)
-        self.ai_opponent = ZeroAgent('data/tree_memory_e500k.pkl', OPPONENT)
+        self.ai_opponent = ZeroAgent('data/tree_memory_e1000k.pkl', OPPONENT)
         self.current_turn = None
         self.plyer_history = None
         self.opponent_history = None
