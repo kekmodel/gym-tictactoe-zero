@@ -201,7 +201,7 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
              - dict로 접근
              - {state: edge} -> pi계산
 
-1월 3일: (state, edge) set을 hdf5로 저장 구현 (data/) (현재 npy형식으로 바꿈)
+1월 3일: (state, edge) set을 hdf5로 저장 구현 (data/) (현재 pkl으로 바꿈)
 
 1월 6일: **PUCT-MCTS 정식버전 구현** (mcts_zero.py)
 
@@ -235,7 +235,7 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
                   - softmax temperature 추가, 1 hot 인코딩 추가 (현재 삭제)
                       - 경험이 부족한 state에선 여전히 이상행동
                       - 신경망으로 학습할 필요성
-              - 저장 형식을 hdf5 -> npy 교체. 로딩 속도 확실히 빨라짐 (강추)
+              - 저장 형식을 hdf5 -> pkl 교체. 로딩 속도 확실히 빨라짐 (강추)
 
 1월 14일: hyperparameter 최적화 후 다시 sample 생성
               
@@ -283,10 +283,11 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
 2월 15일: **사람 실력을 뛰어 넘음**
 
               - 코드 개선된 참에 100만 episode 돌려봄
+                  - 하이퍼파라미터: [c_puct: 5, epsilon: 0.25, alpha: 0.7]
                   - 약 864만 step의 policy iteration
                   - 약 13만 경우의 수 학습
               - 첫번째 수만 stochastic (확률로 착수) 그 후엔 deterministic (최댓값만 착수)
-                  - 사람과 대결해서 현재 무패
+                  - 사람과 대결해서 현재 무패 (이기신 분 제보 부탁 ㅎㅎ)
 
 
 ing...
