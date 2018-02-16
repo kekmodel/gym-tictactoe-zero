@@ -23,7 +23,7 @@ class ZeroAgent(object):
         self.action_count = None
         self.user_type = user_type
         self.reset()
-        self.tau = 1
+        self.tau = 0
 
     def reset(self):
         self.action_count = 0
@@ -77,8 +77,8 @@ class ZeroAgent(object):
 
 class AgentVsAgent(object):
     def __init__(self):
-        self.ai_player = ZeroAgent('data/tree_memory_e500k.pkl', PLAYER)
-        self.ai_opponent = ZeroAgent('data/tree_memory_e1000k.pkl', OPPONENT)
+        self.ai_player = ZeroAgent('data/tree_memory_e1000k.pkl', PLAYER)
+        self.ai_opponent = ZeroAgent('data/tree_memory_e3000k.pkl', OPPONENT)
         self.current_turn = None
         self.plyer_history = None
         self.opponent_history = None
