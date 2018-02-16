@@ -3,7 +3,7 @@ import tictactoe_env
 import neural_network
 
 import time
-import hashlib
+import xxhash
 from collections import deque, defaultdict
 
 import torch
@@ -17,12 +17,10 @@ np.set_printoptions(suppress=True)
 
 PLAYER = 0
 OPPONENT = 1
-MARK_O = 0
-MARK_X = 1
 N, W, Q, P = 0, 1, 2, 3
 
-EPISODE = 1
-SAVE_CYCLE = 1600
+EPISODE = 800
+SAVE_CYCLE = 800
 
 NUM_CHANNEL = 128
 BATCH_SIZE = 32
@@ -55,7 +53,7 @@ class MCTS(object):
 
     def __init__(self):
         # ROM
-        self.state_memory = deque(maxlen=9 * EPISODE)
+        # self.state_memory = deque(maxlen=9 * EPISODE)
         self.tree_memory = defaultdict(lambda: np.zeros((3, 3, 4), 'float'))
 
         # model
@@ -72,6 +70,7 @@ class MCTS(object):
         self.puct = None
         self.total_visit = None
         self.empty_loc = None
+        self.legal_move_n = None
         self.state = None
         self.state_new = None
         self.state_tensor = None
@@ -81,15 +80,15 @@ class MCTS(object):
         self.pi = None
 
         # reset_episode member
-        self.my_history = None
-        self.your_history = None
+        self.player_history = None
+        self.opponent_history = None
         self.node_memory = None
         self.edge_memory = None
         self.action_memory = None
         self.value_memory = None
         self.pi_memory = None
         self.action_count = None
-        self.board = None
+        self.board_fill = None
         self.first_turn = None
         self.user_type = None
 
@@ -103,6 +102,7 @@ class MCTS(object):
         self.puct = np.zeros((3, 3), 'float')
         self.total_visit = 0
         self.empty_loc = None
+        self.legal_move_n = 0
         self.state = None
         self.state_new = None
         self.state_tensor = None
@@ -112,15 +112,14 @@ class MCTS(object):
         self.pi = None
 
     def _reset_episode(self):
-        self.my_history = deque([PLANE] * 4, maxlen=4)
-        self.your_history = deque([PLANE] * 4, maxlen=4)
+        self.player_history = deque([PLANE] * 4, maxlen=4)
+        self.opponent_history = deque([PLANE] * 4, maxlen=4)
         self.node_memory = deque(maxlen=9)
         self.edge_memory = deque(maxlen=9)
         self.action_memory = deque(maxlen=9)
         self.value_memory = deque(maxlen=9)
-        self.pi_memory = deque(maxlen=9)
         self.action_count = 0
-        self.board = None
+        self.board_fill = None
         self.first_turn = None
         self.user_type = None
 
@@ -137,7 +136,7 @@ class MCTS(object):
             state_variable: 1x9x3x3 torch.autograd.Variable.
                 신경망의 인수로 넣을 수 있게 조정. (학습용)
 
-            node: str. (hashlib.md5)
+            node: string. (xxhash)
                 state_new를 string으로 바꾼 후 hash 생성. (탐색용)
 
         action 선택
@@ -160,19 +159,22 @@ class MCTS(object):
         self.state_new = self._convert_state(state)
 
         # new state 저장
-        self.state_memory.appendleft(self.state_new)
+        # self.state_memory.appendleft(self.state_new)
 
         # new state에 Variable 씌움
         self.state_tensor = torch.from_numpy(self.state_new)
         self.state_variable = Variable(
-            self.state_tensor.view(1, 9, 3, 3).float(), requires_grad=True)
+            self.state_tensor.view(
+                9, 3, 3).float().unsqueeze(0), requires_grad=True)
 
         # 신경망에 인풋으로 넣고 아웃풋 받기 (p, v)
         self.p_theta, self.value = self.pv_net(self.state_variable)
-        print('[NN_output]\n', self.p_theta.data, self.value.data[0])
+
+        # 백업용  value 저장
+        self.value_memory.appendleft(self.value.data.numpy()[0])
 
         # state -> 문자열 -> hash로 변환 후 저장 (new state 대신 dict의 key로 사용)
-        self.node = hashlib.md5(self.state_new.tostring()).hexdigest()
+        self.node = xxhash.xxh64(self.state_new.tostring()).hexdigest()
         self.node_memory.appendleft(self.node)
 
         # edge 세팅: tree 탐색 -> edge 생성 or 세팅 -> PUCT 점수 계산
@@ -181,17 +183,21 @@ class MCTS(object):
         # PUCT 점수 출력
         print('***  PUCT Score  ***')
         print(self.puct.round(decimals=2))
-        print('')
+
+        # P, V 출력
+        print('\n[P]\n{}\n\n[V]\n{}\n'.format(
+            self.p_theta.data.numpy().reshape(3, 3).round(decimals=2),
+            (self.value.data.numpy()[0] + 1) / 2 * 100))
 
         # 빈자리가 아닌 곳은 PUCT값으로 -9999를 넣어 빈자리가 최댓값이 되는 것 방지
         puct = self.puct.tolist()
         for i, v in enumerate(puct):
-            for k, s in enumerate(v):
+            for k, _ in enumerate(v):
                 if [i, k] not in self.empty_loc.tolist():
                     puct[i][k] = -9999
 
         # PUCT가 최댓값인 곳 찾기
-        self.puct = np.array(puct)
+        self.puct = np.asarray(puct)
         puct_max = np.argwhere(self.puct == self.puct.max()).tolist()
 
         # 최댓값 동점인 곳 처리
@@ -209,12 +215,12 @@ class MCTS(object):
 
     def _convert_state(self, state):
         """state변환 메소드: action 주체별 최대 4수까지 history를 저장하여 새로운 state로 변환."""
-        if abs(self.user_type - 1) == PLAYER:
-            self.my_history.appendleft(state[PLAYER].flatten())
+        if abs(self.user_type) == OPPONENT:
+            self.player_history.appendleft(state[PLAYER].flatten())
         else:
-            self.your_history.appendleft(state[OPPONENT].flatten())
-        state_new = np.r_[np.array(self.my_history).flatten(),
-                          np.array(self.your_history).flatten(),
+            self.opponent_history.appendleft(state[OPPONENT].flatten())
+        state_new = np.r_[np.array(self.player_history).flatten(),
+                          np.array(self.opponent_history).flatten(),
                           self.state[2].flatten()]
         return state_new
 
@@ -222,22 +228,22 @@ class MCTS(object):
         """확장할 edge의 초기화 하는 메소드.
 
         dict{node: edge}인 MCTS Tree 구성
-        Q, P를 계산하여
-        9개의 좌표에 PUCT값을 계산하여 매칭하는 메소드.
+        edge에 있는 Q, P를 이용하여 PUCT값을 계산한 뒤 9개의 좌표에 매칭.
 
         """
         # tree에서 현재 node를 검색하여 해당 edge의 누적정보 가져오기
         self.edge = self.tree_memory[self.node]
 
+        # 현재 보드에서 착수가능한 수 검색
+        self.board_fill = self.state[PLAYER] + self.state[OPPONENT]
+        self.empty_loc = np.argwhere(self.board_fill == 0)
+        self.legal_move_n = self.empty_loc.shape[0]
+
         # root node면 확률에 노이즈
         if self.action_count == 1:
-            self.pr = (1 - self.epsilon) * self.p_theta + self.epsilon * \
-                np.random.dirichlet(
-                    self.alpha * np.ones(self.legal_move_n))
-
-        # 현재 보드에서 착수가능한 수 저장
-        self.board = self.state[PLAYER] + self.state[OPPONENT]
-        self.empty_loc = np.argwhere(self.board == 0)
+            self.pr = (1 - self.epsilon) * self.p_theta.data.numpy()[0] + \
+                self.epsilon * \
+                np.random.dirichlet(self.alpha * np.ones(self.legal_move_n))
 
         # edge의 총 방문횟수 계산 및 출력
         for i in range(3):
@@ -245,6 +251,7 @@ class MCTS(object):
                 self.total_visit += self.edge[i][j][N]
         print('(visit count: %d)\n' % (self.total_visit + 1))
 
+        # P 배치
         for i in range(self.legal_move_n):
             self.edge[tuple(self.empty_loc[i])][P] = self.pr[i]
 
@@ -272,11 +279,13 @@ class MCTS(object):
             # 내가 지나온 edge는 reward 로
             if self.action_memory[i][0] == PLAYER:
                 self.edge_memory[i][tuple(
-                    self.action_memory[i][1:])][W] += reward
+                    self.action_memory[i][1:])][
+                    W] += (reward + self.value_memory[i])
             # 상대가 지나온 edge는 -reward 로
             else:
                 self.edge_memory[i][tuple(
-                    self.action_memory[i][1:])][W] -= reward
+                    self.action_memory[i][1:])][
+                    W] -= (reward + self.value_memory[i])
             # N 배치
             self.edge_memory[i][tuple(self.action_memory[i][1:])][N] += 1
             # N, W, Q, P 가 계산된 edge들을 Tree에 최종 업데이트
@@ -344,8 +353,8 @@ if __name__ == "__main__":
 
         # SAVE_CYCLE 마다 Data 저장
         if (e + 1) % SAVE_CYCLE == 0:
-            with open('data/state_memory_e{}.pkl'.format(e + 1), 'wb') as f:
-                pickle.dump(zero_play.state_memory, f, pickle.HIGHEST_PROTOCOL)
+            # with open('data/state_memory_e{}.pkl'.format(e + 1), 'wb') as f:
+            #     pickle.dump(zero_play.state_memory, f, pickle.HIGHEST_PROTOCOL)
             with open('data/tree_memory_e{}.pkl'.format(e + 1), 'wb') as f:
                 pickle.dump(zero_play.tree_memory, f, pickle.HIGHEST_PROTOCOL)
 
