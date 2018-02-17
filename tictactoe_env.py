@@ -78,9 +78,9 @@ class TicTacToeEnv(gym.Env):
         self.state = None
         self.viewer = None  # 뷰어
         self.player_color = None  # 나의 "OX"
-        self._reset()
+        self.reset()
 
-    def _reset(self):
+    def reset(self):
         """state 리셋 함수.
 
         state 초기화: 3x3 배열 3장: 2진으로만 해결하기 위함.
@@ -91,7 +91,7 @@ class TicTacToeEnv(gym.Env):
         self.player_color = None
         return self.state  # state 리턴
 
-    def _step(self, action):
+    def step(self, action):
         """한번의 action에 state가 어떻게 변하는지 정하는 메소드.
 
         승부가 나면 에이전트가 reset()을 호출하여 환경을 초기화 해야 함.
@@ -135,9 +135,9 @@ class TicTacToeEnv(gym.Env):
         else:
             self.state[2] = self.state[OPPONENT]
 
-        return self.__check_win()  # 승패 체크해서 리턴
+        return self._check_win()  # 승패 체크해서 리턴
 
-    def __check_win(self):
+    def _check_win(self):
         """state 승패체크용 내부 함수."""
         # 승리패턴 8가지 구성 (1:돌이 있는 곳, 0: 돌이 없는 곳)
         win_pattern = np.array([[[1, 1, 1], [0, 0, 0], [0, 0, 0]],
@@ -180,7 +180,7 @@ class TicTacToeEnv(gym.Env):
             info = {'steps': self.step_count}
             return self.state, reward, done, info
 
-    def _render(self, mode='human', close=False):
+    def render(self, mode='human', close=False):
         """현재 state를 그려주는 함수."""
         if close:  # 클로즈값이 참인데
             if self.viewer is not None:  # 뷰어가 비어있지 않으면
