@@ -12,6 +12,7 @@ np.set_printoptions(suppress=True)
 
 PLAYER = 0
 OPPONENT = 1
+
 N, W, Q, P = 0, 1, 2, 3
 PLANE = np.zeros((3, 3), 'int').flatten()
 EPISODE = 1600
@@ -162,7 +163,7 @@ class MCTS(object):
                     puct[i][j] = -9999
 
         # PUCT가 최댓값인 곳 찾기
-        self.puct = np.asarray(puct)
+        self.puct = np.asarray(self.puct)
         puct_max = np.argwhere(self.puct == self.puct.max()).tolist()
 
         # 동점 처리
