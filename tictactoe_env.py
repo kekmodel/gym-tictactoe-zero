@@ -77,17 +77,19 @@ class TicTacToeEnv(gym.Env):
     def __init__(self):
         self.state = None
         self.viewer = None  # 뷰어
-        self.player_color = None  # 나의 "OX"
+        self.player_color = None  # player의 "OX"
         self.reset()
 
-    def reset(self):
+    def reset(self, state=None):
         """state 리셋 함수.
 
         state 초기화: 3x3 배열 3장: 2진으로만 해결하기 위함.
         """
-        self.state = np.zeros((3, 3, 3), 'int')
+        if state is None:
+            self.state = np.zeros((3, 3, 3), 'int')
+        else:
+            self.state = state
         self.viewer = None   # 뷰어 리셋
-        self.step_count = 0  # action 진행 횟수
         self.player_color = None
         return self.state  # state 리턴
 
@@ -98,27 +100,17 @@ class TicTacToeEnv(gym.Env):
         action을 받아서 (state, reward, done, info)인 튜플 리턴 함.
         """
         # 규칙 위반 필터링: 착수 금지: action 자리에 이미 자리가 차있으면
-        if self.state[action] == 1:
-            if action[USER_TYPE] == PLAYER:  # 근데 그게 플레이어가 한 짓이면 반칙패
-                reward = -1
-                done = True  # 게임 종료
-                info = {}
-                print('@@ Illegal Lose! @@')  # 출력
-                return self.state, reward, done, info  # 필수 요소 리턴
-            elif action[USER_TYPE] == OPPONENT:  # 상대가 한 짓이면 반대
-                reward = 1
-                done = True
-                info = {}
-                print('@@ Illegal Win! @@')
-                return self.state, reward, done, info
+        if self.state[action] >= 1:
+            raise NotImplementedError("No Legal Move!")
 
         # action 적용
         self.state[action] = 1
 
-        # 연속 두번 하기, player_color 비설정 시 오류 발생시키기
+        # 같은 주체가연속 두번 하면 오류 발생
         redupl = np.sum(self.state[PLAYER]) - np.sum(self.state[OPPONENT])
         if abs(redupl) > 1:
             raise NotImplementedError("Place Once!")
+        # player_color 비설정 시 오류 발생시키기
         if self.player_color is None:
             raise NotImplementedError("Set Player Color!")
         # "O"가 아닌데 처음에 하면 오류 발생시키기
@@ -177,7 +169,7 @@ class TicTacToeEnv(gym.Env):
         else:
             reward = 0
             done = False  # 안 끝남!
-            info = {'steps': self.step_count}
+            info = {}
             return self.state, reward, done, info
 
     def render(self, mode='human', close=False):

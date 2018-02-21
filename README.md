@@ -98,13 +98,14 @@ text editor or IDE 로 build
 \* 렌더링 오류 시: pip install pyglet==1.2.4  
      
     tictactoe_env.py                강화학습 환경 제공 (gym 기반)
-    mcts_zero.py                    신경망이 학습할 데이터 생성(PUCT-MCTS 알고리즘)
-    neural_network_cpu.py           정책 + 가치망 cpu버전 (ResNet 5 block)
-    neural_network_gpu.py           정책 + 가치망 gpu버전 (ResNet 5 block)
-    human_interface.py              사람과 대결하는 테스트 환경
-    evaluate.py                     에이전트 vs 에이전트 테스트 환경
+    selfply_###.py                  셀프플레이 -> 데이터 저장
+    opimization_###.py              저장된 셀프플레이 데이터로 신경망 학습
+    evaluator_###.py                에이전트 vs 에이전트 테스트 환경
+    neural_network_###.py           정책 + 가치망 (ResNet 5 block)
+    human_play.py                   사람과 대결하는 테스트 환경
+    mcts_pure.py                    신경망이 없는 순수 MCTS (테스트 용)
     data/data_viewer.ipynb          저장 데이터 분석용 jupyter notebook
-    data/tree_memory_e1000k.pkl     100만 에피소드에 대한 {node: edge} dict 
+    data/tree_memory_e1000k.pkl     100만 에피소드에 대한 Tree dict (순수 MCTS) 
     
     
 

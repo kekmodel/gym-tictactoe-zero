@@ -17,14 +17,15 @@ np.set_printoptions(suppress=True)
 
 PLAYER = 0
 OPPONENT = 1
+MARK_O = 0
+MARK_X = 1
 N, W, Q, P = 0, 1, 2, 3
 
-PLAY = 25000
-SIMULATION = 1600
-SAVE_CYCLE = 1600
+PLAY = 1
+SIMULATION = 800
+SAVE_CYCLE = 800
 
 NUM_CHANNEL = 128
-BATCH_SIZE = 32
 
 PLANE = np.zeros((3, 3), 'int').flatten()
 
@@ -54,7 +55,7 @@ class MCTS(object):
 
     def __init__(self):
         # ROM
-        self.state_memory = deque(maxlen=9 * EPISODE)
+        self.state_memory = deque(maxlen=9 * PLAY)
         self.tree_memory = defaultdict(lambda: np.zeros((3, 3, 4), 'float'))
 
         # model
@@ -72,12 +73,12 @@ class MCTS(object):
         self.total_visit = None
         self.empty_loc = None
         self.state = None
-        self.state_new = None
         self.state_tensor = None
         self.state_variable = None
         self.p_theta = None
         self.value = None
         self.pr = None
+        self.edge_n = None
         self.pi = None
 
         # reset_episode member
@@ -90,8 +91,10 @@ class MCTS(object):
         self.pi_memory = None
         self.action_count = None
         self.board_fill = None
-        self.first_turn = None
+        self.mark_o = None
         self.user_type = None
+        self.done = None
+        self.state_new = None
 
         # member init
         self._reset_step()
@@ -103,14 +106,13 @@ class MCTS(object):
         self.puct = np.zeros((3, 3), 'float')
         self.total_visit = 0
         self.empty_loc = None
-        self.legal_move_n = 0
         self.state = None
-        self.state_new = None
         self.state_tensor = None
         self.state_variable = None
         self.p_theta = None
         self.value = None
         self.pr = np.zeros((3, 3), 'float')
+        self.edge_n = np.zeros((3, 3), 'float')
         self.pi = None
 
     def _reset_episode(self):
@@ -121,9 +123,11 @@ class MCTS(object):
         self.action_memory = deque(maxlen=9)
         self.value_memory = deque(maxlen=9)
         self.action_count = 0
+        self.state_new = None
         self.board_fill = None
-        self.first_turn = None
+        self.mark_o = None
         self.user_type = None
+        self.done = False
 
     def select_action(self, state):
         """raw state를 받아 변환 및 저장 후 action을 리턴하는 외부 메소드.
@@ -154,11 +158,15 @@ class MCTS(object):
 
         # 호출될 때마다 첫턴 기준 교대로 행동주체 바꿈, 최종 action에 붙여줌
         # PLAYER or OPPONENT
-        self.user_type = (self.first_turn + self.action_count - 1) % 2
+        self.user_type = (self.mark_o + self.action_count - 1) % 2
 
         # state 변환
         self.state = state
         self.state_new = self._convert_state(state)
+
+        # 현재 보드에서 착수가능한 수 저장
+        self.board_fill = self.state[PLAYER] + self.state[OPPONENT]
+        self.empty_loc = np.argwhere(self.board_fill == 0)
 
         # root node면 저장
         if self.action_count == 1:
@@ -171,20 +179,23 @@ class MCTS(object):
         # tree 탐색 -> edge 생성 or 호출 -> 각 edge의 PUCT 계산
         self._tree_search()
 
-        # PUCT 점수 출력
-        print('***  PUCT Score  ***')
-        print(self.puct.round(decimals=2))
-
-        # V 출력 (승률로 바꿈)
-        print('\n[Winrate]\n{:0.1f}\n'.format(
-            (self.value.data.numpy()[0] + 1) / 2 * 100))
-
         # 빈자리가 아닌 곳은 PUCT값으로 -inf를 넣어 빈자리가 최댓값이 되는 것 방지
         puct = self.puct.tolist()
         for i, v in enumerate(puct):
             for j, _ in enumerate(v):
                 if [i, j] not in self.empty_loc.tolist():
-                    puct[i][j] = -np.inf
+                    self.puct[i][j] = -np.inf
+
+        # N값이 0인 edge의 PUCT값으로 -inf를 넣어 무작위 확장 방지
+        edge_n = self.edge_n.tolist()
+        for i, v in enumerate(edge_n):
+            for j, _ in enumerate(v):
+                if self.edge_n[i][j] == 0:
+                    self.puct[i][j] = -np.inf
+
+        # PUCT 점수 출력
+        print('***  PUCT Score  ***')
+        print(self.puct.round(decimals=2))
 
         # PUCT가 최댓값인 곳 찾기
         self.puct = np.asarray(puct)
@@ -198,7 +209,6 @@ class MCTS(object):
 
         # action 저장 및 step member 초기화
         self.action_memory.appendleft(action)
-        self._reset_step()
 
         # tuple로 action 리턴
         return tuple(action)
@@ -221,55 +231,33 @@ class MCTS(object):
         edge에 있는 Q, P를 이용하여 PUCT값을 계산한 뒤 모든 좌표에 매칭.
 
         """
-        # 현재 보드에서 착수가능한 수 저장
-        self.board_fill = self.state[PLAYER] + self.state[OPPONENT]
-        self.empty_loc = np.argwhere(self.board_fill == 0)
-
         # tree에서 현재 node를 검색하여 존재하면 해당 edge [선택]
         if self.node in self.tree_memory:
             self.edge = self.tree_memory[self.node]
+            print('"Select"')
             for i in range(3):
                 for j in range(3):
                     self.pr[i][j] = self.edge[i][j][P]
-            # root node면 edge의 P에 노이즈 (탐험)
-            if self.action_count == 1:
-                pr = (1 - self.epsilon) * self.pr.flatten() + \
-                    self.epsilon * np.random.dirichlet(
-                    self.alpha * np.ones(9))
-                self.pr = pr.reshape(3, 3)
-                # P값 재배치
-                for i in range(3):
-                    for j in range(3):
-                        self.edge[i][j][P] = self.pr[i][j]
-        else:  # child node면 [확장]
-            # edge를 생성
-            self.edge = self.tree_memory[self.node]
-            # state에 Variable 씌워서 신경망에 넣기
-            self.state_tensor = torch.from_numpy(self.state_new)
-            self.state_variable = Variable(
-                self.state_tensor.view(
-                    9, 3, 3).float().unsqueeze(0))
-            # 아웃풋 받기 (p, v)
-            self.p_theta, self.value = self.pv_net(self.state_variable)
-            self.pr = self.p_theta.data.numpy().reshape(3, 3)
-            # root node면 edge의 P에 노이즈 (탐험)
-            if self.action_count == 1:
-                pr = (1 - self.epsilon) * self.pr.flatten() + \
-                    self.epsilon * np.random.dirichlet(
-                    self.alpha * np.ones(9))
-                self.pr = pr.reshape(3, 3)
-            # P값 배치
-            for i in range(3):
-                for j in range(3):
-                    self.edge[i][j][P] = self.pr[i][j]
-            self._reset_step()
-            self.backup()
+                    self.edge_n[i][j] = self.edge[i][j][N]
 
-        # edge의 총 방문횟수 계산 및 출력
-        for i in range(3):
-            for j in range(3):
-                self.total_visit += self.edge[i][j][N]
-        print('(visit count: {:0.0f})\n'.format(self.total_visit + 1))
+            if np.sum(self.edge_n) >= 1:
+                # root node면 edge의 P에 노이즈 (탐험)
+                if self.action_count == 1:
+                    print('"root node"')
+                    pr = (1 - self.epsilon) * self.pr.flatten() + \
+                        self.epsilon * np.random.dirichlet(
+                        self.alpha * np.ones(9))
+                    self.pr = pr.reshape(3, 3)
+                    # P값 재배치
+                    for i in range(3):
+                        for j in range(3):
+                            self.edge[i][j][P] = self.pr[i][j]
+            else:
+                print('"leaf node"')
+                self._expand(self.node)
+        else:
+            print('"child node"')
+            self.done = True
 
         # Q값 계산 후 배치
         for i in range(3):
@@ -277,17 +265,39 @@ class MCTS(object):
                 if self.edge[i][j][N] != 0:
                     self.edge[i][j][Q] = self.edge[i][j][W] / \
                         self.edge[i][j][N]
-                else:
-                    self.edge[i][j][Q] = self.edge[i][j][W] * np.inf
 
                 # 각자리의 PUCT 계산
                 self.puct[i][j] = self.edge[i][j][Q] + \
                     self.c_puct * \
                     self.edge[i][j][P] * \
-                    np.sqrt(self.total_visit) / (1 + self.edge[i][j][N])
+                    np.sqrt(np.sum(self.edge_n)) / (1 + self.edge[i][j][N])
 
-        # Q, P값을 배치한 edge 에피소드 동안 저장
+        # Q, P값을 배치한 edge 시뮬레이션 동안 저장
         self.edge_memory.appendleft(self.edge)
+
+    def _expand(self, edge):
+        # edge를 생성
+        self.edge = self.tree_memory[self.node]
+        # state에 Variable 씌워서 신경망에 넣기
+        self.state_tensor = torch.from_numpy(self.state_new)
+        self.state_variable = Variable(
+            self.state_tensor.view(
+                9, 3, 3).float().unsqueeze(0))
+        # 아웃풋 받기 (p, v)
+        self.p_theta, self.value = self.pv_net(self.state_variable)
+        self.pr = self.p_theta.data.numpy().reshape(3, 3)
+        # root node면 edge의 P에 노이즈 (탐험)
+        if self.action_count == 1:
+            pr = (1 - self.epsilon) * self.pr.flatten() + \
+                self.epsilon * np.random.dirichlet(
+                self.alpha * np.ones(9))
+            self.pr = pr.reshape(3, 3)
+        # P값 배치
+        for i in range(3):
+            for j in range(3):
+                self.edge[i][j][P] = self.pr[i][j]
+        print('"Expand"')
+        self.done = True
 
     def backup(self, reward):
         """search가 끝나면 지나온 edge의 N과 W를 업데이트."""
@@ -298,75 +308,74 @@ class MCTS(object):
             if self.action_memory[i][0] == PLAYER:
                 self.edge_memory[i][tuple(
                     self.action_memory[i][1:])][
-                    W] += self.value.data.numpy()[0]
+                    W] += reward
             # 상대가 지나온 edge는 -v 로
             else:
                 self.edge_memory[i][tuple(
                     self.action_memory[i][1:])][
-                    W] -= self.value.data.numpy()[0]
+                    W] -= reward
             # N 배치
             self.edge_memory[i][tuple(self.action_memory[i][1:])][N] += 1
             # N, W, Q, P 가 계산된 edge들을 Tree에 최종 업데이트
             self.tree_memory[self.node_memory[i]] = self.edge_memory[i]
-
+        print('"Back Up"')
         self._reset_episode()
 
 
 if __name__ == "__main__":
     # 시작 시간 측정
     start = time.time()
-
     # 환경 생성
     env_play = tictactoe_env.TicTacToeEnv()
-    env_simul = tictactoe_env.TicTacToeEnv()
-
+    env_mcts = tictactoe_env.TicTacToeEnv()
     # 셀프 플레이 인스턴스 생성
     mcts = MCTS()
-
     # 통계용
     result = {1: 0, 0: 0, -1: 0}
     win_mark_O = 0
-
     # 게임 시작
     for n_play in range(PLAY):
         # raw state 생성
         state_play = env_play.reset()
-        state_simul = env_simul.reset()
+        # 플레이어 컬러 환경에 알림
+        env_play.player_color = MARK_O
         # Game 시작
         print('=' * 65, '\n{} Game'.format(n_play + 1))
-        # 보드 상황 출력: 내 착수:1, 상대 착수:2
         print("----- GAME -----")
         print(state_play[PLAYER] + state_play[OPPONENT] * 2.0)
 
-        # 환경에 알림
-        env_play.player_color = (PLAYER + n_play) % 2
-
-        # 진행 변수 초기화
-        done = False
-        # 시뮬레이션 시작
+        # MCTS 시뮬레이션 시작
         for n_simul in range(SIMULATION):
-            mcts.first_turn = env_play.player_color
-            env_mcts.player_color = mcts.first_turn
-            env_mcts
-            while not done:
+            state_mcts = env_mcts.reset(state_play.copy())
+            env_mcts.player_color = env_play.player_color
+            mcts.mark_o = env_play.player_color
+            # MCTS 시작
+            print('=' * 65, '\n{} Simulation'.format(n_simul + 1))
+            # 진행 변수 초기화
+            done_simul = False
+            while not done_simul:
                 # 보드 상황 출력: 내 착수:1, 상대 착수:2
-                print("----- MCTS -----")
-                print(state_simul[PLAYER] + state_simul[OPPONENT] * 2.0)
+                print("-- SIMULATION --")
+                print(state_mcts[PLAYER] + state_mcts[OPPONENT] * 2.0)
 
                 # action 선택하기
-                action = mcts.select_action(state_simul)
+                action = mcts.select_action(state_mcts)
 
                 # step 진행
-                state, reward, done, info = env_mcts.step(action)
-
-            if done:
-                # 승부난 보드 보기
-                print("- FINAL BOARD -")
-                print(state[PLAYER] + state[OPPONENT] * 2.0)
-                print("")
-
+                state_mcts, reward, done, _ = env_mcts.step(action)
+                done_simul = mcts.done
+            if done_simul:
+                # 배업한 보드 보기
+                print("---- BACK UP ----")
+                print(state_mcts[PLAYER] + state_mcts[OPPONENT] * 2.0)
+                print("V:{}\n".format(mcts.value.data.numpy()[0]))
                 # 보상을 지나온 edge에 백업
-                mcts.backup(reward)
+                mcts.backup(mcts.value.data.numpy()[0])
+                mcts._reset_step()
+            if done:
+                # 보상을 지나온 edge에 백업
+                mcts.backup(mcts.value.data.numpy()[0])
+                mcts._reset_step()
 
                 # 승부 결과 체크
                 result[reward] += 1
@@ -378,25 +387,29 @@ if __name__ == "__main__":
 
             # SAVE_CYCLE 마다 Data 저장
             if (n_simul + 1) % SAVE_CYCLE == 0:
+                """
                 with open('data/state_memory_e{}.pkl'.format(n_simul + 1),
                           'wb') as f:
-                    pickle.dump(mcts.state_memory, f, pickle.HIGHEST_PROTOCOL)
+                    pickle.dump(mcts.state_memory, f,
+                    pickle.HIGHEST_PROTOCOL)
+
                 with open('data/tree_memory_e{}.pkl'.format(n_simul + 1),
                           'wb') as f:
-                    pickle.dump(mcts.tree_memory, f, pickle.HIGHEST_PROTOCOL)
+                    pickle.dump(mcts.tree_memory, f,
+                                pickle.HIGHEST_PROTOCOL)
 
                 # 저장 알림
                 print('[{} Episode Data Saved]'.format(n_simul + 1))
-
+                """
                 # 종료 시간 측정
                 finish = round(float(time.time() - start))
 
                 # 에피소드 통계 문자열 생성
                 statics = ('\nWin: {}  Lose: {}  Draw: {}  Winrate: {:0.1f}%  \
-    WinMarkO: {}'.format(result[1], result[-1], result[0],
-                         1 / (1 + np.exp(result[-1] / SIMULATION) /
-                              np.exp(result[1] / SIMULATION)) * 100,
-                         win_mark_O))
+            WinMarkO: {}'.format(result[1], result[-1], result[0],
+                                 1 / (1 + np.exp(result[-1] / SIMULATION) /
+                                      np.exp(result[1] / SIMULATION)) * 100,
+                                 win_mark_O))
 
                 # 통계 출력
                 print('=' * 65, statics)
@@ -404,7 +417,7 @@ if __name__ == "__main__":
                 # 슬랙에 보고 메시지 보내기
                 slack = slackweb.Slack(
                     url="https://hooks.slack.com/services/T8P0E384U/B8PR44F1C/\
-    4gVy7zhZ9teBUoAFSse8iynn")
+            4gVy7zhZ9teBUoAFSse8iynn")
                 slack.notify(
                     text="Finished: {} MCTS in {}s".format(
                         n_simul + 1, finish))

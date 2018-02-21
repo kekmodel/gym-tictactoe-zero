@@ -2,7 +2,6 @@
 import tictactoe_env
 
 import time
-import xxhash
 from collections import deque, defaultdict
 
 import slackweb
@@ -67,6 +66,7 @@ class MCTS(object):
         self.pr = None
         self.state = None
         self.state_new = None
+        self.edge_n = None
 
         # reset_episode member
         self.player_history = None
@@ -94,6 +94,7 @@ class MCTS(object):
         self.pr = 0.
         self.state = None
         self.state_new = None
+        self.edge_n = np.zeros((3, 3), 'float')
 
     def _reset_episode(self):
         """episode마다 멤버를 초기화 함."""
@@ -143,24 +144,24 @@ class MCTS(object):
         # 새로운 state 저장
         # self.state_memory.appendleft(self.state_new)
 
-        # state를 문자열 -> hash로 변환 (dict의 key로 사용)
-        self.node = xxhash.xxh64(self.state_new.tostring()).hexdigest()
+        # state를 문자열 -> string로 변환 (dict의 key로 사용)
+        self.node = self.state_new.tostring()
         self.node_memory.appendleft(self.node)
 
         # edge 세팅: tree 탐색 -> edge 생성 or 세팅 -> PUCT 점수 계산
         self._set_edge()
-
-        # PUCT 점수 출력
-        print('***  PUCT Score  ***')
-        print(self.puct.round(decimals=2))
-        print('')
 
         # 빈자리가 아닌 곳은 PUCT값으로 -9999를 넣어 빈자리가 최댓값 되는 것 방지
         puct = self.puct.tolist()
         for i, v in enumerate(puct):
             for j, _ in enumerate(v):
                 if [i, j] not in self.empty_loc.tolist():
-                    puct[i][j] = -9999
+                    self.puct[i][j] = -np.inf
+
+        # PUCT 점수 출력
+        print('***  PUCT Score  ***')
+        print(self.puct.round(decimals=2))
+        print('')
 
         # PUCT가 최댓값인 곳 찾기
         self.puct = np.asarray(self.puct)
@@ -204,25 +205,25 @@ class MCTS(object):
         # tree에서 현재 node를 검색하여 해당 edge의 누적정보 가져오기
         self.edge = self.tree_memory[self.node]
 
-        # edge의 총 방문횟수 계산
-        for i in range(3):
-            for j in range(3):
-                self.total_visit += self.edge[i][j][N]
-
-        # 방문횟수 출력
-        print('(visit count: {:0.0f})\n'.format(self.total_visit + 1))
-
         # 현재 보드에서 착수가능한 수를 알아내어 랜덤 확률 P 계산
         self.board = self.state[PLAYER] + self.state[OPPONENT]
         self.empty_loc = np.argwhere(self.board == 0)
-        self.legal_move_n = self.empty_loc.shape[0]
+        self.legal_move_n = len(self.empty_loc)
         prob = 1 / self.legal_move_n
 
-        # root node면 P에 노이즈 (탐험)
-        if self.action_count == 1:
+        # edge의 총 방문횟수 계산
+        for i in range(3):
+            for j in range(3):
+                self.edge_n[i][j] = self.edge[i][j][N]
+        # 방문횟수 출력 (현재포함)
+        self.total_visit = np.sum(self.edge_n)
+        print('(visit count: {:0.0f})\n'.format(self.total_visit + 1))
+
+        # 초반에는 P에 노이즈 (탐험 확대)
+        if self.total_visit <= 800:
             self.pr = (1 - self.epsilon) * prob + self.epsilon * \
                 np.random.dirichlet(
-                    self.alpha * np.ones(self.legal_move_n))
+                    self.alpha * (self.edge_n.flatten() + 1))
         else:  # 아니면 n분의 1
             self.pr = prob * np.ones(self.legal_move_n)
 
@@ -230,13 +231,8 @@ class MCTS(object):
         for i in range(self.legal_move_n):
             self.edge[tuple(self.empty_loc[i])][P] = self.pr[i]
 
-        # Q값 계산 후 배치
         for i in range(3):
             for j in range(3):
-                if self.edge[i][j][N] != 0:
-                    self.edge[i][j][Q] = self.edge[i][j][W] / \
-                        self.edge[i][j][N]
-
                 # 각자리의 PUCT 계산
                 self.puct[i][j] = self.edge[i][j][Q] + \
                     self.c_puct * \
@@ -247,10 +243,10 @@ class MCTS(object):
         self.edge_memory.appendleft(self.edge)
 
     def backup(self, reward):
-        """에피소드가 끝나면 지나온 edge의 N과 W를 업데이트."""
+        """에피소드가 끝나면 지나온 edge의 N, W, Q 를 업데이트."""
         steps = self.action_count
         for i in range(steps):
-            # W 배치
+            # W 백업
             # 내가 지나온 edge는 +reward 로
             if self.action_memory[i][0] == PLAYER:
                 self.edge_memory[i][tuple(
@@ -260,10 +256,16 @@ class MCTS(object):
                 self.edge_memory[i][tuple(
                     self.action_memory[i][1:])][W] -= reward
 
-            # N 배치
+            # N 백업
             self.edge_memory[i][tuple(self.action_memory[i][1:])][N] += 1
 
-            # N, W, Q, P 가 계산된 edge들을 tree에 최종 업데이트
+            # Q값 계산 후 백업
+            self.edge_memory[i][
+                tuple(self.action_memory[i][1:])][Q] = self.edge_memory[i][
+                tuple(self.action_memory[i][1:])][W] / self.edge_memory[i][
+                tuple(self.action_memory[i][1:])][N]
+
+            # N, W, Q, P 가 계산된 edge를 tree에 최종 업데이트
             self.tree_memory[self.node_memory[i]] = self.edge_memory[i]
 
         # 에피소드 초기화
@@ -337,8 +339,10 @@ if __name__ == '__main__':
 
         # 데이터 저장
         if (e + 1) % SAVE_CYCLE == 0:
-            # with open('data/state_memory_e{}.pkl'.format(e + 1), 'wb') as f:
-            #   pickle.dump(zero_play.state_memory, f)
+            """
+            with open('data/state_memory_e{}.pkl'.format(e + 1), 'wb') as f:
+                pickle.dump(zero_play.state_memory, f)
+            """
             with open('data/tree_memory_e{}.pkl'.format(e + 1), 'wb') as f:
                 pickle.dump(zero_play.tree_memory, f, pickle.HIGHEST_PROTOCOL)
 

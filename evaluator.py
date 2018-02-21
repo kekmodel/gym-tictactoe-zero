@@ -13,7 +13,7 @@ OPPONENT = 1
 N, W, Q, P = 0, 1, 2, 3
 PLANE = np.zeros((3, 3), 'int').flatten()
 
-EPISODE = 16000
+EPISODE = 400
 
 
 class ZeroAgent(object):
@@ -23,6 +23,7 @@ class ZeroAgent(object):
         self.action_count = None
         self.user_type = user_type
         self.reset()
+        # hyperparameter
         self.tau = 0
 
     def reset(self):
@@ -77,8 +78,8 @@ class ZeroAgent(object):
 
 class AgentVsAgent(object):
     def __init__(self):
-        self.ai_player = ZeroAgent('data/tree_memory_e1000k.pkl', PLAYER)
-        self.ai_opponent = ZeroAgent('data/tree_memory_e3000k.pkl', OPPONENT)
+        self.ai_player = ZeroAgent('data/MCTS_800.pkl', PLAYER)
+        self.ai_opponent = ZeroAgent('data/MCTS_1600.pkl', OPPONENT)
         self.current_turn = None
         self.plyer_history = None
         self.opponent_history = None

@@ -1,6 +1,5 @@
 import tictactoe_env
 
-import xxhash
 from collections import deque
 
 import numpy as np
@@ -45,7 +44,7 @@ class ZeroAgent(object):
         state_reshape = state_new.reshape(9, 3, 3)
         board = state_reshape[0] + state_reshape[4]
         empty_loc = np.argwhere(board == 0)
-        node = xxhash.xxh64(state_new.tostring()).hexdigest()
+        node = state_new.tostring()
         if node in self.tree_memory:
             edge = self.tree_memory[node]
             pi_memory = self._get_pi(edge)
