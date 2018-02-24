@@ -27,7 +27,7 @@ SIMULATION = 20
 class MCTS(object):
     """몬테카를로 트리 탐색 클래스.
 
-    셀프플레이를 통해 train 데이터 생성
+    셀프플레이를 통해 train 데이터 생성 (s, pi, z)
 
     state
     ------
