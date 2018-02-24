@@ -21,7 +21,7 @@ class ZeroAgent(object):
         self.action_space = self._action_space()
         self.action_count = None
         self.reset()
-        self.tau = 2
+        self.tau = 0
 
     def reset(self):
         self.action_count = 0
@@ -94,7 +94,7 @@ class HumanAgent(object):
 class HumanVsAi(object):
     def __init__(self):
         self.human = HumanAgent()
-        self.ai = ZeroAgent('data/tree_memory_e1000k.pkl')
+        self.ai = ZeroAgent('data/tree_memory_1m.pkl')
         self.current_turn = None
         self.human_history = None
         self.ai_history = None
