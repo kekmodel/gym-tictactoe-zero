@@ -6,7 +6,7 @@
 ### 비개발자의 강화학습 도전기!
 ## <알파고 제로 따라하기: 틱택토> 
 
-AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Study/tree/master/AlphaGo) 을 수십번 읽고 (너무 어려워요ㅠ) 셋 중 가장 심플하고 강력한 Alpha Zero의 방법을 중심으로 따라가고 있습니다.
+AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문을 수십번 읽고 (너무 어려워요ㅠ) 셋 중 가장 심플하고 강력한 Alpha Zero의 방법을 중심으로 따라가고 있습니다.
 
 몬테카를로-트리서치(MCTS) 부분은 Fan 버전, 스스로 학습하는 방법에 대해선 Zero 버전을 주로 참고했습니다.
 
@@ -36,7 +36,7 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Stud
     강화 학습 수준: 파이썬과 케라스로 배우는 강화학습 1독, 모두의 RL 강의 1독
     영어 수준: 구글 번역 성애자 (노벨상 줘야함)
 
-사정이 이렇다보니 --> 삽질의 삽질의 삽질의 연속...(파도 파도 끝이 없는..ㅠㅠ) --> 그렇지만 재밌어서 계속 삽질... (여가시간 타임머신) --> 오기로 계속 하다보니 어느 정도 성과가 나오기 시작!!(오? 재능 발견? ㅎㅎ) --> 생각한 것이 실제로 돌아가니 너무 재밌음! 시간만 나면 알파고 덕질 중!! 모두 함께 해요 ㅎㅎ 
+사정이 이렇다보니 --> 삽질의 삽질의 삽질의 연속...(파도 파도 끝이 없는..ㅠㅠ) --> 그렇지만 재밌어서 계속 삽질... (여가시간 타임머신) --> 오기로 계속 하다보니 어느 정도 성과가 나오기 시작!!(오? 재능 발견? ㅎㅎ) --> 생각한 것이 실제로 돌아가니 너무 재밌음! 시간만 나면 알파고 덕질 중!! 모두 함께 해요 ㅎㅎㅎ 
 
 #### 알파고 관련 편하게 대화나누실 분은 언제든지 페이스북 메시지 주세요 ~ :P (https://www.facebook.com/kekmodel) 
 
@@ -62,8 +62,7 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Stud
       python3  : 홈페이지 참조
       git      : 홈페이지 참조 
       numpy    : pip install numpy (배열 지원) 
-      gym      : 아래 참조 (강화학습 API)
-      dill     : pip install dill (pickle의 dict 저장 지원)
+      gym      : 강화학습 API (아래 참조)
       xxhash   : pip install xxhash (현재 가장 빠른 비암호화 hash)
       pytorch  : 홈페이지 참조
       slackweb : pip install slackweb (결과를 메시지로 보내기: 개인용)   
@@ -89,28 +88,26 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문(https://github.com/kekmodel/RL_Stud
     
 ## 파일 구성
 
-text editor or IDE 로 build 
-
-단, human_interface.py 는 interpreter기반 환경에서만 됨 (e.g. console, IPython)
+human_interface.py 는 interpreter기반 환경에서만 됨 (e.g. console, IPython, pycharm)
 
 \* jupyter notebook으로 사용가능
 
 \* 렌더링 오류 시: pip install pyglet==1.2.4  
      
     tictactoe_env.py                강화학습 환경 제공 (gym 기반)
-    selfply_###.py                  셀프플레이 -> 데이터 저장
+    selfplay_###.py                 셀프플레이 -> 데이터 저장
     opimization_###.py              저장된 셀프플레이 데이터로 신경망 학습
-    evaluator_###.py                에이전트 vs 에이전트 테스트 환경
+    evaluator.py                    에이전트 vs 에이전트 테스트 환경
     neural_network_###.py           정책 + 가치망 (ResNet 5 block)
     human_play.py                   사람과 대결하는 테스트 환경
     mcts_pure.py                    신경망이 없는 순수 MCTS (테스트 용)
     data/data_viewer.ipynb          저장 데이터 분석용 jupyter notebook
-    data/tree_memory_e1000k.pkl     100만 에피소드에 대한 Tree dict (순수 MCTS) 
+    data/                           train dataset 저장소 
     
     
 
 
-### AI와 한판 붙고 싶다면? (강화학습 100만 에피소드 진행한 버전: 신경망 학습은 미적용)
+### AI와 한판 붙고 싶다면? (현재 중단, 신경망 버전에 맞게 코드 변경 중)
 
     cd gym-tictactoe
     python human_interface.py
