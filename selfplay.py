@@ -20,8 +20,9 @@ N, W, Q, P = 0, 1, 2, 3
 PLANE = np.zeros((3, 3), 'int').flatten()
 
 NUM_CHANNEL = 128
-GAME = 10
-SIMULATION = 20
+
+GAME = 200
+SIMULATION = 400
 
 
 class MCTS(object):
@@ -463,7 +464,7 @@ if __name__ == "__main__":
                 if env_game.player_color == MARK_O:
                     win_mark_o += 1
 
-    with open('data/train_dataset_{}.pkl'.format(game + 1), 'wb') as f:
+    with open('data/train_dataset_s{}g{}.pkl'.format(simul + 1, game + 1), 'wb') as f:
         pickle.dump(train_date_store, f)
 
     finish_game = round(float(time.time() - start))
