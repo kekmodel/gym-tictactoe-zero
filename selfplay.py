@@ -20,8 +20,8 @@ N, W, Q, P = 0, 1, 2, 3
 PLANE = np.zeros((3, 3), 'int').flatten()
 
 NUM_CHANNEL = 128
-GAME = 10
-SIMULATION = 200
+GAME = 5
+SIMULATION = 20
 
 
 class MCTS(object):
