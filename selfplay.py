@@ -460,7 +460,7 @@ if __name__ == "__main__":
 
     finish_game = round(float(time.time() - start))
 
-    print("=" * 28, " {} Game End ".format(game + 1), "=" * 28)
+    print("=" * 27, " {}  Game End  ".format(game + 1), "=" * 27)
     stat_game = ('[GAME] Win: {}  Lose: {}  Draw: {}  Winrate: {:0.1f}%  WinMarkO: {}'.format(
         result_game[1], result_game[-1], result_game[0],
         1 / (1 + np.exp(result_game[-1] / (game + 1)) / np.exp(result_game[1] / (game + 1))) * 100,
