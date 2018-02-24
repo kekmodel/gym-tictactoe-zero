@@ -464,7 +464,7 @@ if __name__ == "__main__":
                 if env_game.player_color == MARK_O:
                     win_mark_o += 1
 
-    with open('data/train_dataset_s{}g{}.pkl'.format(simul + 1, game + 1), 'wb') as f:
+    with open('data/train_dataset_s{}_g{}.pkl'.format(simul + 1, game + 1), 'wb') as f:
         pickle.dump(train_date_store, f)
 
     finish_game = round(float(time.time() - start))
