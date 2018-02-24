@@ -4,5 +4,6 @@ data/.ipynb_checkpoints
 /.idea
 /.DS_Store
 /.ipynb_checkpoints
+/mcts_pure.py
 
 
