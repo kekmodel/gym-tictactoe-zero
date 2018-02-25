@@ -22,7 +22,7 @@ PLANE = np.zeros((3, 3), 'int').flatten()
 NUM_CHANNEL = 128
 
 GAME = 10
-SIMULATION = 400
+SIMULATION = 30
 
 
 class MCTS(object):
@@ -150,7 +150,6 @@ class MCTS(object):
             self.root = state
 
         self.state = state
-        print(state.reshape(9, 3, 3))
 
         # state -> 문자열 -> hash로 변환 (state 대신 tree dict의 key로 사용)
         node = xxhash.xxh64(self.state.tostring()).hexdigest()
@@ -193,7 +192,6 @@ class MCTS(object):
             puct: 3x3 numpy array. (float)
 
         """
-
         # tree에서 현재 node를 검색하여 존재하면 해당 edge 불러오기
         if node in self.tree:
             self.edge = self.tree[node]
@@ -258,7 +256,6 @@ class MCTS(object):
         select에서 edge 중 하나를 선택한 후 v로 백업하도록 알림.
 
         """
-
         # edge를 생성
         self.edge = self.tree[node]
 
@@ -311,7 +308,6 @@ class MCTS(object):
 
     def play(self, tau):
         """root node의 pi를 계산하고 최댓값을 찾아 action을 return함."""
-        print(self.root.reshape(9, 3, 3))
         root_node = xxhash.xxh64(self.root.tostring()).hexdigest()
         edge = self.tree[root_node]
 
