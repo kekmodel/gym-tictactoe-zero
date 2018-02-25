@@ -17,20 +17,15 @@ class Node(object):
 
 
 class Edge(object):
+    """node와 node사이에 존재하는 클래스"""
 
-    def __init__(self, parent_node, child_node, p_theta, action):
-        self.id = parent_node.state.id + '|' + child_node.state.id
+    def __init__(self, parent_node, child_node, prior, action):
+        self.id = parent_node.id + '|' + child_node.id
         self.parent_node = parent_node
         self.child_node = child_node
-        self.player_turn = parent_node.state.player_turn
+        self.player_color = parent_node.player_color
         self.action = action
-
-        self.stat = {
-            'N': 0,
-            'W': 0,
-            'Q': 0,
-            'P': p_theta,
-        }
+        self.statistic = {'N': 0, 'W': 0, 'Q': 0, 'P': prior}
 
 
 class MCTS(object):
