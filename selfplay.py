@@ -19,10 +19,10 @@ MARK_O, MARK_X = 0, 1
 N, W, Q, P = 0, 1, 2, 3
 PLANE = np.zeros((3, 3), 'int').flatten()
 
-NUM_CHANNEL = 128
+CHANNEL = 128
 
-GAME = 200
-SIMULATION = 400
+GAME = 15000
+SIMULATION = 200
 
 
 class MCTS(object):
@@ -55,10 +55,10 @@ class MCTS(object):
         self.tree = defaultdict(lambda: np.zeros((3, 3, 4), 'float'))
 
         # model
-        if model_path is None:
-            self.pv_net = neural_network.PolicyValueNet(NUM_CHANNEL)
-        else:
-            self.pv_net = torch.load(self.pv_net.state_dict(), model_path)
+        self.pv_net = neural_network.PolicyValueNet(CHANNEL)
+        if model_path is not None:
+            print('#######  Model is loaded  #######')
+            self.pv_net.load_state_dict(torch.load(model_path))
 
         # hyperparameter
         self.c_puct = 5
@@ -66,29 +66,23 @@ class MCTS(object):
         self.alpha = 0.7
 
         # loop controller
-        self.done = None
+        self.done = False
 
         # reset_step member
-        self.total_visit = None
         self.edge = None
+        self.total_visit = None
         self.legal_move = None
         self.no_legal_move = None
         self.state = None
-        self.state_tensor = None
-        self.state_variable = None
         self.prob = None
         self.value = None
         self.current_user = None
 
         # reset_episode member
-        self.player_history = None
-        self.opponent_history = None
         self.node_memory = None
         self.edge_memory = None
         self.action_memory = None
         self.action_count = None
-        self.p_theta = None
-        self.v_theta = None
 
         # init
         self.reset_step()
@@ -100,20 +94,14 @@ class MCTS(object):
         self.legal_move = None
         self.no_legal_move = None
         self.state = None
-        self.state_tensor = None
-        self.state_variable = None
         self.prob = np.zeros((3, 3), 'float')
         self.value = None
         self.current_user = current_user
 
     def _reset_episode(self):
-        self.player_history = deque([PLANE] * 4, maxlen=4)
-        self.opponent_history = deque([PLANE] * 4, maxlen=4)
         self.node_memory = deque(maxlen=9)
         self.edge_memory = deque(maxlen=9)
         self.action_memory = deque(maxlen=9)
-        self.p_theta = None
-        self.v_theta = None
         self.action_count = 0
 
     def select_action(self, state):
@@ -262,11 +250,11 @@ class MCTS(object):
         print('"Expand"')
 
         # state에 Variable 씌워서 신경망에 넣기
-        self.state_tensor = torch.from_numpy(self.state)
-        self.state_variable = Variable(self.state_tensor.view(9, 3, 3).float().unsqueeze(0))
-        self.p_theta, self.v_theta = self.pv_net(self.state_variable)
-        self.prob = self.p_theta.data.numpy().reshape(3, 3)
-        self.value = self.v_theta.data.numpy()[0]
+        state_tensor = torch.from_numpy(self.state).float()
+        state_variable = Variable(state_tensor.view(9, 3, 3).unsqueeze(0))
+        p_theta, v_theta = self.pv_net(state_variable)
+        self.prob = p_theta.data.numpy().reshape(3, 3)
+        self.value = v_theta.data.numpy()[0]
 
         print('"Evaluate"\n')
 
@@ -317,7 +305,7 @@ class MCTS(object):
 
         for i in range(3):
             for j in range(3):
-                total_visit += edge[i][j][N]
+                total_visit += edge[i, j][N]
                 action_space.append([i, j])
 
         for i in range(3):
@@ -451,8 +439,8 @@ if __name__ == '__main__':
                     win_mark_o += 1
 
     train_dataset_store = list(zip(state_memory, pi_memory, z_memory))
-    with open('data/train_dataset_s{}_g{}.pkl'.format(simul + 1, game + 1), 'wb') as f:
-        pickle.dump(train_dataset_store, f)
+    with open('data/train_dataset_s{}_g{}.pickle'.format(simul + 1, game + 1), 'wb') as f:
+        pickle.dump(train_dataset_store, f, pickle.HIGHEST_PROTOCOL)
 
     finish_game = round(float(time.time() - start))
 
