@@ -21,8 +21,8 @@ PLANE = np.zeros((3, 3), 'int').flatten()
 
 NUM_CHANNEL = 128
 
-GAME = 1
-SIMULATION = 10
+GAME = 200
+SIMULATION = 400
 
 
 class MCTS(object):
@@ -343,7 +343,7 @@ class MCTS(object):
 if __name__ == '__main__':
     start = time.time()
 
-    train_dataset_store = deque(maxlen=4096)
+    train_dataset_store = []
     state_memory = deque(maxlen=4096)
     pi_memory = deque(maxlen=4096)
     z_memory = deque(maxlen=4096)
@@ -450,7 +450,7 @@ if __name__ == '__main__':
                 if env_game.player_color == MARK_O:
                     win_mark_o += 1
 
-    train_dataset_store.appendleft(tuple(zip(state_memory, pi_memory, z_memory)))
+    train_dataset_store = list(zip(state_memory, pi_memory, z_memory))
     with open('data/train_dataset_s{}_g{}.pkl'.format(simul + 1, game + 1), 'wb') as f:
         pickle.dump(train_dataset_store, f)
 
