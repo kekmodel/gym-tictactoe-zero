@@ -21,8 +21,8 @@ PLANE = np.zeros((3, 3), 'int').flatten()
 
 NUM_CHANNEL = 128
 
-GAME = 10
-SIMULATION = 30
+GAME = 1
+SIMULATION = 10
 
 
 class MCTS(object):
@@ -331,13 +331,22 @@ class MCTS(object):
             final_move = action_space[stochactic]
         action = np.r_[self.current_user, final_move]
 
-        return tuple(action), pi.flatten()
+        print('=*=*=*=   Pi   =*=*=*=')
+        print(pi.round(decimals=2), '\n')
+
+        state_memory.appendleft(self.root)
+        pi_memory.appendleft(pi.flatten())
+
+        return tuple(action)
 
 
 if __name__ == '__main__':
     start = time.time()
 
-    train_date_store = deque(maxlen=4096)
+    train_dataset_store = deque(maxlen=4096)
+    state_memory = deque(maxlen=4096)
+    pi_memory = deque(maxlen=4096)
+    z_memory = deque(maxlen=4096)
 
     env_game = tictactoe_env.TicTacToeEnv()
     env_simul = tictactoe_env.TicTacToeEnv()
@@ -353,10 +362,8 @@ if __name__ == '__main__':
         player_color = (MARK_O + game) % 2
         state_game = env_game.reset(player_color=player_color)
         mcts = MCTS()
-        root_state = None
         done_game = False
         step_play = 0
-        data_collector = deque(maxlen=18)
 
         while not done_game:
             print("=" * 27, " Simulation Start ", "=" * 27, '\n')
@@ -386,10 +393,6 @@ if __name__ == '__main__':
                     step_mcts += 1
                     step_simul += 1
                     step_total_simul += 1
-
-                    if step_mcts == 1:
-                        root_state = mcts.state
-
                     done_mcts = mcts.done
                     v = mcts.value
                     done_simul = done_mcts or done_env
@@ -427,14 +430,11 @@ if __name__ == '__main__':
             else:
                 tau = 0
 
-            action_game, pi = mcts.play(tau)
-            data_collector.appendleft(pi)
-            data_collector.appendleft(mcts.root)
+            action_game = mcts.play(tau)
             state_game, z, done_game, _ = env_game.step(action_game)
             step_play += 1
             step_game += 1
-            print('=*=*=*=   Pi   =*=*=*=')
-            print(pi.reshape(3, 3).round(decimals=2), '\n')
+
             print('`*`*` PLAY `*`*`')
             print(env_game.board[PLAYER] + env_game.board[OPPONENT] * 2.0, '\n')
             print('tau: {}\n'.format(tau))
@@ -442,20 +442,17 @@ if __name__ == '__main__':
         if done_game:
             print("(z: {})\n".format(z))
             result_game[z] += 1
-            for i, v in enumerate(data_collector):
-                s = np.zeros(81)
-                pi = np.zeros(9)
-                if i % 2 == 0:
-                    s = v
-                elif i % 2 == 1:
-                    pi = v
-                train_date_store.appendleft((s, pi, z))
+
+            for i in range(step_play):
+                z_memory.appendleft(z)
+
             if z == 1:
                 if env_game.player_color == MARK_O:
                     win_mark_o += 1
 
+    train_dataset_store.appendleft(tuple(zip(state_memory, pi_memory, z_memory)))
     with open('data/train_dataset_s{}_g{}.pkl'.format(simul + 1, game + 1), 'wb') as f:
-        pickle.dump(train_date_store, f)
+        pickle.dump(train_dataset_store, f)
 
     finish_game = round(float(time.time() - start))
 
