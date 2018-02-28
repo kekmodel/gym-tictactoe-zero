@@ -253,7 +253,7 @@ class MCTS(object):
 
         # state에 Variable 씌워서 신경망에 넣기
         state_tensor = torch.from_numpy(self.state).float()
-        state_variable = Variable(state_tensor.view(9, 3, 3).unsqueeze(0))
+        state_variable = Variable(state_tensor.view(9, 3, 3).unsqueeze(0)).cuda()
         p_theta, v_theta = self.pv_net(state_variable)
         self.prob = p_theta.data.cpu().numpy()[0].reshape(3, 3)
         self.value = v_theta.data.cpu().numpy()[0]
