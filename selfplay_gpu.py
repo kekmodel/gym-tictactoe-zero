@@ -21,7 +21,7 @@ PLANE = np.zeros((3, 3), 'int').flatten()
 
 CHANNEL = 128
 
-GAMES = 5
+GAMES = 10
 SIMULATION = 800
 
 
