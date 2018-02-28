@@ -92,7 +92,7 @@ class MCTS:
 
         self.action_count += 1
 
-        self.state = state.copy()
+        self.state = state
         node = xxhash.xxh64(self.state.tostring()).hexdigest()
         self.node_memory.appendleft(node)
 
@@ -152,6 +152,8 @@ class MCTS:
         p_theta, v_theta = self.pv_net(state_variable)
         self.prob = p_theta.data.cpu().numpy()[0].reshape(3, 3)
         self.value = v_theta.data.cpu().numpy()[0]
+        print(self.root)
+        print(self.state)
         if np.array_equal(self.state, self.root):
             self.evaluate = self.value
         self.done = True
