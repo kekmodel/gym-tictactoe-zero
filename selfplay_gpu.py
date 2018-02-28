@@ -334,9 +334,9 @@ if __name__ == '__main__':
     start = time.time()
 
     train_dataset_store = []
-    state_memory = deque(maxlen=4096)
-    pi_memory = deque(maxlen=4096)
-    z_memory = deque(maxlen=4096)
+    state_memory = deque(maxlen=40960)
+    pi_memory = deque(maxlen=40960)
+    z_memory = deque(maxlen=40960)
 
     env_game = tictactoe_env.TicTacToeEnv()
     env_simul = tictactoe_env.TicTacToeEnv()
