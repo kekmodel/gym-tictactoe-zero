@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import tictactoe_env
-import neural_network
+import neural_net_5block
 
 import time
 from collections import deque, defaultdict
@@ -21,8 +21,8 @@ PLANE = np.zeros((3, 3), 'int').flatten()
 
 CHANNEL = 128
 
-GAME = 15000
-SIMULATION = 200
+GAMES = 1
+SIMULATION = 1600
 
 
 class MCTS(object):
@@ -55,7 +55,7 @@ class MCTS(object):
         self.tree = defaultdict(lambda: np.zeros((3, 3, 4), 'float'))
 
         # model
-        self.pv_net = neural_network.PolicyValueNet(CHANNEL)
+        self.pv_net = neural_net_5block.PolicyValueNet(CHANNEL).cuda()
         if model_path is not None:
             print('#######  Model is loaded  #######')
             self.pv_net.load_state_dict(torch.load(model_path))
@@ -214,6 +214,8 @@ class MCTS(object):
             for move in self.legal_move:
                 self.edge[tuple(move)][P] = self.prob[tuple(move)]
 
+        print('###  Piror Prob  ###\n', self.prob.round(decimals=2), '\n')
+
         # Q, P값을 배치한 edge를 담아둠. 백업할 때 사용
         self.edge_memory.appendleft(self.edge)
 
@@ -253,8 +255,8 @@ class MCTS(object):
         state_tensor = torch.from_numpy(self.state).float()
         state_variable = Variable(state_tensor.view(9, 3, 3).unsqueeze(0))
         p_theta, v_theta = self.pv_net(state_variable)
-        self.prob = p_theta.data.numpy().reshape(3, 3)
-        self.value = v_theta.data.numpy()[0]
+        self.prob = p_theta.data.cpu().numpy()[0].reshape(3, 3)
+        self.value = v_theta.data.cpu().numpy()[0]
 
         print('"Evaluate"\n')
 
@@ -346,7 +348,7 @@ if __name__ == '__main__':
 
     print("=" * 30, " Game Start ", "=" * 30, '\n')
 
-    for game in range(GAME):
+    for game in range(GAMES):
         player_color = (MARK_O + game) % 2
         state_game = env_game.reset(player_color=player_color)
         mcts = MCTS()
