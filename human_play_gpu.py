@@ -219,7 +219,7 @@ class MCTS:
             stochactic = np.random.choice(9, p=pi.flatten())
             final_move = action_space[stochactic]
         action = np.r_[self.current_user, final_move]
-
+        print(pi.round(decimals=2))
         return tuple(action)
 
 
