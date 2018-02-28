@@ -196,7 +196,7 @@ class MCTS:
                     self.backup(reward)
         print('{} simulations end'.format(s + 1))
         self.current_user = OPPONENT
-        action = self.play(self.tau)
+        action = self.play(0)
 
         return action
 
