@@ -17,7 +17,7 @@ MARK_O, MARK_X = 0, 1
 N, W, Q, P = 0, 1, 2, 3
 PLANE = np.zeros((3, 3), 'int').flatten()
 
-CHANNEL = 16
+CHANNEL = 128
 
 GAMES = 5
 SIMULATION = 1600

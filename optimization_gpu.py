@@ -14,7 +14,7 @@ from torch.utils import data
 start = time.time()
 
 # Hyper Parameters
-EPOCHS = 1
+EPOCHS = 64
 BATCH_SIZE = 32
 LR = 0.2
 L2 = 0.0001
@@ -56,7 +56,7 @@ for epoch in range(EPOCHS):
         val_loss += loss.data[0]
 
         # step check
-        if (i + 1) % 1 == 0:
+        if (i + 1) % 16 == 0:
             print('Epoch [{:d}/{:d}]  Loss: [{:0.4f}]  Step: [{:d}/{:d}]'.format(
                 epoch + 1, EPOCHS, val_loss[0] / (i + 1), (i + 1) * BATCH_SIZE,
                 len(train_dataset) * BATCH_SIZE))
