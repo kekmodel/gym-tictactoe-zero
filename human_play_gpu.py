@@ -28,7 +28,6 @@ class MCTS:
     def __init__(self, model_path=None):
         # simul env
         self.env_simul = tictactoe_env_simul.TicTacToeEnv()
-        self.player_color = None
 
         # tree
         self.tree = defaultdict(lambda: np.zeros((3, 3, 4), 'float'))
@@ -39,15 +38,16 @@ class MCTS:
             print('#######  Model is loaded  #######')
             self.pv_net.load_state_dict(torch.load(model_path))
 
+        self.done = False
+        self.root = None
+        self.evaluate = None
+        self.player_color = None
+
         # hyperparameter
         self.c_puct = 5
         self.epsilon = 0.25
         self.alpha = 0.7
         self.tau = None
-
-        # loop controller
-        self.done = False
-        self.root = None
 
         # reset_step member
         self.edge = None
@@ -77,7 +77,6 @@ class MCTS:
         self.state = None
         self.prob = np.zeros((3, 3), 'float')
         self.value = None
-        self.evaluate = None
         self.current_user = current_user
 
     def _reset_episode(self):
