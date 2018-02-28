@@ -29,7 +29,7 @@ train_dataset = data.DataLoader(
 # 신경망 생성 및 최적화 인스턴스 생성
 pv_net = neural_net_5block.PolicyValueNet(CHANNEL)
 optimizer = torch.optim.SGD(pv_net.parameters(), lr=LR, momentum=0.9, weight_decay=L2)
-# scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=3, min_lr=2e-4, verbose=1)
+# scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=20, min_lr=2e-4, verbose=1)
 
 # print spec
 spec = {'epoch': EPOCHS, 'batch size': BATCH_SIZE, 'optim': 'SGD', **optimizer.defaults}
@@ -48,22 +48,22 @@ for epoch in range(EPOCHS):
         optimizer.zero_grad()
         p, v = pv_net(s)
         p = p.view(BATCH_SIZE * 9, 1)
-        loss = ((z - v).pow(2) - torch.matmul(pi, torch.log(p)))
+        loss = (z - v).pow(2).sum() - torch.matmul(pi, torch.log(p))
         loss.backward()
         optimizer.step()
         step += 1
         val_loss += loss.data[0]
 
         # step check
-        if (i + 1) % 1 == 0:
+        if (i + 1) % 16 == 0:
             print('Epoch [{:d}/{:d}]  Loss: [{:0.4f}]  Step: [{:d}/{:d}]'.format(
-                epoch + 1, EPOCHS, val_loss[0] / (i + 1), (i + 1) * BATCH_SIZE,
+                epoch + 1, EPOCHS, val_loss / (i + 1), (i + 1) * BATCH_SIZE,
                 len(train_dataset) * BATCH_SIZE))
 
     # epoch check
     finish = round(float(time.time() - start))
     print('Finished {} Epoch in {}s'.format(epoch + 1, finish))
-    # scheduler.step(val_loss[0], epoch)
+    # scheduler.step(val_loss, epoch)
 
 # Save the Model
 torch.save(pv_net.state_dict(), 'data/model_step{}.pickle'.format(step * BATCH_SIZE))
