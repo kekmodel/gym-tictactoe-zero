@@ -73,4 +73,4 @@ torch.save(pv_net.state_dict(), 'data/model_step{}.pickle'.format(step * BATCH_S
 finish = round(float(time.time() - start))
 slack = slackweb.Slack(
     url="https://hooks.slack.com/services/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")
-slack.notify('Finished {} Epoch in {}s [MacBook]'.format(epoch + 1, finish))
+slack.notify(text='Finished {} Epoch in {}s [MacBook]'.format(epoch + 1, finish))
