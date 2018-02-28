@@ -21,7 +21,7 @@ PLANE = np.zeros((3, 3), 'int').flatten()
 
 CHANNEL = 128
 
-GAMES = 800
+GAMES = 5
 SIMULATION = 800
 
 
@@ -350,7 +350,7 @@ if __name__ == '__main__':
     for game in range(GAMES):
         player_color = (MARK_O + game) % 2
         state_game = env_game.reset(player_color=player_color)
-        mcts = MCTS()
+        mcts = MCTS('data/model_s800_g800.pickle')
         done_game = False
         step_play = 0
 
