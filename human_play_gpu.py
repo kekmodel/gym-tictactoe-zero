@@ -11,7 +11,6 @@ from torch.autograd import Variable
 
 import xxhash
 import numpy as np
-np.set_printoptions(suppress=True)
 
 PLAYER, OPPONENT = 0, 1
 MARK_O, MARK_X = 0, 1
@@ -21,7 +20,7 @@ PLANE = np.zeros((3, 3), 'int').flatten()
 CHANNEL = 128
 
 GAMES = 5
-SIMULATION = 1600
+SIMULATION = 800
 
 
 class MCTS:
@@ -35,7 +34,7 @@ class MCTS:
         self.tree = defaultdict(lambda: np.zeros((3, 3, 4), 'float'))
 
         # model
-        self.pv_net = neural_net_5block.PolicyValueNet(CHANNEL)
+        self.pv_net = neural_net_5block.PolicyValueNet(CHANNEL).cuda()
         if model_path is not None:
             print('#######  Model is loaded  #######')
             self.pv_net.load_state_dict(torch.load(model_path))
@@ -149,12 +148,11 @@ class MCTS:
 
     def _expand(self, node):
         self.edge = self.tree[node]
-
         state_tensor = torch.from_numpy(self.state).float()
-        state_variable = Variable(state_tensor.view(9, 3, 3).unsqueeze(0))
+        state_variable = Variable(state_tensor.view(9, 3, 3).unsqueeze(0)).cuda()
         p_theta, v_theta = self.pv_net(state_variable)
-        self.prob = p_theta.data.numpy()[0].reshape(3, 3)
-        self.value = v_theta.data.numpy()[0]
+        self.prob = p_theta.data.cpu().numpy()[0].reshape(3, 3)
+        self.value = v_theta.data.cpu().numpy()[0]
         self.done = True
 
     def backup(self, reward):
@@ -221,7 +219,7 @@ class MCTS:
             stochactic = np.random.choice(9, p=pi.flatten())
             final_move = action_space[stochactic]
         action = np.r_[self.current_user, final_move]
-        print(pi.round(decimals=2))
+
         return tuple(action)
 
 
@@ -246,7 +244,7 @@ class HumanAgent:
 class HumanVsAi:
     def __init__(self):
         self.human = HumanAgent()
-        self.ai = MCTS()
+        self.ai = MCTS('data/model_s800_g800.pickle')
         self.current_user = None
 
     def select_action(self, state):
@@ -287,7 +285,7 @@ if __name__ == '__main__':
             result[reward] += 1
             print('- FINAL -')
             print(env.board[PLAYER] + env.board[OPPONENT] * 2, '\n')
-            manager.ai = MCTS()
+            manager.ai = MCTS('data/model_s800_g800.pickle')
             time.sleep(2)
 
     print('=' * 20, '\nWin: {}  Lose: {}  Draw: {}  Winrate: {:0.1f}%'.format(
