@@ -25,7 +25,26 @@ GAMES = 1
 SIMULATION = 800
 
 
-class MCTS(object):
+class HumanAgent:
+    def __init__(self):
+        self.action_space = self._action_space()
+
+    def _action_space(self):
+        action_space = []
+        for i in range(3):
+            for j in range(3):
+                action_space.append([i, j])
+        return np.array(action_space)
+
+    def select_action(self, state):
+        print("It's your turn!")
+        move_target = input('1 ~ 9: ')
+        i = int(move_target) - 1
+        action = np.r_[PLAYER, self.action_space[i]]
+        return tuple(action)
+
+
+class MCTS:
     """몬테카를로 트리 탐색 클래스.
 
     셀프플레이를 통해 train 데이터 생성 (s, pi, z)
@@ -109,7 +128,7 @@ class MCTS(object):
 
         state 변환
         ----------
-        state -> state -> node & state_variable
+        state -> node & state_variable
 
             state: 9x3x3 numpy array.
                 유저별 최근 4-histroy 저장하여 재구성.
@@ -328,6 +347,32 @@ class MCTS(object):
         pi_memory.appendleft(pi.flatten())
 
         return tuple(action)
+
+
+class HumanVsAi:
+    def __init__(self):
+        self.human = HumanAgent()
+        self.ai = MCTS()
+        self.current_turn = None
+        self.human_history = None
+        self.ai_history = None
+        self.state_new = None
+        self.reset()
+
+    def reset(self):
+        self.current_turn = None
+        self.human_history = deque([PLANE] * 4, maxlen=4)
+        self.ai_history = deque([PLANE] * 4, maxlen=4)
+        self.state_new = None
+        self.ai.reset()
+
+    def select_action(self, state):
+        self.state_new = self._convert_state(state)
+        if self.current_turn == PLAYER:
+            action = self.human.select_action(state)
+        else:
+            action = self.ai.select_action(self.state_new)
+        return action
 
 
 if __name__ == '__main__':
