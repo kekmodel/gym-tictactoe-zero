@@ -7,7 +7,7 @@ import pickle
 import slackweb
 
 import torch
-from torch.optim import lr_scheduler
+# from torch.optim import lr_scheduler
 from torch.autograd import Variable
 from torch.utils import data
 
