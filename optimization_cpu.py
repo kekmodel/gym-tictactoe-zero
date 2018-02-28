@@ -14,7 +14,7 @@ from torch.utils import data
 start = time.time()
 
 # Hyper Parameters
-EPOCHS = 1
+EPOCHS = 64
 BATCH_SIZE = 32
 LR = 0.2
 L2 = 0.0001
@@ -48,8 +48,7 @@ for epoch in range(EPOCHS):
         optimizer.zero_grad()
         p, v = pv_net(s)
         p = p.view(BATCH_SIZE * 9, 1)
-        loss = ((z - v).pow(2).sum() -
-                torch.matmul(pi, torch.log(p))) / BATCH_SIZE
+        loss = ((z - v).pow(2) - torch.matmul(pi, torch.log(p)))
         loss.backward()
         optimizer.step()
         step += 1
