@@ -32,13 +32,13 @@ class MCTS(object):
 
     state
     ------
-    state에서 각 주체당 4수까지 저장해서 state로 만듦
+    각 주체당 4수까지 저장한 8장, OX 구분 1장 총 9장.
 
-        9x3x3 numpy array -> 1x81 tuple
+        9x3x3 numpy array -> 1x81 numpy array
 
     edge
     -----
-    현재 state에서 착수 가능한 모든 action자리에 4개의 정보 저장
+    현재 state의 현재 보드에서 착수 가능한 모든 action자리에 4개의 정보 저장.
 
     type: 3x3x4 numpy array
 
@@ -109,10 +109,9 @@ class MCTS(object):
 
         state 변환
         ----------
-        state -> state -> node & state_variable
+        state --> node & state_variable
 
-            state: 9x3x3 numpy array.
-                유저별 최근 4-histroy 저장하여 재구성.
+            state: 1x81 numpy array.
 
             state_variable: 1x9x3x3 torch.autograd.Variable.
                 신경망의 인수로 넣을 수 있게 조정. (학습용)
@@ -125,7 +124,7 @@ class MCTS(object):
         puct 값이 가장 높은 곳을 선택함, 동점이면 랜덤 선택.
 
             action: 1x3 tuple.
-            action = (유저타입, 보드의 좌표행, 보드의 좌표열)
+            action = (현재 유저 타입, 보드의 좌표행, 보드의 좌표열)
 
         """
         # 현재 주체 설정 여부 필터링
@@ -240,7 +239,7 @@ class MCTS(object):
     def _expand(self, node):
         """ 기존 tree에 없는 노드가 선택됐을때 사용되는 메소드.
 
-        현재 node의 모든 좌표의 edge를 생성.
+        모든 좌표의 edge를 생성.
         state 텐서화 하여 신경망에 넣고 p_theta, v_theta 얻음.
         edge의 P에 p_theta를 넣어 초기화.
         select에서 edge 중 하나를 선택한 후 v로 백업하도록 알림.
