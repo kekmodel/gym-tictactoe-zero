@@ -221,7 +221,7 @@ class MCTS:
             final_move = action_space[stochactic]
         action = np.r_[self.current_user, final_move]
         print('v: ', self.evaluate.round(decimals=4), '\n')
-        print('= pi =\n', pi.round(decimals=2))
+        print('======  Pi  ======\n', pi.round(decimals=2))
 
         return tuple(action)
 

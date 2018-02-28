@@ -11,14 +11,13 @@ from torch.autograd import Variable
 
 import xxhash
 import numpy as np
-np.set_printoptions(suppress=True)
 
 PLAYER, OPPONENT = 0, 1
 MARK_O, MARK_X = 0, 1
 N, W, Q, P = 0, 1, 2, 3
 PLANE = np.zeros((3, 3), 'int').flatten()
 
-CHANNEL = 128
+CHANNEL = 8
 
 GAMES = 5
 SIMULATION = 1600
@@ -29,7 +28,6 @@ class MCTS:
     def __init__(self, model_path=None):
         # simul env
         self.env_simul = tictactoe_env_simul.TicTacToeEnv()
-        self.player_color = None
 
         # tree
         self.tree = defaultdict(lambda: np.zeros((3, 3, 4), 'float'))
@@ -40,14 +38,16 @@ class MCTS:
             print('#######  Model is loaded  #######')
             self.pv_net.load_state_dict(torch.load(model_path))
 
+        self.done = False
+        self.root = None
+        self.evaluate = None
+        self.player_color = None
+
         # hyperparameter
         self.c_puct = 5
         self.epsilon = 0.25
         self.alpha = 0.7
         self.tau = None
-
-        # loop controller
-        self.done = False
 
         # reset_step member
         self.edge = None
@@ -90,9 +90,6 @@ class MCTS:
             raise NotImplementedError("Set Current User!")
 
         self.action_count += 1
-
-        if self.action_count == 1:
-            self.root = state
 
         self.state = state
         node = xxhash.xxh64(self.state.tostring()).hexdigest()
@@ -149,12 +146,13 @@ class MCTS:
 
     def _expand(self, node):
         self.edge = self.tree[node]
-
         state_tensor = torch.from_numpy(self.state).float()
         state_variable = Variable(state_tensor.view(9, 3, 3).unsqueeze(0))
         p_theta, v_theta = self.pv_net(state_variable)
         self.prob = p_theta.data.numpy()[0].reshape(3, 3)
         self.value = v_theta.data.numpy()[0]
+        if np.array_equal(self.state, self.root):
+            self.evaluate = self.value
         self.done = True
 
     def backup(self, reward):
@@ -179,6 +177,7 @@ class MCTS:
 
     def simulation(self, root):
         self.root = root
+        print("computing move...")
         for s in range(SIMULATION):
             state = self.env_simul.reset(root.copy(), self.player_color)
             done = False
@@ -192,12 +191,12 @@ class MCTS:
                 step += 1
             if done:
                 if self.done:
-                    self.backup(self.value[0])
+                    self.backup(self.value)
                 else:
                     self.backup(reward)
         print('{} simulations end'.format(s + 1))
         self.current_user = OPPONENT
-        action = self.play(self.tau)
+        action = self.play(0)
 
         return action
 
@@ -221,7 +220,9 @@ class MCTS:
             stochactic = np.random.choice(9, p=pi.flatten())
             final_move = action_space[stochactic]
         action = np.r_[self.current_user, final_move]
-        print(pi.round(decimals=2))
+        print('v: ', self.evaluate.round(decimals=4), '\n')
+        print('======  Pi  ======\n', pi.round(decimals=2))
+
         return tuple(action)
 
 
