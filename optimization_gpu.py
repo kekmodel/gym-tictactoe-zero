@@ -21,7 +21,7 @@ L2 = 0.0001
 CHANNEL = 128
 
 # data load
-with open('data/train_dataset_s200_g1000.pickle', 'rb') as f:
+with open('data/train_dataset_s800_g800.pickle', 'rb') as f:
     dataset = pickle.load(f)
 train_dataset = data.DataLoader(
     dataset, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
