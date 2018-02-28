@@ -91,10 +91,7 @@ class MCTS:
 
         self.action_count += 1
 
-        if self.action_count == 1:
-            self.root = state
-
-        self.state = state
+        self.state = state.copy()
         node = xxhash.xxh64(self.state.tostring()).hexdigest()
         self.node_memory.appendleft(node)
 
