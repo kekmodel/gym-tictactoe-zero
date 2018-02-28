@@ -20,7 +20,7 @@ PLANE = np.zeros((3, 3), 'int').flatten()
 CHANNEL = 128
 
 GAMES = 5
-SIMULATION = 1600
+SIMULATION = 800
 
 
 class MCTS:
@@ -76,6 +76,7 @@ class MCTS:
         self.state = None
         self.prob = np.zeros((3, 3), 'float')
         self.value = None
+        self.evaluate = None
         self.current_user = current_user
 
     def _reset_episode(self):
@@ -153,6 +154,8 @@ class MCTS:
         p_theta, v_theta = self.pv_net(state_variable)
         self.prob = p_theta.data.cpu().numpy()[0].reshape(3, 3)
         self.value = v_theta.data.cpu().numpy()[0]
+        if np.array_equal(self.state, self.root):
+            self.evaluate = self.value
         self.done = True
 
     def backup(self, reward):
@@ -177,6 +180,7 @@ class MCTS:
 
     def simulation(self, root):
         self.root = root
+        print("computing move...")
         for s in range(SIMULATION):
             state = self.env_simul.reset(root.copy(), self.player_color)
             done = False
@@ -190,7 +194,7 @@ class MCTS:
                 step += 1
             if done:
                 if self.done:
-                    self.backup(self.value[0])
+                    self.backup(self.value)
                 else:
                     self.backup(reward)
         print('{} simulations end'.format(s + 1))
@@ -219,7 +223,9 @@ class MCTS:
             stochactic = np.random.choice(9, p=pi.flatten())
             final_move = action_space[stochactic]
         action = np.r_[self.current_user, final_move]
-        print(pi.round(decimals=2))
+        print('v: ', self.evaluate.round(decimals=4), '\n')
+        print('= pi =\n', pi.round(decimals=2))
+
         return tuple(action)
 
 
