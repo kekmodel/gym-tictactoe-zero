@@ -63,7 +63,7 @@ for epoch in range(EPOCHS):
 
     # epoch check
     finish = round(float(time.time() - start))
-    print('Finished {} Epoch in {}s [MacBook]'.format(epoch + 1, finish))
+    print('Finished {} Epoch in {}s'.format(epoch + 1, finish))
     # scheduler.step(val_loss[0], epoch)
 
 # Save the Model

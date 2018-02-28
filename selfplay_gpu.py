@@ -456,6 +456,6 @@ if __name__ == '__main__':
     slack = slackweb.Slack(
         url="https://hooks.slack.com/services/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")
     slack.notify(
-        text="Finished: [{} Game/{} Step] in {}s [Mac]".format(
+        text="Finished: [{} Game/{} Step] in {}s [UBT]".format(
             game + 1, step_game + step_total_simul, finish_game))
     slack.notify(text=stat_game)
