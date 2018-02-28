@@ -47,6 +47,7 @@ class MCTS:
 
         # loop controller
         self.done = False
+        self.root = None
 
         # reset_step member
         self.edge = None
