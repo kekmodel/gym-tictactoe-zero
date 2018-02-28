@@ -29,7 +29,7 @@ train_dataset = data.DataLoader(
 # 신경망 생성 및 최적화 인스턴스 생성
 pv_net = neural_net_5block.PolicyValueNet(CHANNEL).cuda()
 optimizer = torch.optim.SGD(pv_net.parameters(), lr=LR, momentum=0.9, weight_decay=L2)
-# scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', min_lr=2e-4, verbose=1)
+# scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', min_lr=2e-4, patience=3, verbose=1)
 
 # print spec
 spec = {'epoch': EPOCHS, 'batch size': BATCH_SIZE, 'optim': 'SGD', **optimizer.defaults}
@@ -57,20 +57,20 @@ for epoch in range(EPOCHS):
 
         # step check
         if (i + 1) % 1 == 0:
-            statics = ('Epoch [%d/%d]  Loss: [%.4f]' %
-                       (epoch + 1, EPOCHS, val_loss / (i + 1)))
-            print(statics, " Step: [%d/%d]" %
-                  ((i + 1) * BATCH_SIZE, len(train_dataset) * BATCH_SIZE))
+            print('Epoch [{:d}/{:d}]  Loss: [{:0.4f}]  Step: [{:d}/{:d}]'.format(
+                epoch + 1, EPOCHS, val_loss[0] / (i + 1), (i + 1) * BATCH_SIZE,
+                len(train_dataset) * BATCH_SIZE))
 
     # epoch check
     finish = round(float(time.time() - start))
-    print(statics, ' in {}s [MacBook]'.format(finish))
+    print('Finished {} Epoch in {}s [MacBook]'.format(epoch + 1, finish))
     # scheduler.step(val_loss[0], epoch)
 
 # Save the Model
 torch.save(pv_net.state_dict(), 'data/model_step{}.pickle'.format(step * BATCH_SIZE))
 
 # 메시지 보내기
+finish = round(float(time.time() - start))
 slack = slackweb.Slack(
     url="https://hooks.slack.com/services/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")
-slack.notify(text=statics + ' in {}s [MacBook]'.format(finish))
+slack.notify('Finished {} Epoch in {}s [MacBook]'.format(epoch + 1, finish))
