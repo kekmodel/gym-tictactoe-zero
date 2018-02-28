@@ -21,8 +21,8 @@ PLANE = np.zeros((3, 3), 'int').flatten()
 
 CHANNEL = 128
 
-GAMES = 1
-SIMULATION = 1600
+GAMES = 800
+SIMULATION = 800
 
 
 class MCTS(object):
@@ -334,9 +334,9 @@ if __name__ == '__main__':
     start = time.time()
 
     train_dataset_store = []
-    state_memory = deque(maxlen=40960)
-    pi_memory = deque(maxlen=40960)
-    z_memory = deque(maxlen=40960)
+    state_memory = deque(maxlen=102400)
+    pi_memory = deque(maxlen=102400)
+    z_memory = deque(maxlen=102400)
 
     env_game = tictactoe_env.TicTacToeEnv()
     env_simul = tictactoe_env.TicTacToeEnv()

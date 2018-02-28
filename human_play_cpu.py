@@ -22,7 +22,7 @@ PLANE = np.zeros((3, 3), 'int').flatten()
 CHANNEL = 128
 
 GAMES = 1
-SIMULATION = 1600
+SIMULATION = 800
 
 
 class MCTS(object):
