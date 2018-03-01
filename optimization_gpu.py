@@ -29,7 +29,7 @@ train_dataset = data.DataLoader(
 # 신경망 생성 및 최적화 인스턴스 생성
 pv_net = neural_net_5block.PolicyValueNet(CHANNEL).cuda()
 optimizer = torch.optim.SGD(pv_net.parameters(), lr=LR, momentum=0.9, weight_decay=L2)
-scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', min_lr=2e-4, patience=20, verbose=1)
+scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', min_lr=2e-4, patience=5, verbose=1)
 
 # print spec
 spec = {'epoch': EPOCHS, 'batch size': BATCH_SIZE, 'optim': 'SGD', **optimizer.defaults}
