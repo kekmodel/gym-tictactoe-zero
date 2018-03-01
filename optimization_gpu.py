@@ -67,7 +67,7 @@ for epoch in range(EPOCHS):
     # scheduler.step(val_loss[0], epoch)
 
 # Save the Model
-torch.save(pv_net.state_dict(), 'data/model_step{}.pickle'.format(step))
+torch.save(pv_net.state_dict(), 'data/model_step{}.pickle'.format(step * BATCH_SIZE))
 
 # 메시지 보내기
 finish = round(float(time.time() - start))
