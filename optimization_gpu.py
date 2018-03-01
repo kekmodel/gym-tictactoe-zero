@@ -48,7 +48,7 @@ for epoch in range(EPOCHS):
         optimizer.zero_grad()
         p, v = pv_net(s)
         p = p.view(BATCH_SIZE * 9, 1)
-        loss = (z - v).pow(2).sum() / BATCH_SIZE - torch.matmul(pi, torch.log(p))
+        loss = ((z - v).pow(2).sum() / BATCH_SIZE) - torch.matmul(pi, torch.log(p))
         loss.backward()
         optimizer.step()
         step += 1
@@ -58,13 +58,13 @@ for epoch in range(EPOCHS):
         if (i + 1) % 16 == 0:
             print('Epoch [{:d}/{:d}]  Loss: [{:0.4f}]  Step: [{:d}/{:d}]'.format(
                 epoch + 1,
-                EPOCHS, val_loss / (i + 1),
+                EPOCHS, val_loss[0] / (i + 1),
                 (i + 1) * BATCH_SIZE, len(train_dataset) * BATCH_SIZE))
 
     # epoch check
     finish = round(float(time.time() - start))
     print('Finished {} Epoch in {}s'.format(epoch + 1, finish))
-    # scheduler.step(val_loss, epoch)
+    # scheduler.step(val_loss[0], epoch)
 
 # Save the Model
 torch.save(pv_net.state_dict(), 'data/model_step{}.pickle'.format(step * BATCH_SIZE))
