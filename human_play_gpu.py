@@ -247,7 +247,7 @@ class HumanAgent:
 class HumanVsAi:
     def __init__(self):
         self.human = HumanAgent()
-        self.ai = MCTS('data/model_s800_g800_e64xs.pickle')
+        self.ai = MCTS('data/model_s800_g800_e64xde.pickle')
         self.current_user = None
 
     def select_action(self, state):
@@ -288,7 +288,7 @@ if __name__ == '__main__':
             result[reward] += 1
             print('- FINAL -')
             print(env.board[PLAYER] + env.board[OPPONENT] * 2, '\n')
-            manager.ai = MCTS('data/model_s800_g800_e64xs.pickle')
+            manager.ai = MCTS('data/model_s800_g800_e64xde.pickle')
             time.sleep(2)
 
     print('=' * 20, '\nWin: {}  Lose: {}  Draw: {}  Winrate: {:0.1f}%'.format(
