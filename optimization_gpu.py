@@ -58,13 +58,13 @@ for epoch in range(EPOCHS):
         if (i + 1) % 16 == 0:
             print('Epoch [{:d}/{:d}]  Loss: [{:0.4f}]  Step: [{:d}/{:d}]'.format(
                 epoch + 1,
-                EPOCHS, val_loss[0] / (i + 1),
+                EPOCHS, val_loss / (i + 1),
                 (i + 1) * BATCH_SIZE, len(train_dataset) * BATCH_SIZE))
 
     # epoch check
     finish = round(float(time.time() - start))
     print('Finished {} Epoch in {}s'.format(epoch + 1, finish))
-    # scheduler.step(val_loss[0], epoch)
+    # scheduler.step(val_loss, epoch)
 
 # Save the Model
 torch.save(pv_net.state_dict(), 'data/model_step{}.pickle'.format(step * BATCH_SIZE))
