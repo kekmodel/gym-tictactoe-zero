@@ -108,7 +108,7 @@ human_interface.py 는 interpreter기반 환경에서만 됨 (e.g. console, IPyt
 ### AI와 한판 붙고 싶다면?
 
     cd gym-tictactoe
-    python human_play_cpu.py
+    python human_play_cpu.py(랜덤 파라미터) or gpu(1회 학습 파라미터 800게임)
 
 
 default: 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에 치면 됨;;)
