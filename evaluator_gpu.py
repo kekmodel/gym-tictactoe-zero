@@ -227,7 +227,7 @@ class MCTS:
 
 class AiVsAi:
     def __init__(self):
-        self.ai_player = MCTS('data/model_s800_g800_e64xde', 800, PLAYER)
+        self.ai_player = MCTS('data/model_s800_g800_e64xde.pickle', 800, PLAYER)
         self.ai_oppoenet = MCTS(800, OPPONENT)
         self.current_user = None
 
@@ -273,7 +273,7 @@ if __name__ == '__main__':
             result[reward] += 1
             print('- FINAL -')
             print(env.board[PLAYER] + env.board[OPPONENT] * 2, '\n')
-            manager.ai_player = MCTS('data/model_s800_g800_e64xde', 800, PLAYER)
+            manager.ai_player = MCTS('data/model_s800_g800_e64xde.pickle', 800, PLAYER)
             manager.ai_oppoenet = MCTS(800, OPPONENT)
             time.sleep(2)
 
