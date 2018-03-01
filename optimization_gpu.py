@@ -43,14 +43,13 @@ for epoch in range(EPOCHS):
         s = Variable(s.view(BATCH_SIZE, 9, 3, 3).float(), requires_grad=True).cuda()
         pi = Variable(pi.view(1, BATCH_SIZE * 9).float(), requires_grad=False).cuda()
         z = Variable(z.float(), requires_grad=False).cuda()
-        print(z)
 
         # forward and backward
         optimizer.zero_grad()
         p, v = pv_net(s)
         p = p.view(BATCH_SIZE * 9, 1)
-        print(v)
         loss = ((z - v).pow(2).sum() - torch.matmul(pi, torch.log(p))) / BATCH_SIZE
+        print((z - v).pow(2).sum())
         loss.backward()
         optimizer.step()
         step += 1
