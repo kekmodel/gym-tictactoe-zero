@@ -57,7 +57,9 @@ for epoch in range(EPOCHS):
         # step check
         if (i + 1) % 16 == 0:
             print('Epoch [{:d}/{:d}]  Loss: [{:0.4f}]  Step: [{:d}/{:d}]'.format(
-                epoch + 1, EPOCHS, val_loss / (i + 1), (i + 1) * BATCH_SIZE,
+                epoch + 1,
+                EPOCHS, val_loss / (i + 1),
+                (i + 1) * BATCH_SIZE,
                 len(train_dataset) * BATCH_SIZE))
 
     # epoch check
