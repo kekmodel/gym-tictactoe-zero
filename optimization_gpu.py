@@ -48,7 +48,7 @@ for epoch in range(EPOCHS):
         optimizer.zero_grad()
         p, v = pv_net(s)
         p = p.view(BATCH_SIZE * 9, 1)
-        loss = ((z - v).pow(2).sum()) / BATCH_SIZE - torch.matmul(pi, torch.log(p))
+        loss = ((z - v).pow(2).sum() - torch.matmul(pi, torch.log(p))) / BATCH_SIZE
         loss.backward()
         optimizer.step()
         step += 1
