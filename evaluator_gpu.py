@@ -227,8 +227,8 @@ class MCTS:
 
 class AiVsAi:
     def __init__(self):
-        self.ai_player = MCTS('data/model_s800_g800_e64xde.pickle', 800, PLAYER)
-        self.ai_oppoenet = MCTS(800, OPPONENT)
+        self.ai_player = MCTS('data/model_s800_g800_e64xde.pickle', 800, 128, PLAYER)
+        self.ai_oppoenet = MCTS(None, 800, 128, OPPONENT)
         self.current_user = None
 
     def select_action(self, state):
@@ -273,8 +273,8 @@ if __name__ == '__main__':
             result[reward] += 1
             print('- FINAL -')
             print(env.board[PLAYER] + env.board[OPPONENT] * 2, '\n')
-            manager.ai_player = MCTS('data/model_s800_g800_e64xde.pickle', 800, PLAYER)
-            manager.ai_oppoenet = MCTS(800, OPPONENT)
+            manager.ai_player = MCTS('data/model_s800_g800_e64xde.pickle', 800, 128, PLAYER)
+            manager.ai_oppoenet = MCTS(None, 800, 128, OPPONENT)
             time.sleep(2)
 
     print('=' * 20, '\nWin: {}  Lose: {}  Draw: {}  Winrate: {:0.1f}%'.format(
