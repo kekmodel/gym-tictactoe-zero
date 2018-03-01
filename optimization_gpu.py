@@ -60,7 +60,7 @@ for epoch in range(EPOCHS):
                 epoch + 1,
                 EPOCHS, val_loss / (i + 1),
                 (i + 1) * BATCH_SIZE,
-                len(train_dataset) * BATCH_SIZE))
+                BATCH_SIZE))
 
     # epoch check
     finish = round(float(time.time() - start))
