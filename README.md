@@ -10,18 +10,14 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문을 수십번 읽고 (너무 어려�
 
 몬테카를로-트리서치(MCTS) 부분은 Fan 버전, 스스로 학습하는 방법에 대해선 Zero 버전을 주로 참고했습니다.
 
-아직 <**미완성**>이고 직장인이라 여가시간에 틈틈히 공부하면서 개발중입니다. (아래 진행 상황 참고)
-
-#### 주의! 혼자 이해한 걸로 진행한 거라 오개념이 있을 수 있습니다.ㅎㅎ (피드백 주세요!) 
-
+직장인이라 여가시간에 틈틈히 공부하면서 개발하였습니다!
+ 
 
 
  
-직접 돌려보시려면 python 3, numpy, gym, dill, xxhash를 설치하시면 됩니다. (아래 요구사항 참조)
+직접 돌려보시려면 python3, numpy, gym, xxhash, PyTorch를 설치하시길 바랍니다.
 
-신경망 버전을 돌리시려면 PyTorch를 설치하시길 바랍니다.
-
-대국할 때 그래픽 모드를 선택하면 약간의 허접한 렌더링도 지원합니다. ㅋㅋㅋ
+사람과 대결할 땐 약간의 허접한 렌더링도 지원합니다. ㅋㅋㅋ
 
 
 
@@ -45,14 +41,15 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문을 수십번 읽고 (너무 어려�
 ### 프로젝트 진행 상황 요약
 
       1. OpenAI Gym 기반 틱택토 환경 만들기 (완료)
-      2. MCTS 구현 (완료)
+      2. MCTS 일반버전 구현 (완료)
       3. 데이터 저장 및 불러오기 기능 구현 (완료)
       4. 에이전트 vs 에이전트 테스트 환경 구현 (완료)
       5. 사람 vs 에이전트 테스트 환경 구현 (완료)
       6. 정책 + 가치 신경망 구현 (완료)
-      7. 신경망 학습 (**진행 중**)
-      8. 사람 vs 에이전트 실제 플레이 환경 구현
-      9. 자바스크립트 공부해서 웹에 올려보기
+      7. MCTS 제로버전 구현 (완료)
+      8. 신경망 학습 (완료)
+      9. 사람 vs 에이전트 실제 플레이 환경 구현(완료)
+      10. 자바스크립트 공부해서 웹에 올려보기 (잠정 보류)
 
 
   
@@ -61,7 +58,7 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문을 수십번 읽고 (너무 어려�
     
       python3  : 홈페이지 참조
       git      : 홈페이지 참조 
-      numpy    : pip install numpy (배열 지원) 
+      numpy    : pip install numpy (아나콘다 추천 mkl까지 돼서 더 빠름)
       gym      : 강화학습 API (아래 참조)
       xxhash   : pip install xxhash (현재 가장 빠른 비암호화 hash)
       pytorch  : 홈페이지 참조
@@ -95,25 +92,26 @@ human_interface.py 는 interpreter기반 환경에서만 됨 (e.g. console, IPyt
 \* 렌더링 오류 시: pip install pyglet==1.2.4  
      
     tictactoe_env.py                강화학습 환경 제공 (gym 기반)
-    selfplay_###.py                 셀프플레이 -> 데이터 저장
-    opimization_###.py              저장된 셀프플레이 데이터로 신경망 학습
-    evaluator.py                    에이전트 vs 에이전트 테스트 환경
-    neural_network_###.py           정책 + 가치망 (ResNet 5 block)
-    human_play.py                   사람과 대결하는 테스트 환경
-    mcts_pure.py                    신경망이 없는 순수 MCTS (테스트 용)
+    tictactoe_env_simul.py          시뮬레이션 돌릴 환경    
+    selfplay_***.py                 셀프플레이 -> 데이터 저장 (시뮬레이션 내용 확인 가능)
+    mcts_simple.py                  위 파일을 간단하게 보완한 최종 버전. (gpu는 모델, 텐서에 .cuda()만 붙여주세요)    
+    opimization_***.py              저장된 셀프플레이 데이터로 신경망 학습
+    evaluator_***.py                에이전트 vs 에이전트 테스트 환경
+    neural_net_***.py               정책 + 가치망 (ResNet 5~40 block)
+    human_play_***.py               사람과 대결하는 테스트 환경
     data/data_viewer.ipynb          저장 데이터 분석용 jupyter notebook
-    data/                           train dataset 저장소 
+    data/                           train dataset, 학습한 모델 저장
     
     
 
 
-### AI와 한판 붙고 싶다면? (현재 중단, 신경망 버전에 맞게 코드 변경 중)
+### AI와 한판 붙고 싶다면?
 
     cd gym-tictactoe
-    python human_interface.py
+    python human_play_cpu.py
 
 
-default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에 치면 됨;;)
+default: 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에 치면 됨;;)
 
               [1][2][3]
               [4][5][6]
@@ -176,7 +174,7 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
 
 12월 19일: 코딩 시작
 
-12월 25일: **PyTorch로 간단한 ResNet 구현** (neural_network_cpu.py)
+12월 25일: **PyTorch로 간단한 ResNet 구현** (neural_net_cpu.py)
 
 12월 31일: state를 hash로 바꿔 다뤄봄
 
@@ -193,7 +191,7 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
 
 1월 3일: (state, edge) set을 hdf5로 저장 구현 (data/) (현재 pkl으로 바꿈)
 
-1월 6일: **PUCT-MCTS 정식버전 구현** (mcts_zero.py)
+1월 6일: **PUCT-MCTS 정식버전 구현** (mcts_zero.py) (현재 삭제)
 
      - 알고리즘 오류 수정
      - 첫번째 state에 Dirichlet 노이즈 설정(e-greedy) 
@@ -203,7 +201,7 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
      - 완료시 Slack에 메시지 보내는 기능 추가
         - 개인용
 
-1월 10일: **RL Agent 프로토타입 구현** (agent_rl.py -> human_interface.py에 통합)
+1월 10일: **RL Agent 프로토타입 구현** (agent_rl.py -> human_play.py에 통합)
 
     - 딥러닝 없이 순수 강화학습만 활용한 버전
     - 데이터로 트리 재구현 
@@ -211,7 +209,7 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
     - 정책함수 구현
     - self Play 전적 1600전 1600무
 
-1월 11일: Human interface 프로토 타입 구현 
+1월 11일: Human interface 프로토 타입 구현 (현재 human_play.py)
 
     - 사람과 처음으로 게임을 함: 지인들에게 테스트 
         - 자신이 경험해본 상황에선 강하지만 경험이 부족한 상황에선 최적 판단 못함
@@ -236,7 +234,7 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
     - human_interface.py 업데이트
         - 모드 선택 추가: text & graphic
 
-1월 15일: 에이전트끼리 플레이하는 평가 프로토 타입 구현 (evaluate.py)
+1월 15일: 에이전트끼리 플레이하는 평가 프로토 타입 구현 (evaluator.py)
 
     - 평가를 통해 hyperparameter 최적화 
         - decay 삭제, c_puct: 1, alpha: 1, expand_count: 100 (현재 수정) 
@@ -246,7 +244,7 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
         - 5번 시행해서 승률 높은 쪽 선택
     - 해당 에이전트가 생성한 데이터를 신경망 학습용으로 생성
 
-1월 16일: **Human interface 정식 버전 완성** (human_interface.py)
+1월 16일: **Human interface 정식 버전 완성** (human_play.py)
 
     - AI의 첫번째 수는 확률이 최댓값인 곳만 선택, 그 이후엔 확률에 따라 선택
         - softmax -> 일반 확률법으로 확정
@@ -255,6 +253,7 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
 
     - 플레이어 3x3 array 4장, 상대 3x3 array 4장, 선공 구별 1장
     - 9x3x3 numpy array -> flatten() 하여 저장
+    - local minimum에 빠지던 현상 현저히 줄어서 더 강해짐
 
 2월 1일: 신경망 학습 시작
 
@@ -277,12 +276,14 @@ default: text or graphic 선택, 5판 승부, 선공 사람, 착수: 1 ~ 9번 (�
         - 약 864만 step의 policy iteration
         - 약 13만 경우의 수 학습
     - 첫번째 수만 stochastic (확률로 착수) 그 후엔 deterministic (최댓값만 착수)
-        - 사람과 대결해서 현재 무패 (이기신 분 제보 부탁 ㅎㅎ)
+        - 사람과 대결해서 현재 무패
 
 
 2월 24일: **알파고 제로 셀프 플레이 프로토타입 구현**
 
-    - 자세한 내용은 추후에! 
+    - 논문 리뷰후 제대로 된 알고리즘 탑재 (thanks..알메)
 
+3월 1일:  **프로젝트 완료**
 
+    - 눈물이 앞을 가리운다.ㅋㅋㅋㅋㅋㅋ
 
