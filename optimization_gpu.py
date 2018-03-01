@@ -14,8 +14,8 @@ from torch.utils import data
 start = time.time()
 
 # Hyper Parameters
-EPOCHS = 1
-BATCH_SIZE = 64
+EPOCHS = 64
+BATCH_SIZE = 32
 LR = 0.2
 L2 = 0.0001
 CHANNEL = 128
