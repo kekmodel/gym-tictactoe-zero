@@ -41,8 +41,8 @@ for epoch in range(EPOCHS):
     val_loss = 0
     for i, (s, pi, z) in enumerate(train_dataset):
         s = Variable(s.view(BATCH_SIZE, 9, 3, 3).float(), requires_grad=True).cuda()
-        pi = pi.view(1, BATCH_SIZE * 9).float()
-        z = z.float()
+        pi = Variable(pi.view(1, BATCH_SIZE * 9).float(), requires_grad=False).cuda()
+        z = Variable(z.float(), requires_grad=False).cuda()
 
         # forward and backward
         optimizer.zero_grad()
@@ -56,7 +56,7 @@ for epoch in range(EPOCHS):
         val_loss += loss.data[0]
 
         # step check
-        if (i + 1) % 16 == 0:
+        if (i + 1) % 10 == 0:
             print('Epoch [{:d}/{:d}]  Loss: [{:0.4f}]  Step: [{:d}/{:d}]'.format(
                 epoch + 1,
                 EPOCHS, val_loss[0] / (i + 1),
