@@ -119,7 +119,7 @@ default: 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에 치면 됨;;
 
 
 
-# 프로젝트 진행 기록 (ing..!)
+## 프로젝트 진행 기록 (완료)
 
 ## 1. OpenAI Gym기반 틱택토 환경만들기 (완료)
 - git, text editor, jupyter 등 개발환경 설정
@@ -147,7 +147,7 @@ default: 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에 치면 됨;;
 
 
 
-## 2. 에이전트 만들기 (진행중)
+## 2. 에이전트 만들기 완료
 - 파이썬 중급 공부
 - 강화학습 공부
     - Marcov Decision Process
@@ -189,9 +189,9 @@ default: 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에 치면 됨;;
      - dict로 접근
      - {state: edge} -> pi계산
 
-1월 3일: (state, edge) set을 hdf5로 저장 구현 (data/) (현재 pkl으로 바꿈)
+1월 3일: (state, edge) set을 hdf5로 저장 구현 (data/) (현재 pickle으로 바꿈)
 
-1월 6일: **PUCT-MCTS 정식버전 구현** (mcts_zero.py) (현재 삭제)
+1월 6일: **PUCT-MCTS 정식버전 구현** (mcts.py) (현재 mcts_simple.py로 교체)
 
      - 알고리즘 오류 수정
      - 첫번째 state에 Dirichlet 노이즈 설정(e-greedy) 
