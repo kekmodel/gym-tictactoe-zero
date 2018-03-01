@@ -14,7 +14,7 @@ from torch.utils import data
 start = time.time()
 
 # Hyper Parameters
-EPOCHS = 64
+EPOCHS = 1
 BATCH_SIZE = 32
 LR = 0.2
 L2 = 0.0001
@@ -41,13 +41,15 @@ for epoch in range(EPOCHS):
     val_loss = 0
     for i, (s, pi, z) in enumerate(train_dataset):
         s = Variable(s.view(BATCH_SIZE, 9, 3, 3).float(), requires_grad=True).cuda()
-        pi = Variable(pi.view(1, BATCH_SIZE * 9).float()).cuda()
-        z = Variable(z.float()).cuda()
+        pi = Variable(pi.view(1, BATCH_SIZE * 9).float(), requires_grad=False).cuda()
+        z = Variable(z.float(), requires_grad=False).cuda()
+        print(z)
 
         # forward and backward
         optimizer.zero_grad()
         p, v = pv_net(s)
         p = p.view(BATCH_SIZE * 9, 1)
+        print(v)
         loss = ((z - v).pow(2).sum() - torch.matmul(pi, torch.log(p))) / BATCH_SIZE
         loss.backward()
         optimizer.step()
