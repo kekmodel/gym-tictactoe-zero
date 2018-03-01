@@ -284,12 +284,14 @@ if __name__ == '__main__':
             action = manager.select_action(state)
             state, reward, done, _ = env.step(action)
             step_play += 1
+            env.render()
         if done:
             result[reward] += 1
             print('- FINAL -')
             print(env.board[PLAYER] + env.board[OPPONENT] * 2, '\n')
             manager.ai = MCTS('data/model_s800_g800_e64xde.pickle')
             time.sleep(2)
+            env.render(close=True)
 
     print('=' * 20, '\nWin: {}  Lose: {}  Draw: {}  Winrate: {:0.1f}%'.format(
         result[1], result[-1], result[0],
