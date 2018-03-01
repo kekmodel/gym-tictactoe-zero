@@ -247,7 +247,7 @@ class HumanAgent:
 class HumanVsAi:
     def __init__(self):
         self.human = HumanAgent()
-        self.ai = MCTS('data/model_s800_g800_e64x2.pickle')
+        self.ai = MCTS('data/model_s800_g800_e64x_2.pickle')
         self.current_user = None
 
     def select_action(self, state):
