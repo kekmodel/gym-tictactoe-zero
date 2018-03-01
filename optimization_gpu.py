@@ -24,7 +24,7 @@ CHANNEL = 128
 with open('data/train_dataset_s800_g800.pickle', 'rb') as f:
     dataset = pickle.load(f)
 train_dataset = data.DataLoader(
-    dataset, batch_size=BATCH_SIZE, shuffle=False, drop_last=True)
+    dataset, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
 
 # 신경망 생성 및 최적화 인스턴스 생성
 pv_net = neural_net_5block.PolicyValueNet(CHANNEL).cuda()
