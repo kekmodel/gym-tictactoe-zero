@@ -19,8 +19,8 @@ PLANE = np.zeros((3, 3), 'int').flatten()
 
 CHANNEL = 128
 
-GAMES = 5
-SIMULATION = 1600
+GAMES = 3
+SIMULATION = 2000
 
 
 class MCTS:
@@ -266,7 +266,7 @@ if __name__ == '__main__':
 
     for game in range(GAMES):
         print('##########    Game: {}    ##########\n'.format(game + 1))
-        player_color = (MARK_O + game) % 2
+        player_color = (MARK_X + game) % 2
         state = env.reset(player_color=player_color)
         env.render()
         done = False

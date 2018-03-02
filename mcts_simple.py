@@ -253,7 +253,8 @@ if __name__ == '__main__':
         while not done:
             print('---- BOARD ----')
             print(env.board[PLAYER] + env.board[OPPONENT] * 2.0)
-            current_user = ((PLAYER if player_color == MARK_O else OPPONENT) + step_play) % 2
+            current_user = ((PLAYER if player_color ==
+                             MARK_O else OPPONENT) + step_play) % 2
             mcts.player_color = player_color
             mcts.current_user_game = current_user
             if step_play < 2:
@@ -284,7 +285,8 @@ if __name__ == '__main__':
     print("=" * 20, " {}  Game End  ".format(game + 1), "=" * 20)
     stat_game = ('Win: {}  Lose: {}  Draw: {}  Winrate: {:0.1f}%  WinMarkO: {}'.format(
         result[1], result[-1], result[0],
-        1 / (1 + np.exp(result[-1] / (game + 1)) / np.exp(result[1] / (game + 1))) * 100,
+        1 / (1 + np.exp(result[-1] / (game + 1)) /
+             np.exp(result[1] / (game + 1))) * 100,
         win_mark_o))
     print(stat_game)
 
