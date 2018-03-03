@@ -1,8 +1,1 @@
-data/.DS_Store
-data/.ipynb_checkpoints
-/__pycache__
-/.idea
-/.DS_Store
-/.ipynb_checkpoints
-
-
+/1. tictactoe/__pycache__

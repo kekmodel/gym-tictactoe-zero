@@ -17,9 +17,10 @@ MARK_O, MARK_X = 0, 1
 N, W, Q, P = 0, 1, 2, 3
 PLANE = np.zeros((3, 3), 'int').flatten()
 
-GAMES = 2
-P1 = 2000
-P2 = 2400
+GAMES = 12
+
+P1 = 2400
+P2 = 2000
 
 
 class MCTS:
@@ -158,7 +159,10 @@ class MCTS:
 
     def backup(self, reward):
         steps = self.action_count
-        for i in range(steps):
+        start = 0
+        if self.done:
+            start = 1
+        for i in range(start, steps):
             if self.action_memory[i][0] == PLAYER:
                 self.edge_memory[i][tuple(
                     self.action_memory[i][1:])][

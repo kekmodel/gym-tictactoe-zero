@@ -157,7 +157,10 @@ class MCTS:
 
     def backup(self, reward):
         steps = self.action_count
-        for i in range(steps):
+        start = 0
+        if self.done:
+            start = 1
+        for i in range(start, steps):
             if self.action_memory[i][0] == PLAYER:
                 self.edge_memory[i][tuple(
                     self.action_memory[i][1:])][

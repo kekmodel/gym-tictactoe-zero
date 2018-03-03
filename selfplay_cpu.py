@@ -22,7 +22,7 @@ PLANE = np.zeros((3, 3), 'int').flatten()
 CHANNEL = 128
 
 GAMES = 1
-SIMULATION = 800
+SIMULATION = 2000
 
 
 class MCTS:
@@ -266,7 +266,10 @@ class MCTS:
         """search가 끝나면 지나온 edge의 N, W, Q를 업데이트."""
 
         steps = self.action_count
-        for i in range(steps):
+        start = 0
+        if self.done:
+            start = 1
+        for i in range(start, steps):
 
             # W 배치
             # 내가 지나온 edge에는 v 로
