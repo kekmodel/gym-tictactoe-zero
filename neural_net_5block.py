@@ -2,7 +2,6 @@
 import torch
 from torch.autograd import Variable
 import torch.nn as nn
-
 import numpy as np
 
 
@@ -11,7 +10,7 @@ class PolicyValueNet(nn.Module):
     def __init__(self, channel):
         super(PolicyValueNet, self).__init__()
         # convolutional layer
-        self.conv = nn.Conv2d(9, channel, kernel_size=3, padding=1)
+        self.conv = nn.Conv2d(5, channel, kernel_size=3, padding=1)
         self.conv_bn = nn.BatchNorm2d(channel)
         self.conv_relu = nn.ReLU(inplace=True)
 
@@ -76,18 +75,15 @@ class PolicyValueNet(nn.Module):
         self.value_scalar = nn.Linear(channel, 1)
         self.value_out = nn.Tanh()
 
-        # weight 초기화 (xavier)
+        # weight 초기화
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, np.math.sqrt(2. / n))
-                if m.bias is not None:
-                    m.bias.data.zero_()
+                nn.init.kaiming_normal(m.weight.data)
             elif isinstance(m, nn.BatchNorm2d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
             elif isinstance(m, nn.Linear):
-                m.weight.data.normal_(0, 0.01)
+                nn.init.xavier_uniform(m.weight)
                 m.bias.data.zero_()
 
     def forward(self, state):

@@ -97,8 +97,8 @@ class MCTS:
         node = xxhash.xxh64(self.state.tostring()).hexdigest()
         self.node_memory.appendleft(node)
 
-        origin_state = state.reshape(9, 3, 3)
-        board_fill = origin_state[0] + origin_state[4]
+        origin_state = state.reshape(5, 3, 3)
+        board_fill = origin_state[0] + origin_state[2]
         self.legal_move = np.argwhere(board_fill == 0)
         self.no_legal_move = np.argwhere(board_fill != 0)
 
@@ -149,7 +149,7 @@ class MCTS:
     def _expand(self, node):
         self.edge = self.tree[node]
         state_tensor = torch.from_numpy(self.state).float()
-        state_variable = Variable(state_tensor.view(9, 3, 3).unsqueeze(0))
+        state_variable = Variable(state_tensor.view(5, 3, 3).unsqueeze(0))
         p_theta, v_theta = self.pv_net(state_variable)
         self.prob = p_theta.data.numpy()[0].reshape(3, 3)
         self.value = v_theta.data.numpy()[0]

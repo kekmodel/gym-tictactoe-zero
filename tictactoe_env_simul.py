@@ -28,17 +28,17 @@ class TicTacToeEnv(gym.Env):
 
     state
     ----------
-    9x3x3 numpy 배열: 3x3 평면 9장.
+    5x3x3 numpy 배열: 3x3 평면 9장.
 
-        0 ~3 번 평면: 나의 표시만 1로 체크하며 4수까지 저장
-        4 ~7 번 평면: 상대 표시만 1로 체크하며 4수까지 저장
-        8번 평면: O만 1로 체크 (누가 O, X 인지 구별 용)
+        0 ~ 1 번 평면: 나의 표시만 1로 체크하며 2수까지 저장
+        2 ~ 3 번 평면: 상대 표시만 1로 체크하며 2수까지 저장
+        5번 평면: O만 1로 체크 (누가 O, X 인지 구별 용)
 
     action
     ----------
     tuple(유저타입, 좌표행, 좌표열).
 
-        state가 board 상황과 다르므로 (0번, 4번, 8번)을 모아 3x3x3 board 를 다시구성 함.
+        state가 board 상황과 다르므로 (0번, 2번, 4번)을 모아 3x3x3 board 를 다시구성 함.
         action = (0, 1, 1) -> step(action) -> state.appendleft(board(action))
 
     Warning
@@ -72,29 +72,26 @@ class TicTacToeEnv(gym.Env):
         """리셋 함수.
 
         state 초기화: 3x3 배열 3장.
-
         """
         # input이 없으면 초기 state
         if state is None:
-            self.state = np.zeros((9, 3, 3), 'int').flatten()
+            self.state = np.zeros((5, 3, 3), 'int').flatten()
             # 보드
             self.board = np.zeros((3, 3, 3), 'int')
-            self.player_history = deque([PLANE] * 4, maxlen=4)
-            self.opponent_history = deque([PLANE] * 4, maxlen=4)
+            self.player_history = deque([PLANE] * 2, maxlen=2)
+            self.opponent_history = deque([PLANE] * 2, maxlen=2)
         # 있으면 그걸로 초기화
         else:
             self.state = state.copy()
-            origin_state = state.reshape(9, 3, 3)
+            origin_state = state.reshape(5, 3, 3)
             self.board = np.zeros((3, 3, 3), 'int')
             self.board[PLAYER] = origin_state[0]
-            self.board[OPPONENT] = origin_state[4]
-            self.board[2] = origin_state[8]
+            self.board[OPPONENT] = origin_state[2]
+            self.board[2] = origin_state[4]
             self.player_history = deque(
-                [origin_state[0].flatten(), origin_state[1].flatten(),
-                 origin_state[2].flatten(), origin_state[3].flatten()], maxlen=4)
+                [origin_state[0].flatten(), origin_state[1].flatten()], maxlen=2)
             self.opponent_history = deque(
-                [origin_state[4].flatten(), origin_state[5].flatten(),
-                 origin_state[6].flatten(), origin_state[7].flatten()], maxlen=4)
+                [origin_state[2].flatten(), origin_state[3].flatten()], maxlen=2)
 
         # 플레이어 컬러 설정
         self.player_color = player_color
@@ -107,7 +104,6 @@ class TicTacToeEnv(gym.Env):
 
         승부가 나면 외부에서 reset()을 호출하여 환경을 초기화 해야 함.
         action을 받아서 (board, reward, done, info)인 튜플 리턴 함.
-
         """
         # 사전 규칙 위반 필터링
         # player color 미지정

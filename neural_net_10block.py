@@ -11,7 +11,7 @@ class PolicyValueNet(nn.Module):
     def __init__(self, channel):
         super(PolicyValueNet, self).__init__()
         # convolutional layer
-        self.conv = nn.Conv2d(9, channel, kernel_size=3, padding=1)
+        self.conv = nn.Conv2d(5, channel, kernel_size=3, padding=1)
         self.conv_bn = nn.BatchNorm2d(channel)
         self.conv_relu = nn.ReLU(inplace=True)
 
