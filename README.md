@@ -77,9 +77,9 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문을 수십번 읽고 (너무 어려�
 ### PyTorch 설치 (http://pytorch.org)
 
 
-## gym-tictactoe 설치 (제가 만든 거)
+## gym-tictactoe-zero 설치 (제가 만든 거)
     
-    git clone https://github.com/kekmodel/gym-tictactoe-zerp.git
+    git clone https://github.com/kekmodel/gym-tictactoe-zero.git
 
 
     
