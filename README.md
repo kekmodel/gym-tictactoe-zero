@@ -79,7 +79,7 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문을 수십번 읽고 (너무 어려�
 
 ## gym-tictactoe 설치 (제가 만든 거)
     
-    git clone https://github.com/kekmodel/gym-tictactoe.git
+    git clone https://github.com/kekmodel/gym-tictactoe-zerp.git
 
 
     
