@@ -85,7 +85,7 @@ AlphaGo Fan, AlphaGo Zero, Alpha Zero 논문을 수십번 읽고 (너무 어려�
 
 human_interface.py 는 interpreter기반 환경에서만 됨 (e.g. console, IPython, pycharm)
 
-\* jupyter notebook으로 사용가능
+\* jupyter notebook으로 사용가능 (thanks to 
 
 \* 렌더링 오류 시: pip install pyglet==1.2.4  
      
@@ -105,7 +105,8 @@ human_interface.py 는 interpreter기반 환경에서만 됨 (e.g. console, IPyt
 
 ### AI와 한판 붙고 싶다면?
 
-    python human_play_cpu.py(랜덤 파라미터) or gpu(1회 학습 파라미터 800게임)
+    python human_play_cpu.py
+    python human_play_gpu.py
 
 
 default: 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에 치면 됨;;)
@@ -276,7 +277,7 @@ default: 5판 승부, 선공 사람, 착수: 1 ~ 9번 (콘솔창에 치면 됨;;
 
 2월 24일: **알파고 제로 셀프 플레이 프로토타입 구현**
 
-    - 논문 리뷰후 제대로 된 알고리즘 탑재 (thanks..민규식, 이웅원)
+    - 논문 리뷰후 제대로 된 알고리즘 탑재 (thanks 민규식, 이웅원)
 
 3월 1일:  **프로젝트 완료**
 
